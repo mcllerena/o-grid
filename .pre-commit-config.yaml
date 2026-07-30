@@ -21,12 +21,12 @@ repos:
       - id: check-yaml
       - id: mixed-line-ending
         args: ["--fix=lf"]
-        exclude: '\.(bat|cmd)$'
       - id: check-merge-conflict
       - id: detect-private-key
       - id: check-added-large-files
         args: ["--maxkb=1000"]
       - id: pretty-format-json
+        args: ["--autofix"]
         files: ^(?!.*(^|/)package-lock\.json$).+\.json$
 
   - repo: meta

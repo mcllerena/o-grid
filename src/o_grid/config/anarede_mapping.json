@@ -1,129 +1,48 @@
 {
-  "DOPC": {
+  "DARE": {
     "fields": {
-      "option": {
+      "area_number": {
         "column": {
-          "end": 4,
+          "end": 3,
           "start": 1
         },
         "default": "",
-        "description": "Power-flow execution option mnemonic. Examples include QLIM, CREM, STEP, NEWT, MOST, MOSG, MOSF, RCVG, RMON, FILE, CONT, CELO and MFCT."
+        "description": "Area number, as defined in the Area field of the DBAR execution code."
       },
-      "state": {
+      "maximum_net_interchange": {
         "column": {
-          "end": 6,
-          "start": 6
-        },
-        "default": "L",
-        "description": "Option activation state. L indicates that the execution option is enabled."
-      }
-    },
-    "options": {
-      "CELO": "Activates simultaneous Newton-Raphson solution of AC-DC link equations.",
-      "CONT": "Prints terminal reports continuously without pagination pauses.",
-      "MOCF": "Monitors MVA power flow on all system circuits.",
-      "MOCG": "Monitors reactive generation on all AC generator buses.",
-      "MOCT": "Monitors voltage on all AC buses.",
-      "MOSF": "Monitors only selected AC circuit flows.",
-      "MOSG": "Monitors only selected AC generator reactive outputs.",
-      "MOST": "Monitors only selected AC bus voltages.",
-      "NEWT": "Solves the nonlinear power-flow equations with Newton-Raphson instead of fast decoupled power flow.",
-      "RCVG": "Prints iterative convergence reports for AC, DC and AC-DC interface solutions.",
-      "STEP": "Limits voltage angle, voltage magnitude and CSC susceptance corrections during iterations."
-    },
-    "function": "Reading of power-flow execution options. Records are represented by repeated option/state pairs."
-  },
-  "DCTE": {
-    "fields": {
-      "mnemonic": {
-        "column": {
-          "end": 4,
-          "start": 1
-        },
-        "default": "",
-        "description": "Constant mnemonic to be modified before execution of codes that use it."
-      },
-      "value": {
-        "column": {
-          "end": 12,
-          "start": 7
+          "end": 68,
+          "start": 63
         },
         "default": 0.0,
-        "description": "New value associated with the DCTE constant mnemonic."
+        "description": "Maximum net active power interchange of the area, in MW. Positive values indicate export and negative values indicate import."
+      },
+      "minimum_net_interchange": {
+        "column": {
+          "end": 61,
+          "start": 56
+        },
+        "default": 0.0,
+        "description": "Minimum net active power interchange of the area, in MW. Positive values indicate export and negative values indicate import."
+      },
+      "name": {
+        "column": {
+          "end": 54,
+          "start": 19
+        },
+        "default": "",
+        "description": "Alphanumeric identification of the area."
+      },
+      "net_interchange": {
+        "column": {
+          "end": 13,
+          "start": 8
+        },
+        "default": 0.0,
+        "description": "Net active power interchange of the area, in MW. Positive values indicate export and negative values indicate import."
       }
     },
-    "constants": {
-      "ACIT": "Maximum number of iterations in the AC power-flow solution.",
-      "APAS": "Continuation power-flow loading point from which parametrized step size is accelerated, in percent of maximum loading.",
-      "ASDC": "Maximum firing/extinction angle correction of the DC link converter during solution.",
-      "ASTP": "Maximum voltage phase-angle correction during the solution process, in radians.",
-      "BASE": "AC system power base, in MVA.",
-      "BFPO": "Minimum reactive power injection of a shunt bank allocated by Flupot, in MVAr.",
-      "CPAR": "Stopping point of the parametrized continuation power flow, in percent of maximum loading.",
-      "CSTP": "Maximum CSC susceptance correction during the solution process, in percent.",
-      "DASE": "Default DC system power base, in MW.",
-      "DCIT": "Maximum number of iterations in the DC power-flow solution.",
-      "DMAX": "Maximum consecutive applications of the FDIV division factor in continuation power flow.",
-      "EXST": "Active-power interchange control application tolerance.",
-      "FDIV": "Automatic load increment reduction factor when continuation power flow has no solution.",
-      "HIST": "Number of case records stored in ANAREDE format.",
-      "ICIT": "Maximum number of power-flow solutions during continuation power flow.",
-      "ICMN": "Minimum automatic load increment and parametrization threshold when PARM is active.",
-      "ICMV": "Initial step size when the continuation parameter changes from loading to voltage magnitude.",
-      "LCRT": "Maximum report lines per page on logical unit 6.",
-      "LFCV": "Fast-decoupled iterations before switching to Newton-Raphson.",
-      "LFIT": "Maximum iterations in the AC-DC interface solution.",
-      "LFLP": "Maximum active-power redispatch iterations.",
-      "LFPO": "Power-flow option tolerance constant.",
-      "LPIT": "Maximum iterations of the linear programming problem.",
-      "LPRT": "Maximum report lines per page on logical unit 4.",
-      "NDIR": "Number of directions used while building the security region.",
-      "PDIT": "Number of iterations used in loss estimation for the linearized load-flow model.",
-      "PGER": "Percentage of internal-system active generation removed to calculate active-power flow variations in external-system circuits.",
-      "QLST": "Reactive-power error tolerance for reactive generation limit control.",
-      "STIR": "Division factor for the current active-generation transfer step when a violation occurs while building the security region.",
-      "STTR": "Active-generation transfer step used while building the security region.",
-      "TADC": "Tolerance for converter firing/extinction angle limits.",
-      "TBPA": "Tolerance for active-power redistribution error in generation/load contingencies.",
-      "TEPA": "Active-power mismatch convergence tolerance at the bus, in MW.",
-      "TEPR": "Reactive-power mismatch convergence tolerance at the bus, in MVAr.",
-      "TETP": "Active-power interchange error tolerance between areas, in MW.",
-      "TLMF": "Load-flow limit monitoring factor constant.",
-      "TLMG": "Load-flow generation limit monitoring factor constant.",
-      "TLMT": "Load-flow voltage limit monitoring factor constant.",
-      "TLPP": "Circuit loading capacity tolerance, in percent.",
-      "TLPQ": "Unused in this version.",
-      "TLPR": "Reactive generation limit tolerance, in MVAr.",
-      "TLPV": "Unused in this version.",
-      "TLTC": "Transformer tap limit tolerance, in percent.",
-      "TLVC": "Controlled voltage tolerance, in percent.",
-      "TRPT": "Percentage of active generation transferred while building the security region.",
-      "TSBA": "Tolerance for small active-power flow variations in external system circuits, in MW.",
-      "TSBZ": "Tolerance for null active-power flow variation detection in external system circuits, in MW.",
-      "TSDC": "Maximum DC link converter tap correction during the solution process.",
-      "TSFR": "Tolerance for physical electrical-network separation detection.",
-      "TSTP": "Number of discrete tap transformer steps.",
-      "TUDC": "DC bus voltage mismatch convergence tolerance, in percent.",
-      "TLSI": "Tolerance for the inverted sensitivity report used to determine buses with inverted dQ/dV sensitivity.",
-      "VART": "Voltage variation threshold for automatic monitoring in continuation power flow.",
-      "VAVF": "Flow variation criterion based on nominal loading for complementary network determination.",
-      "VAVT": "Voltage variation criterion for complementary network determination.",
-      "VDVM": "Maximum voltage for automatic case divergence test, in percent.",
-      "VDVN": "Minimum voltage for automatic case divergence test, in percent.",
-      "VFLD": "Voltage below which constant-power functional loads are modeled as constant impedance, in percent.",
-      "VINF": "Variation used to define lower report-band limits for RFXC and RFXS.",
-      "VMVF": "Flow variation criterion for complementary network determination, in MW.",
-      "VPMF": "Flow variation criterion for the simulation network first criterion, in MW.",
-      "VPVF": "Flow variation criterion based on nominal loading for the simulation network first criterion.",
-      "VPVT": "Voltage variation criterion for the simulation network first criterion.",
-      "VSIT": "Maximum iterations for DC bus voltage adjustment.",
-      "VSTP": "Maximum voltage magnitude correction during the solution process, in percent.",
-      "VSUP": "Variation used to define upper report-band limits for RFXC and RFXS.",
-      "VSVF": "Flow variation criterion based on nominal loading for the simulation network second criterion.",
-      "ZMAX": "Impedance limit above which equivalent circuits are neglected, in percent.",
-      "ZMIN": "Minimum AC circuit impedance magnitude, in percent."
-    },
-    "function": "Reading and modification of program constants. Records are represented by repeated mnemonic/value pairs."
+    "function": "Reading of active power interchange data between areas."
   },
   "DBAR": {
     "fields": {
@@ -291,6 +210,56 @@
     "function": "Reading of AC buses."
   },
   "DBSH": {
+    "bank_fields": {
+      "bank_number": {
+        "column": {
+          "end": 2,
+          "start": 1
+        },
+        "default": "",
+        "description": "Identification number of the capacitor and/or reactor group or bank. One bus may have one or more groups or banks, and each group may consist of one or more equal switching stages."
+      },
+      "operation": {
+        "column": {
+          "end": 5,
+          "start": 5
+        },
+        "default": "A",
+        "description": "A or 0 - group or bank data addition. E or 1 - group or bank data elimination. M or 2 - group or bank data modification."
+      },
+      "reactive_power_per_unit": {
+        "column": {
+          "end": 22,
+          "start": 17
+        },
+        "default": "",
+        "description": "Total reactive power injected at the bus by one unit or stage of the capacitor/reactor group, in MVAr at nominal voltage (1.0 p.u.). Positive values represent capacitors and negative values represent reactors."
+      },
+      "state": {
+        "column": {
+          "end": 7,
+          "start": 7
+        },
+        "default": "L",
+        "description": "L if the group or bank is in operation. D if the group or bank is out of operation."
+      },
+      "total_units": {
+        "column": {
+          "end": 11,
+          "start": 9
+        },
+        "default": "",
+        "description": "Total number of equal units or stages that compose the capacitor/reactor group or bank. The maximum number of units allowed per bus is six."
+      },
+      "units_in_operation": {
+        "column": {
+          "end": 15,
+          "start": 13
+        },
+        "default": "Capacitor/Reactor units",
+        "description": "Number of equal units or stages of the capacitor/reactor group or bank that are effectively in operation."
+      }
+    },
     "fields": {
       "clear_dbar_data": {
         "column": {
@@ -299,14 +268,6 @@
         },
         "default": "N",
         "description": "S if the value informed in the DBAR Capacitor/Reactor field must be cleared. Otherwise the DBAR value is preserved."
-      },
-      "controlled_bus": {
-        "column": {
-          "end": 34,
-          "start": 30
-        },
-        "default": "From Bus",
-        "description": "Bus number whose voltage magnitude is controlled by automatic switching of the individualized capacitor and/or reactor banks connected to the terminal bus. The controlled voltage depends on the voltage range and the selected control type."
       },
       "control_mode": {
         "column": {
@@ -323,6 +284,14 @@
         },
         "default": "C",
         "description": "Voltage control type: C if control is performed by the center of the voltage range, or L if control is performed by the violated limit of the voltage range."
+      },
+      "controlled_bus": {
+        "column": {
+          "end": 34,
+          "start": 30
+        },
+        "default": "From Bus",
+        "description": "Bus number whose voltage magnitude is controlled by automatic switching of the individualized capacitor and/or reactor banks connected to the terminal bus. The controlled voltage depends on the voltage range and the selected control type."
       },
       "dbsh_circuit": {
         "column": {
@@ -389,102 +358,7 @@
         "description": "Bus number of the other circuit terminal for line capacitor/reactor banks. Not used for shunt banks connected directly to an AC bus."
       }
     },
-    "bank_fields": {
-      "bank_number": {
-        "column": {
-          "end": 2,
-          "start": 1
-        },
-        "default": "",
-        "description": "Identification number of the capacitor and/or reactor group or bank. One bus may have one or more groups or banks, and each group may consist of one or more equal switching stages."
-      },
-      "operation": {
-        "column": {
-          "end": 5,
-          "start": 5
-        },
-        "default": "A",
-        "description": "A or 0 - group or bank data addition. E or 1 - group or bank data elimination. M or 2 - group or bank data modification."
-      },
-      "reactive_power_per_unit": {
-        "column": {
-          "end": 22,
-          "start": 17
-        },
-        "default": "",
-        "description": "Total reactive power injected at the bus by one unit or stage of the capacitor/reactor group, in MVAr at nominal voltage (1.0 p.u.). Positive values represent capacitors and negative values represent reactors."
-      },
-      "state": {
-        "column": {
-          "end": 7,
-          "start": 7
-        },
-        "default": "L",
-        "description": "L if the group or bank is in operation. D if the group or bank is out of operation."
-      },
-      "total_units": {
-        "column": {
-          "end": 11,
-          "start": 9
-        },
-        "default": "",
-        "description": "Total number of equal units or stages that compose the capacitor/reactor group or bank. The maximum number of units allowed per bus is six."
-      },
-      "units_in_operation": {
-        "column": {
-          "end": 15,
-          "start": 13
-        },
-        "default": "Capacitor/Reactor units",
-        "description": "Number of equal units or stages of the capacitor/reactor group or bank that are effectively in operation."
-      }
-    },
     "function": "Reading of individualized capacitor and/or reactor bank data connected to AC buses or transmission lines. For each terminal bus record, one or more bank records follow, and an FBAN record in columns 1-4 terminates the bank list for that terminal bus."
-  },
-  "DARE": {
-    "fields": {
-      "area_number": {
-        "column": {
-          "end": 3,
-          "start": 1
-        },
-        "default": "",
-        "description": "Area number, as defined in the Area field of the DBAR execution code."
-      },
-      "maximum_net_interchange": {
-        "column": {
-          "end": 68,
-          "start": 63
-        },
-        "default": 0.0,
-        "description": "Maximum net active power interchange of the area, in MW. Positive values indicate export and negative values indicate import."
-      },
-      "minimum_net_interchange": {
-        "column": {
-          "end": 61,
-          "start": 56
-        },
-        "default": 0.0,
-        "description": "Minimum net active power interchange of the area, in MW. Positive values indicate export and negative values indicate import."
-      },
-      "name": {
-        "column": {
-          "end": 54,
-          "start": 19
-        },
-        "default": "",
-        "description": "Alphanumeric identification of the area."
-      },
-      "net_interchange": {
-        "column": {
-          "end": 13,
-          "start": 8
-        },
-        "default": 0.0,
-        "description": "Net active power interchange of the area, in MW. Positive values indicate export and negative values indicate import."
-      }
-    },
-    "function": "Reading of active power interchange data between areas."
   },
   "DCAI": {
     "fields": {
@@ -603,6 +477,224 @@
     },
     "function": "Reading of individualized load parameters. This code allows defining groups of individualized loads connected to buses, where each group can consist of multiple identical units with voltage-dependent characteristics."
   },
+  "DCBA": {
+    "fields": {
+      "dc_link_number": {
+        "column": {
+          "end": 75,
+          "start": 72
+        },
+        "default": 0,
+        "description": "DC link number, as defined in the Number field of the DELO execution code. All buses of the same pole or bipole must belong to the same DC link."
+      },
+      "ground_electrode_resistance": {
+        "column": {
+          "end": 71,
+          "start": 67
+        },
+        "default": 1.0,
+        "description": "Ground electrode resistance, in ohms, for a neutral bus. This field must not be filled for positive- or negative-polarity buses."
+      },
+      "name": {
+        "column": {
+          "end": 21,
+          "start": 10
+        },
+        "default": "",
+        "description": "Alphanumeric identification of the DC bus."
+      },
+      "number": {
+        "column": {
+          "end": 4,
+          "start": 1
+        },
+        "default": "",
+        "description": "DC bus identification number."
+      },
+      "operation": {
+        "column": {
+          "end": 6,
+          "start": 6
+        },
+        "default": "A",
+        "description": "A or 0 - DC bus data addition. M or 2 - DC bus data modification."
+      },
+      "polarity": {
+        "column": {
+          "end": 9,
+          "start": 9
+        },
+        "default": "0",
+        "description": "+ indicates that the bus belongs to the positive pole. - indicates that the bus belongs to the negative pole. 0 indicates a neutral bus."
+      },
+      "type": {
+        "column": {
+          "end": 8,
+          "start": 8
+        },
+        "default": 0,
+        "description": "0 - bus without specified voltage. 1 - bus with specified voltage, used as a reference bus. One type-1 bus must be specified for each pole of each DC link."
+      },
+      "voltage": {
+        "column": {
+          "end": 28,
+          "start": 24
+        },
+        "default": "",
+        "description": "Initial voltage magnitude of the DC bus, in kV. For type-1 buses this field contains the voltage value to be held constant."
+      },
+      "voltage_limit_group": {
+        "column": {
+          "end": 23,
+          "start": 22
+        },
+        "default": 0,
+        "description": "Voltage limit group identifier associated with the DC bus."
+      }
+    },
+    "function": "Reading of DC bus data."
+  },
+  "DCCV": {
+    "fields": {
+      "converter_angle": {
+        "column": {
+          "end": 34,
+          "start": 30
+        },
+        "default": 0.0,
+        "description": "Desired firing angle for a rectifier, extinction angle for a conventional inverter, or commutation margin for a CCC inverter, in degrees."
+      },
+      "converter_control_type": {
+        "column": {
+          "end": 10,
+          "start": 10
+        },
+        "default": "",
+        "description": "Converter control type: C for constant-current control, or P for constant-power control."
+      },
+      "current_margin": {
+        "column": {
+          "end": 22,
+          "start": 18
+        },
+        "default": 10.0,
+        "description": "Inverter current margin, in percent of the nominal current defined in the DCNV Current field. This field is not considered for rectifiers."
+      },
+      "dc_voltage_minimum_for_power_control": {
+        "column": {
+          "end": 66,
+          "start": 63
+        },
+        "default": 0.0,
+        "description": "Minimum DC voltage, in p.u., below which a converter in power control changes to current control. Implicit decimal point between columns 63 and 64."
+      },
+      "inverter_control_mode": {
+        "column": {
+          "end": 9,
+          "start": 9
+        },
+        "default": "",
+        "description": "Inverter control mode for CCC inverters: G for gamma control, or T for AC interface bus voltage control."
+      },
+      "maximum_converter_angle": {
+        "column": {
+          "end": 46,
+          "start": 42
+        },
+        "default": 0.0,
+        "description": "Maximum firing angle for a rectifier, extinction angle for a conventional inverter, or commutation margin for a CCC inverter, in degrees."
+      },
+      "maximum_overcurrent": {
+        "column": {
+          "end": 28,
+          "start": 24
+        },
+        "default": 9999.0,
+        "description": "Maximum overcurrent allowed for the converter, in percent of the nominal current defined in the DCNV Current field. This field is not considered for rectifiers."
+      },
+      "maximum_transformer_tap": {
+        "column": {
+          "end": 58,
+          "start": 54
+        },
+        "default": "",
+        "description": "Maximum tap value of the converter transformer."
+      },
+      "minimum_converter_angle": {
+        "column": {
+          "end": 40,
+          "start": 36
+        },
+        "default": 0.0,
+        "description": "Minimum firing angle for a rectifier, extinction angle for a conventional inverter, or commutation margin for a CCC inverter, in degrees."
+      },
+      "minimum_transformer_tap": {
+        "column": {
+          "end": 52,
+          "start": 48
+        },
+        "default": "",
+        "description": "Minimum tap value of the converter transformer."
+      },
+      "number": {
+        "column": {
+          "end": 4,
+          "start": 1
+        },
+        "default": "",
+        "description": "Converter identification number, as defined in the Number field of the DCNV execution code."
+      },
+      "operation": {
+        "column": {
+          "end": 6,
+          "start": 6
+        },
+        "default": "A",
+        "description": "A or 0 - converter control data addition. E or 1 - converter control data elimination. M or 2 - converter control data modification."
+      },
+      "slack": {
+        "column": {
+          "end": 8,
+          "start": 8
+        },
+        "default": "N",
+        "description": "F for a slack converter, or N for a normal converter. One slack converter must be specified for each pole of the DC link."
+      },
+      "specified_value": {
+        "column": {
+          "end": 16,
+          "start": 12
+        },
+        "default": "",
+        "description": "Specified converter control value, in A for current control or MW for power control."
+      },
+      "tap_himvar_mode": {
+        "column": {
+          "end": 72,
+          "start": 68
+        },
+        "default": "",
+        "description": "Converter transformer tap used when the DC link operates in HiMVAr Consumption mode, as defined in the DELO HiMVAr Mode field."
+      },
+      "tap_reduced_voltage_mode": {
+        "column": {
+          "end": 78,
+          "start": 74
+        },
+        "default": "Maximum transformer tap minus one step, or 1.0 when the tap step is not available",
+        "description": "Converter transformer tap used when the DC link operates in reduced-voltage mode."
+      },
+      "transformer_tap_steps": {
+        "column": {
+          "end": 61,
+          "start": 60
+        },
+        "default": "Infinity",
+        "description": "Number of converter transformer tap steps. The tap step is calculated by dividing the difference between maximum and minimum transformer taps by this number of steps."
+      }
+    },
+    "function": "Reading of AC-DC converter control data."
+  },
   "DCER": {
     "fields": {
       "bus": {
@@ -619,7 +711,7 @@
           "start": 44
         },
         "default": "I",
-        "description": "P – Control by power generated by the SVC.\nI – Control by current injected by the SVC."
+        "description": "P \u2013 Control by power generated by the SVC.\nI \u2013 Control by current injected by the SVC."
       },
       "controlled_bus": {
         "column": {
@@ -695,6 +787,200 @@
       }
     },
     "function": "Reading of static reactive compensator data."
+  },
+  "DCLI": {
+    "fields": {
+      "capacity": {
+        "column": {
+          "end": 64,
+          "start": 61
+        },
+        "default": 0.0,
+        "description": "DC line loading capacity, in MW, for flow monitoring purposes."
+      },
+      "dcli_circuit": {
+        "column": {
+          "end": 14,
+          "start": 13
+        },
+        "default": "",
+        "description": "Identification number of the parallel DC line."
+      },
+      "from_bus": {
+        "column": {
+          "end": 4,
+          "start": 1
+        },
+        "default": "",
+        "description": "Number of the DC bus at one end of the DC line, as defined in the Number field of the DCBA execution code."
+      },
+      "inductance": {
+        "column": {
+          "end": 29,
+          "start": 24
+        },
+        "default": 0.0,
+        "description": "DC line inductance, in mH."
+      },
+      "operation": {
+        "column": {
+          "end": 6,
+          "start": 6
+        },
+        "default": "A",
+        "description": "A or 0 - DC line data addition. M or 2 - DC line data modification."
+      },
+      "owner": {
+        "column": {
+          "end": 16,
+          "start": 16
+        },
+        "default": "",
+        "description": "Owner flag. This field is not used in this version."
+      },
+      "resistance": {
+        "column": {
+          "end": 23,
+          "start": 18
+        },
+        "default": "",
+        "description": "DC line resistance, in ohms."
+      },
+      "to_bus": {
+        "column": {
+          "end": 12,
+          "start": 9
+        },
+        "default": "",
+        "description": "Number of the DC bus at the other end of the DC line, as defined in the Number field of the DCBA execution code."
+      }
+    },
+    "function": "Reading of DC line data."
+  },
+  "DCNV": {
+    "fields": {
+      "ac_bus": {
+        "column": {
+          "end": 12,
+          "start": 8
+        },
+        "default": "",
+        "description": "AC bus number to which the converter is connected, as defined in the Number field of the DBAR execution code."
+      },
+      "ccc_capacitance": {
+        "column": {
+          "end": 68,
+          "start": 64
+        },
+        "default": 0.0,
+        "description": "CCC capacitance, in microfarads."
+      },
+      "commutation_reactance": {
+        "column": {
+          "end": 38,
+          "start": 34
+        },
+        "default": "",
+        "description": "Commutation reactance per six-pulse bridge, in percent on the converter transformer power base."
+      },
+      "current": {
+        "column": {
+          "end": 32,
+          "start": 28
+        },
+        "default": "",
+        "description": "Nominal converter current, in A."
+      },
+      "dc_bus": {
+        "column": {
+          "end": 17,
+          "start": 14
+        },
+        "default": "",
+        "description": "DC bus number to which the converter is connected, as defined in the Number field of the DCBA execution code."
+      },
+      "frequency": {
+        "column": {
+          "end": 71,
+          "start": 70
+        },
+        "default": 60,
+        "description": "Frequency, in Hz, of the AC system to which the CCC is connected."
+      },
+      "mode": {
+        "column": {
+          "end": 24,
+          "start": 24
+        },
+        "default": "",
+        "description": "Converter operating mode: R for rectifier, or I for inverter."
+      },
+      "neutral_bus": {
+        "column": {
+          "end": 22,
+          "start": 19
+        },
+        "default": "",
+        "description": "Neutral DC bus number to which the converter is connected, as defined in the Number field of the DCBA execution code."
+      },
+      "number": {
+        "column": {
+          "end": 4,
+          "start": 1
+        },
+        "default": "",
+        "description": "Converter identification number."
+      },
+      "operation": {
+        "column": {
+          "end": 6,
+          "start": 6
+        },
+        "default": "A",
+        "description": "A or 0 - converter data addition. M or 2 - converter data modification."
+      },
+      "reactor_inductance": {
+        "column": {
+          "end": 62,
+          "start": 58
+        },
+        "default": 0.0,
+        "description": "Smoothing reactor inductance, in mH."
+      },
+      "reactor_resistance": {
+        "column": {
+          "end": 56,
+          "start": 52
+        },
+        "default": "",
+        "description": "Smoothing reactor resistance, in ohms."
+      },
+      "secondary_voltage": {
+        "column": {
+          "end": 44,
+          "start": 40
+        },
+        "default": "",
+        "description": "Line-to-line base voltage of the secondary side of the six-pulse bridge converter transformer, in kV."
+      },
+      "six_pulse_bridges": {
+        "column": {
+          "end": 26,
+          "start": 26
+        },
+        "default": "",
+        "description": "Number of six-pulse converter bridges."
+      },
+      "transformer_power": {
+        "column": {
+          "end": 50,
+          "start": 46
+        },
+        "default": "",
+        "description": "Power base of the six-pulse bridge converter transformer, in MVA."
+      }
+    },
+    "function": "Reading of AC-DC converter data."
   },
   "DCSC": {
     "fields": {
@@ -821,6 +1107,98 @@
     },
     "function": "Reading of CSC (Controllable Series Compensator) data."
   },
+  "DCTE": {
+    "constants": {
+      "ACIT": "Maximum number of iterations in the AC power-flow solution.",
+      "APAS": "Continuation power-flow loading point from which parametrized step size is accelerated, in percent of maximum loading.",
+      "ASDC": "Maximum firing/extinction angle correction of the DC link converter during solution.",
+      "ASTP": "Maximum voltage phase-angle correction during the solution process, in radians.",
+      "BASE": "AC system power base, in MVA.",
+      "BFPO": "Minimum reactive power injection of a shunt bank allocated by Flupot, in MVAr.",
+      "CPAR": "Stopping point of the parametrized continuation power flow, in percent of maximum loading.",
+      "CSTP": "Maximum CSC susceptance correction during the solution process, in percent.",
+      "DASE": "Default DC system power base, in MW.",
+      "DCIT": "Maximum number of iterations in the DC power-flow solution.",
+      "DMAX": "Maximum consecutive applications of the FDIV division factor in continuation power flow.",
+      "EXST": "Active-power interchange control application tolerance.",
+      "FDIV": "Automatic load increment reduction factor when continuation power flow has no solution.",
+      "HIST": "Number of case records stored in ANAREDE format.",
+      "ICIT": "Maximum number of power-flow solutions during continuation power flow.",
+      "ICMN": "Minimum automatic load increment and parametrization threshold when PARM is active.",
+      "ICMV": "Initial step size when the continuation parameter changes from loading to voltage magnitude.",
+      "LCRT": "Maximum report lines per page on logical unit 6.",
+      "LFCV": "Fast-decoupled iterations before switching to Newton-Raphson.",
+      "LFIT": "Maximum iterations in the AC-DC interface solution.",
+      "LFLP": "Maximum active-power redispatch iterations.",
+      "LFPO": "Power-flow option tolerance constant.",
+      "LPIT": "Maximum iterations of the linear programming problem.",
+      "LPRT": "Maximum report lines per page on logical unit 4.",
+      "NDIR": "Number of directions used while building the security region.",
+      "PDIT": "Number of iterations used in loss estimation for the linearized load-flow model.",
+      "PGER": "Percentage of internal-system active generation removed to calculate active-power flow variations in external-system circuits.",
+      "QLST": "Reactive-power error tolerance for reactive generation limit control.",
+      "STIR": "Division factor for the current active-generation transfer step when a violation occurs while building the security region.",
+      "STTR": "Active-generation transfer step used while building the security region.",
+      "TADC": "Tolerance for converter firing/extinction angle limits.",
+      "TBPA": "Tolerance for active-power redistribution error in generation/load contingencies.",
+      "TEPA": "Active-power mismatch convergence tolerance at the bus, in MW.",
+      "TEPR": "Reactive-power mismatch convergence tolerance at the bus, in MVAr.",
+      "TETP": "Active-power interchange error tolerance between areas, in MW.",
+      "TLMF": "Load-flow limit monitoring factor constant.",
+      "TLMG": "Load-flow generation limit monitoring factor constant.",
+      "TLMT": "Load-flow voltage limit monitoring factor constant.",
+      "TLPP": "Circuit loading capacity tolerance, in percent.",
+      "TLPQ": "Unused in this version.",
+      "TLPR": "Reactive generation limit tolerance, in MVAr.",
+      "TLPV": "Unused in this version.",
+      "TLSI": "Tolerance for the inverted sensitivity report used to determine buses with inverted dQ/dV sensitivity.",
+      "TLTC": "Transformer tap limit tolerance, in percent.",
+      "TLVC": "Controlled voltage tolerance, in percent.",
+      "TRPT": "Percentage of active generation transferred while building the security region.",
+      "TSBA": "Tolerance for small active-power flow variations in external system circuits, in MW.",
+      "TSBZ": "Tolerance for null active-power flow variation detection in external system circuits, in MW.",
+      "TSDC": "Maximum DC link converter tap correction during the solution process.",
+      "TSFR": "Tolerance for physical electrical-network separation detection.",
+      "TSTP": "Number of discrete tap transformer steps.",
+      "TUDC": "DC bus voltage mismatch convergence tolerance, in percent.",
+      "VART": "Voltage variation threshold for automatic monitoring in continuation power flow.",
+      "VAVF": "Flow variation criterion based on nominal loading for complementary network determination.",
+      "VAVT": "Voltage variation criterion for complementary network determination.",
+      "VDVM": "Maximum voltage for automatic case divergence test, in percent.",
+      "VDVN": "Minimum voltage for automatic case divergence test, in percent.",
+      "VFLD": "Voltage below which constant-power functional loads are modeled as constant impedance, in percent.",
+      "VINF": "Variation used to define lower report-band limits for RFXC and RFXS.",
+      "VMVF": "Flow variation criterion for complementary network determination, in MW.",
+      "VPMF": "Flow variation criterion for the simulation network first criterion, in MW.",
+      "VPVF": "Flow variation criterion based on nominal loading for the simulation network first criterion.",
+      "VPVT": "Voltage variation criterion for the simulation network first criterion.",
+      "VSIT": "Maximum iterations for DC bus voltage adjustment.",
+      "VSTP": "Maximum voltage magnitude correction during the solution process, in percent.",
+      "VSUP": "Variation used to define upper report-band limits for RFXC and RFXS.",
+      "VSVF": "Flow variation criterion based on nominal loading for the simulation network second criterion.",
+      "ZMAX": "Impedance limit above which equivalent circuits are neglected, in percent.",
+      "ZMIN": "Minimum AC circuit impedance magnitude, in percent."
+    },
+    "fields": {
+      "mnemonic": {
+        "column": {
+          "end": 4,
+          "start": 1
+        },
+        "default": "",
+        "description": "Constant mnemonic to be modified before execution of codes that use it."
+      },
+      "value": {
+        "column": {
+          "end": 12,
+          "start": 7
+        },
+        "default": 0.0,
+        "description": "New value associated with the DCTE constant mnemonic."
+      }
+    },
+    "function": "Reading and modification of program constants. Records are represented by repeated mnemonic/value pairs."
+  },
   "DCTR": {
     "fields": {
       "curve_id": {
@@ -946,6 +1324,88 @@
     },
     "function": "Reading of complementary transformer data for LTC transformers with voltage-band control and phase-shifting transformers with automatic phase variation."
   },
+  "DELO": {
+    "fields": {
+      "himvar_mode": {
+        "column": {
+          "end": 41,
+          "start": 41
+        },
+        "default": "N",
+        "description": "DC link operating mode selector: N for normal operation, or H for HiMVAr Consumption mode."
+      },
+      "name": {
+        "column": {
+          "end": 39,
+          "start": 20
+        },
+        "default": "",
+        "description": "Alphanumeric identification of the DC link name."
+      },
+      "number": {
+        "column": {
+          "end": 4,
+          "start": 1
+        },
+        "default": "",
+        "description": "DC link identification number."
+      },
+      "operation": {
+        "column": {
+          "end": 6,
+          "start": 6
+        },
+        "default": "A",
+        "description": "A or 0 - DC link data addition. M or 2 - DC link data modification."
+      },
+      "power_base": {
+        "column": {
+          "end": 18,
+          "start": 14
+        },
+        "default": "DASE constant base",
+        "description": "DC link power base, in MW."
+      },
+      "state": {
+        "column": {
+          "end": 43,
+          "start": 43
+        },
+        "default": "L",
+        "description": "L if the DC link is in operation. D if the DC link is out of operation."
+      },
+      "voltage": {
+        "column": {
+          "end": 12,
+          "start": 8
+        },
+        "default": "",
+        "description": "Nominal DC link operating voltage, in kV."
+      }
+    },
+    "function": "Reading of DC link data."
+  },
+  "DGBT": {
+    "fields": {
+      "group": {
+        "column": {
+          "end": 2,
+          "start": 1
+        },
+        "default": 0,
+        "description": "Voltage base group identifier, as defined in the Voltage Base Group field of the DBAR execution code."
+      },
+      "voltage": {
+        "column": {
+          "end": 8,
+          "start": 4
+        },
+        "default": 1.0,
+        "description": "Base voltage associated with the group, in kV."
+      }
+    },
+    "function": "Reading of AC bus voltage base group data."
+  },
   "DGER": {
     "fields": {
       "armature_service_factor": {
@@ -962,7 +1422,7 @@
           "start": 51
         },
         "default": "",
-        "description": "Maximum load angle (0.0 – 85.0), in degrees."
+        "description": "Maximum load angle (0.0 \u2013 85.0), in degrees."
       },
       "machine_reactance": {
         "column": {
@@ -1046,6 +1506,51 @@
       }
     },
     "function": "Reading of active power generation limits and participation factors."
+  },
+  "DGLT": {
+    "fields": {
+      "emergency_maximum_voltage_limit": {
+        "column": {
+          "end": 26,
+          "start": 22
+        },
+        "default": "Maximum voltage limit",
+        "description": "Maximum voltage limit, in p.u., associated with the voltage limit group under emergency conditions."
+      },
+      "emergency_minimum_voltage_limit": {
+        "column": {
+          "end": 20,
+          "start": 16
+        },
+        "default": "Minimum voltage limit",
+        "description": "Minimum voltage limit, in p.u., associated with the voltage limit group under emergency conditions."
+      },
+      "group": {
+        "column": {
+          "end": 2,
+          "start": 1
+        },
+        "default": "",
+        "description": "Voltage limit group identifier, as defined in the Voltage Limit Group field of the DBAR execution code."
+      },
+      "maximum_voltage_limit": {
+        "column": {
+          "end": 14,
+          "start": 10
+        },
+        "default": 1.2,
+        "description": "Maximum voltage limit, in p.u., associated with the voltage limit group."
+      },
+      "minimum_voltage_limit": {
+        "column": {
+          "end": 8,
+          "start": 4
+        },
+        "default": 0.8,
+        "description": "Minimum voltage limit, in p.u., associated with the voltage limit group."
+      }
+    },
+    "function": "Reading of voltage limit group data."
   },
   "DLIN": {
     "fields": {
@@ -1212,6 +1717,40 @@
     },
     "function": "Reading of AC circuits (lines & transformers)."
   },
+  "DOPC": {
+    "fields": {
+      "option": {
+        "column": {
+          "end": 4,
+          "start": 1
+        },
+        "default": "",
+        "description": "Power-flow execution option mnemonic. Examples include QLIM, CREM, STEP, NEWT, MOST, MOSG, MOSF, RCVG, RMON, FILE, CONT, CELO and MFCT."
+      },
+      "state": {
+        "column": {
+          "end": 6,
+          "start": 6
+        },
+        "default": "L",
+        "description": "Option activation state. L indicates that the execution option is enabled."
+      }
+    },
+    "function": "Reading of power-flow execution options. Records are represented by repeated option/state pairs.",
+    "options": {
+      "CELO": "Activates simultaneous Newton-Raphson solution of AC-DC link equations.",
+      "CONT": "Prints terminal reports continuously without pagination pauses.",
+      "MOCF": "Monitors MVA power flow on all system circuits.",
+      "MOCG": "Monitors reactive generation on all AC generator buses.",
+      "MOCT": "Monitors voltage on all AC buses.",
+      "MOSF": "Monitors only selected AC circuit flows.",
+      "MOSG": "Monitors only selected AC generator reactive outputs.",
+      "MOST": "Monitors only selected AC bus voltages.",
+      "NEWT": "Solves the nonlinear power-flow equations with Newton-Raphson instead of fast decoupled power flow.",
+      "RCVG": "Prints iterative convergence reports for AC, DC and AC-DC interface solutions.",
+      "STEP": "Limits voltage angle, voltage magnitude and CSC susceptance corrections during iterations."
+    }
+  },
   "DSHL": {
     "fields": {
       "dshl_circuit": {
@@ -1281,497 +1820,8 @@
     },
     "function": "Reading of AC circuit shunt device data. This code allows associating shunt devices to AC network circuits to facilitate fault simulation. These devices are automatically removed or inserted together with the associated circuit."
   },
-  "DCCV": {
-    "fields": {
-      "converter_angle": {
-        "column": {
-          "end": 34,
-          "start": 30
-        },
-        "default": 0.0,
-        "description": "Desired firing angle for a rectifier, extinction angle for a conventional inverter, or commutation margin for a CCC inverter, in degrees."
-      },
-      "converter_control_type": {
-        "column": {
-          "end": 10,
-          "start": 10
-        },
-        "default": "",
-        "description": "Converter control type: C for constant-current control, or P for constant-power control."
-      },
-      "current_margin": {
-        "column": {
-          "end": 22,
-          "start": 18
-        },
-        "default": 10.0,
-        "description": "Inverter current margin, in percent of the nominal current defined in the DCNV Current field. This field is not considered for rectifiers."
-      },
-      "dc_voltage_minimum_for_power_control": {
-        "column": {
-          "end": 66,
-          "start": 63
-        },
-        "default": 0.0,
-        "description": "Minimum DC voltage, in p.u., below which a converter in power control changes to current control. Implicit decimal point between columns 63 and 64."
-      },
-      "inverter_control_mode": {
-        "column": {
-          "end": 9,
-          "start": 9
-        },
-        "default": "",
-        "description": "Inverter control mode for CCC inverters: G for gamma control, or T for AC interface bus voltage control."
-      },
-      "maximum_converter_angle": {
-        "column": {
-          "end": 46,
-          "start": 42
-        },
-        "default": 0.0,
-        "description": "Maximum firing angle for a rectifier, extinction angle for a conventional inverter, or commutation margin for a CCC inverter, in degrees."
-      },
-      "maximum_overcurrent": {
-        "column": {
-          "end": 28,
-          "start": 24
-        },
-        "default": 9999.0,
-        "description": "Maximum overcurrent allowed for the converter, in percent of the nominal current defined in the DCNV Current field. This field is not considered for rectifiers."
-      },
-      "maximum_transformer_tap": {
-        "column": {
-          "end": 58,
-          "start": 54
-        },
-        "default": "",
-        "description": "Maximum tap value of the converter transformer."
-      },
-      "minimum_converter_angle": {
-        "column": {
-          "end": 40,
-          "start": 36
-        },
-        "default": 0.0,
-        "description": "Minimum firing angle for a rectifier, extinction angle for a conventional inverter, or commutation margin for a CCC inverter, in degrees."
-      },
-      "minimum_transformer_tap": {
-        "column": {
-          "end": 52,
-          "start": 48
-        },
-        "default": "",
-        "description": "Minimum tap value of the converter transformer."
-      },
-      "number": {
-        "column": {
-          "end": 4,
-          "start": 1
-        },
-        "default": "",
-        "description": "Converter identification number, as defined in the Number field of the DCNV execution code."
-      },
-      "operation": {
-        "column": {
-          "end": 6,
-          "start": 6
-        },
-        "default": "A",
-        "description": "A or 0 - converter control data addition. E or 1 - converter control data elimination. M or 2 - converter control data modification."
-      },
-      "slack": {
-        "column": {
-          "end": 8,
-          "start": 8
-        },
-        "default": "N",
-        "description": "F for a slack converter, or N for a normal converter. One slack converter must be specified for each pole of the DC link."
-      },
-      "specified_value": {
-        "column": {
-          "end": 16,
-          "start": 12
-        },
-        "default": "",
-        "description": "Specified converter control value, in A for current control or MW for power control."
-      },
-      "tap_himvar_mode": {
-        "column": {
-          "end": 72,
-          "start": 68
-        },
-        "default": "",
-        "description": "Converter transformer tap used when the DC link operates in HiMVAr Consumption mode, as defined in the DELO HiMVAr Mode field."
-      },
-      "tap_reduced_voltage_mode": {
-        "column": {
-          "end": 78,
-          "start": 74
-        },
-        "default": "Maximum transformer tap minus one step, or 1.0 when the tap step is not available",
-        "description": "Converter transformer tap used when the DC link operates in reduced-voltage mode."
-      },
-      "transformer_tap_steps": {
-        "column": {
-          "end": 61,
-          "start": 60
-        },
-        "default": "Infinity",
-        "description": "Number of converter transformer tap steps. The tap step is calculated by dividing the difference between maximum and minimum transformer taps by this number of steps."
-      }
-    },
-    "function": "Reading of AC-DC converter control data."
-  },
-  "DCBA": {
-    "fields": {
-      "dc_link_number": {
-        "column": {
-          "end": 75,
-          "start": 72
-        },
-        "default": 0,
-        "description": "DC link number, as defined in the Number field of the DELO execution code. All buses of the same pole or bipole must belong to the same DC link."
-      },
-      "ground_electrode_resistance": {
-        "column": {
-          "end": 71,
-          "start": 67
-        },
-        "default": 1.0,
-        "description": "Ground electrode resistance, in ohms, for a neutral bus. This field must not be filled for positive- or negative-polarity buses."
-      },
-      "name": {
-        "column": {
-          "end": 21,
-          "start": 10
-        },
-        "default": "",
-        "description": "Alphanumeric identification of the DC bus."
-      },
-      "number": {
-        "column": {
-          "end": 4,
-          "start": 1
-        },
-        "default": "",
-        "description": "DC bus identification number."
-      },
-      "operation": {
-        "column": {
-          "end": 6,
-          "start": 6
-        },
-        "default": "A",
-        "description": "A or 0 - DC bus data addition. M or 2 - DC bus data modification."
-      },
-      "polarity": {
-        "column": {
-          "end": 9,
-          "start": 9
-        },
-        "default": "0",
-        "description": "+ indicates that the bus belongs to the positive pole. - indicates that the bus belongs to the negative pole. 0 indicates a neutral bus."
-      },
-      "type": {
-        "column": {
-          "end": 8,
-          "start": 8
-        },
-        "default": 0,
-        "description": "0 - bus without specified voltage. 1 - bus with specified voltage, used as a reference bus. One type-1 bus must be specified for each pole of each DC link."
-      },
-      "voltage": {
-        "column": {
-          "end": 28,
-          "start": 24
-        },
-        "default": "",
-        "description": "Initial voltage magnitude of the DC bus, in kV. For type-1 buses this field contains the voltage value to be held constant."
-      },
-      "voltage_limit_group": {
-        "column": {
-          "end": 23,
-          "start": 22
-        },
-        "default": 0,
-        "description": "Voltage limit group identifier associated with the DC bus."
-      }
-    },
-    "function": "Reading of DC bus data."
-  },
-  "DCLI": {
-    "fields": {
-      "capacity": {
-        "column": {
-          "end": 64,
-          "start": 61
-        },
-        "default": 0.0,
-        "description": "DC line loading capacity, in MW, for flow monitoring purposes."
-      },
-      "dcli_circuit": {
-        "column": {
-          "end": 14,
-          "start": 13
-        },
-        "default": "",
-        "description": "Identification number of the parallel DC line."
-      },
-      "from_bus": {
-        "column": {
-          "end": 4,
-          "start": 1
-        },
-        "default": "",
-        "description": "Number of the DC bus at one end of the DC line, as defined in the Number field of the DCBA execution code."
-      },
-      "inductance": {
-        "column": {
-          "end": 29,
-          "start": 24
-        },
-        "default": 0.0,
-        "description": "DC line inductance, in mH."
-      },
-      "operation": {
-        "column": {
-          "end": 6,
-          "start": 6
-        },
-        "default": "A",
-        "description": "A or 0 - DC line data addition. M or 2 - DC line data modification."
-      },
-      "owner": {
-        "column": {
-          "end": 16,
-          "start": 16
-        },
-        "default": "",
-        "description": "Owner flag. This field is not used in this version."
-      },
-      "resistance": {
-        "column": {
-          "end": 23,
-          "start": 18
-        },
-        "default": "",
-        "description": "DC line resistance, in ohms."
-      },
-      "to_bus": {
-        "column": {
-          "end": 12,
-          "start": 9
-        },
-        "default": "",
-        "description": "Number of the DC bus at the other end of the DC line, as defined in the Number field of the DCBA execution code."
-      }
-    },
-    "function": "Reading of DC line data."
-  },
-  "DCNV": {
-    "fields": {
-      "ac_bus": {
-        "column": {
-          "end": 12,
-          "start": 8
-        },
-        "default": "",
-        "description": "AC bus number to which the converter is connected, as defined in the Number field of the DBAR execution code."
-      },
-      "ccc_capacitance": {
-        "column": {
-          "end": 68,
-          "start": 64
-        },
-        "default": 0.0,
-        "description": "CCC capacitance, in microfarads."
-      },
-      "commutation_reactance": {
-        "column": {
-          "end": 38,
-          "start": 34
-        },
-        "default": "",
-        "description": "Commutation reactance per six-pulse bridge, in percent on the converter transformer power base."
-      },
-      "dc_bus": {
-        "column": {
-          "end": 17,
-          "start": 14
-        },
-        "default": "",
-        "description": "DC bus number to which the converter is connected, as defined in the Number field of the DCBA execution code."
-      },
-      "frequency": {
-        "column": {
-          "end": 71,
-          "start": 70
-        },
-        "default": 60,
-        "description": "Frequency, in Hz, of the AC system to which the CCC is connected."
-      },
-      "mode": {
-        "column": {
-          "end": 24,
-          "start": 24
-        },
-        "default": "",
-        "description": "Converter operating mode: R for rectifier, or I for inverter."
-      },
-      "neutral_bus": {
-        "column": {
-          "end": 22,
-          "start": 19
-        },
-        "default": "",
-        "description": "Neutral DC bus number to which the converter is connected, as defined in the Number field of the DCBA execution code."
-      },
-      "number": {
-        "column": {
-          "end": 4,
-          "start": 1
-        },
-        "default": "",
-        "description": "Converter identification number."
-      },
-      "operation": {
-        "column": {
-          "end": 6,
-          "start": 6
-        },
-        "default": "A",
-        "description": "A or 0 - converter data addition. M or 2 - converter data modification."
-      },
-      "reactor_inductance": {
-        "column": {
-          "end": 62,
-          "start": 58
-        },
-        "default": 0.0,
-        "description": "Smoothing reactor inductance, in mH."
-      },
-      "reactor_resistance": {
-        "column": {
-          "end": 56,
-          "start": 52
-        },
-        "default": "",
-        "description": "Smoothing reactor resistance, in ohms."
-      },
-      "secondary_voltage": {
-        "column": {
-          "end": 44,
-          "start": 40
-        },
-        "default": "",
-        "description": "Line-to-line base voltage of the secondary side of the six-pulse bridge converter transformer, in kV."
-      },
-      "six_pulse_bridges": {
-        "column": {
-          "end": 26,
-          "start": 26
-        },
-        "default": "",
-        "description": "Number of six-pulse converter bridges."
-      },
-      "transformer_power": {
-        "column": {
-          "end": 50,
-          "start": 46
-        },
-        "default": "",
-        "description": "Power base of the six-pulse bridge converter transformer, in MVA."
-      },
-      "current": {
-        "column": {
-          "end": 32,
-          "start": 28
-        },
-        "default": "",
-        "description": "Nominal converter current, in A."
-      }
-    },
-    "function": "Reading of AC-DC converter data."
-  },
-  "DELO": {
-    "fields": {
-      "himvar_mode": {
-        "column": {
-          "end": 41,
-          "start": 41
-        },
-        "default": "N",
-        "description": "DC link operating mode selector: N for normal operation, or H for HiMVAr Consumption mode."
-      },
-      "name": {
-        "column": {
-          "end": 39,
-          "start": 20
-        },
-        "default": "",
-        "description": "Alphanumeric identification of the DC link name."
-      },
-      "number": {
-        "column": {
-          "end": 4,
-          "start": 1
-        },
-        "default": "",
-        "description": "DC link identification number."
-      },
-      "operation": {
-        "column": {
-          "end": 6,
-          "start": 6
-        },
-        "default": "A",
-        "description": "A or 0 - DC link data addition. M or 2 - DC link data modification."
-      },
-      "power_base": {
-        "column": {
-          "end": 18,
-          "start": 14
-        },
-        "default": "DASE constant base",
-        "description": "DC link power base, in MW."
-      },
-      "state": {
-        "column": {
-          "end": 43,
-          "start": 43
-        },
-        "default": "L",
-        "description": "L if the DC link is in operation. D if the DC link is out of operation."
-      },
-      "voltage": {
-        "column": {
-          "end": 12,
-          "start": 8
-        },
-        "default": "",
-        "description": "Nominal DC link operating voltage, in kV."
-      }
-    },
-    "function": "Reading of DC link data."
-  },
   "DTPF": {
     "fields": {
-      "element_type_1": {
-        "column": {
-          "end": 4,
-          "start": 1
-        },
-        "default": "",
-        "description": "First element type. BARR specifies a bus, AREA an area, TENS a voltage base, and AG01 through AG10 an aggregator."
-      },
-      "element_id_1": {
-        "column": {
-          "end": 10,
-          "start": 6
-        },
-        "default": "",
-        "description": "Identifier of the first element: bus number, area number, voltage base, or aggregator identifier."
-      },
       "condition_1": {
         "column": {
           "end": 12,
@@ -1779,46 +1829,6 @@
         },
         "default": "",
         "description": "First condition operator. A specifies an interval condition. E specifies a union condition."
-      },
-      "element_type_2": {
-        "column": {
-          "end": 17,
-          "start": 14
-        },
-        "default": "",
-        "description": "Second element type. BARR specifies a bus, AREA an area, TENS a voltage base, and AG01 through AG10 an aggregator."
-      },
-      "element_id_2": {
-        "column": {
-          "end": 23,
-          "start": 19
-        },
-        "default": "",
-        "description": "Identifier of the second element: bus number, area number, voltage base, or aggregator identifier."
-      },
-      "main_condition": {
-        "column": {
-          "end": 25,
-          "start": 25
-        },
-        "default": "",
-        "description": "Main condition between the sets defined by conditions 1 and 2. X means difference, E union, and S intersection."
-      },
-      "element_type_3": {
-        "column": {
-          "end": 30,
-          "start": 27
-        },
-        "default": "",
-        "description": "Third element type. BARR specifies a bus, AREA an area, TENS a voltage base, and AG01 through AG10 an aggregator."
-      },
-      "element_id_3": {
-        "column": {
-          "end": 36,
-          "start": 32
-        },
-        "default": "",
-        "description": "Identifier of the third element: bus number, area number, voltage base, or aggregator identifier."
       },
       "condition_2": {
         "column": {
@@ -1828,13 +1838,29 @@
         "default": "",
         "description": "Second condition operator. A specifies an interval condition. E specifies a union condition."
       },
-      "element_type_4": {
+      "element_id_1": {
         "column": {
-          "end": 43,
-          "start": 40
+          "end": 10,
+          "start": 6
         },
         "default": "",
-        "description": "Fourth element type. BARR specifies a bus, AREA an area, TENS a voltage base, and AG01 through AG10 an aggregator."
+        "description": "Identifier of the first element: bus number, area number, voltage base, or aggregator identifier."
+      },
+      "element_id_2": {
+        "column": {
+          "end": 23,
+          "start": 19
+        },
+        "default": "",
+        "description": "Identifier of the second element: bus number, area number, voltage base, or aggregator identifier."
+      },
+      "element_id_3": {
+        "column": {
+          "end": 36,
+          "start": 32
+        },
+        "default": "",
+        "description": "Identifier of the third element: bus number, area number, voltage base, or aggregator identifier."
       },
       "element_id_4": {
         "column": {
@@ -1844,13 +1870,37 @@
         "default": "",
         "description": "Identifier of the fourth element: bus number, area number, voltage base, or aggregator identifier."
       },
-      "operation": {
+      "element_type_1": {
         "column": {
-          "end": 51,
-          "start": 51
+          "end": 4,
+          "start": 1
         },
-        "default": "A",
-        "description": "A - addition of fixed CTAP-control data. E - elimination of fixed CTAP-control data."
+        "default": "",
+        "description": "First element type. BARR specifies a bus, AREA an area, TENS a voltage base, and AG01 through AG10 an aggregator."
+      },
+      "element_type_2": {
+        "column": {
+          "end": 17,
+          "start": 14
+        },
+        "default": "",
+        "description": "Second element type. BARR specifies a bus, AREA an area, TENS a voltage base, and AG01 through AG10 an aggregator."
+      },
+      "element_type_3": {
+        "column": {
+          "end": 30,
+          "start": 27
+        },
+        "default": "",
+        "description": "Third element type. BARR specifies a bus, AREA an area, TENS a voltage base, and AG01 through AG10 an aggregator."
+      },
+      "element_type_4": {
+        "column": {
+          "end": 43,
+          "start": 40
+        },
+        "default": "",
+        "description": "Fourth element type. BARR specifies a bus, AREA an area, TENS a voltage base, and AG01 through AG10 an aggregator."
       },
       "interconnection": {
         "column": {
@@ -1859,28 +1909,28 @@
         },
         "default": "T",
         "description": "T fixes automatic tap voltage control for all selected transformers. I fixes only selected interconnection circuits."
+      },
+      "main_condition": {
+        "column": {
+          "end": 25,
+          "start": 25
+        },
+        "default": "",
+        "description": "Main condition between the sets defined by conditions 1 and 2. X means difference, E union, and S intersection."
+      },
+      "operation": {
+        "column": {
+          "end": 51,
+          "start": 51
+        },
+        "default": "A",
+        "description": "A - addition of fixed CTAP-control data. E - elimination of fixed CTAP-control data."
       }
     },
     "function": "Reading of fixed data for automatic tap voltage-control application (CTAP) by selected element sets."
   },
   "DTPF_CIRC": {
     "fields": {
-      "from_bus_1": {
-        "column": {
-          "end": 5,
-          "start": 1
-        },
-        "default": "",
-        "description": "From bus of the first selected circuit."
-      },
-      "to_bus_1": {
-        "column": {
-          "end": 11,
-          "start": 7
-        },
-        "default": "",
-        "description": "To bus of the first selected circuit."
-      },
       "circuit_1": {
         "column": {
           "end": 14,
@@ -1888,22 +1938,6 @@
         },
         "default": "",
         "description": "Identification number of the first selected parallel AC circuit."
-      },
-      "from_bus_2": {
-        "column": {
-          "end": 20,
-          "start": 16
-        },
-        "default": "",
-        "description": "From bus of the second selected circuit."
-      },
-      "to_bus_2": {
-        "column": {
-          "end": 26,
-          "start": 22
-        },
-        "default": "",
-        "description": "To bus of the second selected circuit."
       },
       "circuit_2": {
         "column": {
@@ -1913,22 +1947,6 @@
         "default": "",
         "description": "Identification number of the second selected parallel AC circuit."
       },
-      "from_bus_3": {
-        "column": {
-          "end": 35,
-          "start": 31
-        },
-        "default": "",
-        "description": "From bus of the third selected circuit."
-      },
-      "to_bus_3": {
-        "column": {
-          "end": 41,
-          "start": 37
-        },
-        "default": "",
-        "description": "To bus of the third selected circuit."
-      },
       "circuit_3": {
         "column": {
           "end": 44,
@@ -1936,22 +1954,6 @@
         },
         "default": "",
         "description": "Identification number of the third selected parallel AC circuit."
-      },
-      "from_bus_4": {
-        "column": {
-          "end": 50,
-          "start": 46
-        },
-        "default": "",
-        "description": "From bus of the fourth selected circuit."
-      },
-      "to_bus_4": {
-        "column": {
-          "end": 56,
-          "start": 52
-        },
-        "default": "",
-        "description": "To bus of the fourth selected circuit."
       },
       "circuit_4": {
         "column": {
@@ -1961,22 +1963,6 @@
         "default": "",
         "description": "Identification number of the fourth selected parallel AC circuit."
       },
-      "from_bus_5": {
-        "column": {
-          "end": 65,
-          "start": 61
-        },
-        "default": "",
-        "description": "From bus of the fifth selected circuit."
-      },
-      "to_bus_5": {
-        "column": {
-          "end": 71,
-          "start": 67
-        },
-        "default": "",
-        "description": "To bus of the fifth selected circuit."
-      },
       "circuit_5": {
         "column": {
           "end": 74,
@@ -1985,6 +1971,46 @@
         "default": "",
         "description": "Identification number of the fifth selected parallel AC circuit."
       },
+      "from_bus_1": {
+        "column": {
+          "end": 5,
+          "start": 1
+        },
+        "default": "",
+        "description": "From bus of the first selected circuit."
+      },
+      "from_bus_2": {
+        "column": {
+          "end": 20,
+          "start": 16
+        },
+        "default": "",
+        "description": "From bus of the second selected circuit."
+      },
+      "from_bus_3": {
+        "column": {
+          "end": 35,
+          "start": 31
+        },
+        "default": "",
+        "description": "From bus of the third selected circuit."
+      },
+      "from_bus_4": {
+        "column": {
+          "end": 50,
+          "start": 46
+        },
+        "default": "",
+        "description": "From bus of the fourth selected circuit."
+      },
+      "from_bus_5": {
+        "column": {
+          "end": 65,
+          "start": 61
+        },
+        "default": "",
+        "description": "From bus of the fifth selected circuit."
+      },
       "operation": {
         "column": {
           "end": 76,
@@ -1992,75 +2018,49 @@
         },
         "default": "A",
         "description": "A - addition of fixed CTAP-control data. E - elimination of fixed CTAP-control data."
-      }
-    },
-    "function": "Reading of fixed data for automatic tap voltage-control application (CTAP) by explicitly selected circuits when DTPF CIRC is active."
-  },
-  "DGBT": {
-    "fields": {
-      "group": {
-        "column": {
-          "end": 2,
-          "start": 1
-        },
-        "default": 0,
-        "description": "Voltage base group identifier, as defined in the Voltage Base Group field of the DBAR execution code."
       },
-      "voltage": {
+      "to_bus_1": {
         "column": {
-          "end": 8,
-          "start": 4
+          "end": 11,
+          "start": 7
         },
-        "default": 1.0,
-        "description": "Base voltage associated with the group, in kV."
-      }
-    },
-    "function": "Reading of AC bus voltage base group data."
-  },
-  "DGLT": {
-    "fields": {
-      "emergency_maximum_voltage_limit": {
+        "default": "",
+        "description": "To bus of the first selected circuit."
+      },
+      "to_bus_2": {
         "column": {
           "end": 26,
           "start": 22
         },
-        "default": "Maximum voltage limit",
-        "description": "Maximum voltage limit, in p.u., associated with the voltage limit group under emergency conditions."
+        "default": "",
+        "description": "To bus of the second selected circuit."
       },
-      "emergency_minimum_voltage_limit": {
+      "to_bus_3": {
         "column": {
-          "end": 20,
-          "start": 16
-        },
-        "default": "Minimum voltage limit",
-        "description": "Minimum voltage limit, in p.u., associated with the voltage limit group under emergency conditions."
-      },
-      "group": {
-        "column": {
-          "end": 2,
-          "start": 1
+          "end": 41,
+          "start": 37
         },
         "default": "",
-        "description": "Voltage limit group identifier, as defined in the Voltage Limit Group field of the DBAR execution code."
+        "description": "To bus of the third selected circuit."
       },
-      "maximum_voltage_limit": {
+      "to_bus_4": {
         "column": {
-          "end": 14,
-          "start": 10
+          "end": 56,
+          "start": 52
         },
-        "default": 1.2,
-        "description": "Maximum voltage limit, in p.u., associated with the voltage limit group."
+        "default": "",
+        "description": "To bus of the fourth selected circuit."
       },
-      "minimum_voltage_limit": {
+      "to_bus_5": {
         "column": {
-          "end": 8,
-          "start": 4
+          "end": 71,
+          "start": 67
         },
-        "default": 0.8,
-        "description": "Minimum voltage limit, in p.u., associated with the voltage limit group."
+        "default": "",
+        "description": "To bus of the fifth selected circuit."
       }
     },
-    "function": "Reading of voltage limit group data."
+    "function": "Reading of fixed data for automatic tap voltage-control application (CTAP) by explicitly selected circuits when DTPF CIRC is active."
   },
   "TITU": {
     "fields": {
@@ -2076,6 +2076,290 @@
     "function": "System title and description information."
   },
   "_dat": {
+    "field_order": {
+      "DARE": [
+        "area_number",
+        "net_interchange",
+        "name",
+        "minimum_net_interchange",
+        "maximum_net_interchange"
+      ],
+      "DBAR": [
+        "number",
+        "name",
+        "type",
+        "area",
+        "voltage",
+        "angle",
+        "active_generation",
+        "reactive_generation",
+        "max_reactive_generation",
+        "min_reactive_generation",
+        "controlled_bus",
+        "active_load",
+        "reactive_load",
+        "capacitor_reactor",
+        "voltage_base_group",
+        "voltage_limit_group",
+        "voltage_for_load_definition",
+        "visualization_mode",
+        "state",
+        "operation"
+      ],
+      "DBSH": [
+        "from_bus",
+        "operation",
+        "to_bus",
+        "dbsh_circuit",
+        "control_mode",
+        "minimum_voltage",
+        "maximum_voltage",
+        "controlled_bus",
+        "initial_reactive_injection",
+        "control_type",
+        "clear_dbar_data",
+        "extremity_bus"
+      ],
+      "DBSH_BANK": [
+        "parent_record_index",
+        "bank_number",
+        "operation",
+        "state",
+        "total_units",
+        "units_in_operation",
+        "reactive_power_per_unit"
+      ],
+      "DCAI": [
+        "bus",
+        "operation",
+        "group",
+        "state",
+        "total_units",
+        "units_in_operation",
+        "active_power",
+        "reactive_power",
+        "parameter_a",
+        "parameter_b",
+        "parameter_c",
+        "parameter_d",
+        "voltage_limit",
+        "voltage_for_load_definition"
+      ],
+      "DCBA": [
+        "number",
+        "operation",
+        "type",
+        "polarity",
+        "name",
+        "voltage_limit_group",
+        "voltage",
+        "ground_electrode_resistance",
+        "dc_link_number"
+      ],
+      "DCCV": [
+        "number",
+        "operation",
+        "slack",
+        "inverter_control_mode",
+        "converter_control_type",
+        "specified_value",
+        "current_margin",
+        "maximum_overcurrent",
+        "converter_angle",
+        "minimum_converter_angle",
+        "maximum_converter_angle",
+        "minimum_transformer_tap",
+        "maximum_transformer_tap",
+        "transformer_tap_steps",
+        "dc_voltage_minimum_for_power_control",
+        "tap_himvar_mode",
+        "tap_reduced_voltage_mode"
+      ],
+      "DCER": [
+        "bus",
+        "operation",
+        "group",
+        "units",
+        "controlled_bus",
+        "slope",
+        "reactive_generation",
+        "min_reactive_generation",
+        "max_reactive_generation",
+        "control_mode",
+        "state"
+      ],
+      "DCLI": [
+        "from_bus",
+        "operation",
+        "to_bus",
+        "dcli_circuit",
+        "owner",
+        "resistance",
+        "inductance",
+        "capacity"
+      ],
+      "DCNV": [
+        "number",
+        "operation",
+        "ac_bus",
+        "dc_bus",
+        "neutral_bus",
+        "mode",
+        "six_pulse_bridges",
+        "current",
+        "commutation_reactance",
+        "secondary_voltage",
+        "transformer_power",
+        "reactor_resistance",
+        "reactor_inductance",
+        "ccc_capacitance",
+        "frequency"
+      ],
+      "DCSC": [
+        "from_bus",
+        "to_bus",
+        "dcsc_circuit",
+        "operation",
+        "state",
+        "owner",
+        "bypass",
+        "min_reactance",
+        "max_reactance",
+        "initial_reactance",
+        "control_mode",
+        "specified_value",
+        "measurement_terminal",
+        "number_of_stages",
+        "dcsc_capacity"
+      ],
+      "DCTE": [
+        "mnemonic",
+        "value"
+      ],
+      "DCTR": [
+        "from_bus",
+        "operation",
+        "to_bus",
+        "dctr_circuit",
+        "minimum_voltage",
+        "maximum_voltage",
+        "voltage_control_type",
+        "phase_mode",
+        "minimum_phase_shift",
+        "maximum_phase_shift",
+        "phase_control_type",
+        "specified_value",
+        "measurement_terminal",
+        "number_of_taps",
+        "curve_id"
+      ],
+      "DELO": [
+        "number",
+        "operation",
+        "voltage",
+        "power_base",
+        "name",
+        "himvar_mode",
+        "state"
+      ],
+      "DGBT": [
+        "group",
+        "voltage"
+      ],
+      "DGER": [
+        "number",
+        "operation",
+        "min_active_generation",
+        "max_active_generation",
+        "participation_factor",
+        "remote_control_participation_factor",
+        "nominal_power_factor",
+        "armature_service_factor",
+        "rotor_service_factor",
+        "load_angle",
+        "machine_reactance",
+        "nominal_apparent_power"
+      ],
+      "DGLT": [
+        "group",
+        "minimum_voltage_limit",
+        "maximum_voltage_limit",
+        "emergency_minimum_voltage_limit",
+        "emergency_maximum_voltage_limit"
+      ],
+      "DLIN": [
+        "from_bus",
+        "to_bus",
+        "dlin_circuit",
+        "from_bus_opening",
+        "to_bus_opening",
+        "operation",
+        "state",
+        "owner",
+        "resistance",
+        "reactance",
+        "susceptance",
+        "tap",
+        "tap_minimum",
+        "tap_maximum",
+        "phase_shift",
+        "controlled_bus",
+        "normal_capacity",
+        "emergency_capacity",
+        "number_of_taps",
+        "equipment_capacity"
+      ],
+      "DOPC": [
+        "option",
+        "state"
+      ],
+      "DSHL": [
+        "from_bus",
+        "operation",
+        "to_bus",
+        "dshl_circuit",
+        "shunt_from",
+        "shunt_to",
+        "state_from",
+        "state_to"
+      ],
+      "DTPF": [
+        "element_type_1",
+        "element_id_1",
+        "condition_1",
+        "element_type_2",
+        "element_id_2",
+        "main_condition",
+        "element_type_3",
+        "element_id_3",
+        "condition_2",
+        "element_type_4",
+        "element_id_4",
+        "operation",
+        "interconnection"
+      ],
+      "DTPF_CIRC": [
+        "from_bus_1",
+        "to_bus_1",
+        "circuit_1",
+        "from_bus_2",
+        "to_bus_2",
+        "circuit_2",
+        "from_bus_3",
+        "to_bus_3",
+        "circuit_3",
+        "from_bus_4",
+        "to_bus_4",
+        "circuit_4",
+        "from_bus_5",
+        "to_bus_5",
+        "circuit_5",
+        "operation"
+      ],
+      "TITU": [
+        "title_line"
+      ]
+    },
     "name_aliases": {
       "ac_bus": "Bac",
       "active_generation": "Pg",
@@ -2089,35 +2373,32 @@
       "capacitor_reactor": "Sh",
       "capacity": "Cap",
       "ccc_capacitance": "CCC",
-      "clear_dbar_data": "Clr",
-      "commutation_reactance": "Xc",
-      "control_mode": "Ctrl",
-      "control_type": "TCtrl",
-      "condition_1": "Cond1",
-      "condition_2": "Cond2",
-      "controlled_bus": "Bctrl",
-      "converter_angle": "Ang",
-      "converter_control_type": "TCnv",
       "circuit_1": "Nc1",
       "circuit_2": "Nc2",
       "circuit_3": "Nc3",
       "circuit_4": "Nc4",
       "circuit_5": "Nc5",
-      "curve_id": "IdCurvaPts",
+      "clear_dbar_data": "Clr",
+      "commutation_reactance": "Xc",
+      "condition_1": "Cond1",
+      "condition_2": "Cond2",
+      "control_mode": "Ctrl",
+      "control_type": "TCtrl",
+      "controlled_bus": "Bctrl",
+      "converter_angle": "Ang",
+      "converter_control_type": "TCnv",
       "current": "Inom",
       "current_margin": "Marg",
-      "dcli_circuit": "Nc",
-      "dctr_circuit": "Nc",
-      "dlin_circuit": "Nc",
+      "curve_id": "IdCurvaPts",
       "dbsh_circuit": "Nc",
       "dc_bus": "Bdc",
       "dc_link_number": "Elo",
       "dc_voltage_minimum_for_power_control": "Vmn",
+      "dcli_circuit": "Nc",
       "dcsc_capacity": "Cdcsc",
       "dcsc_circuit": "Nc",
-      "emergency_capacity": "Ce",
-      "emergency_maximum_voltage_limit": "Vmxe",
-      "emergency_minimum_voltage_limit": "Vmne",
+      "dctr_circuit": "Nc",
+      "dlin_circuit": "Nc",
       "element_id_1": "Id1",
       "element_id_2": "Id2",
       "element_id_3": "Id3",
@@ -2126,6 +2407,9 @@
       "element_type_2": "Tp2",
       "element_type_3": "Tp3",
       "element_type_4": "Tp4",
+      "emergency_capacity": "Ce",
+      "emergency_maximum_voltage_limit": "Vmxe",
+      "emergency_minimum_voltage_limit": "Vmne",
       "equipment_capacity": "Cq",
       "extremity_bus": "Extr",
       "frequency": "Fr",
@@ -2167,8 +2451,8 @@
       "minimum_transformer_tap": "Tmn",
       "minimum_voltage": "Vmn",
       "minimum_voltage_limit": "Vmn",
-      "mode": "Modo",
       "mnemonic": "Mn",
+      "mode": "Modo",
       "name": "Name",
       "net_interchange": "Xchg",
       "neutral_bus": "Bneu",
@@ -2226,294 +2510,10 @@
       "value": "Val",
       "visualization_mode": "M",
       "voltage": "V",
-      "voltage_control_type": "VCtrl",
       "voltage_base_group": "Gb",
+      "voltage_control_type": "VCtrl",
       "voltage_for_load_definition": "Vf",
       "voltage_limit_group": "Gl"
-    },
-    "field_order": {
-      "DOPC": [
-        "option",
-        "state"
-      ],
-      "DCTE": [
-        "mnemonic",
-        "value"
-      ],
-      "DBAR": [
-        "number",
-        "name",
-        "type",
-        "area",
-        "voltage",
-        "angle",
-        "active_generation",
-        "reactive_generation",
-        "max_reactive_generation",
-        "min_reactive_generation",
-        "controlled_bus",
-        "active_load",
-        "reactive_load",
-        "capacitor_reactor",
-        "voltage_base_group",
-        "voltage_limit_group",
-        "voltage_for_load_definition",
-        "visualization_mode",
-        "state",
-        "operation"
-      ],
-      "DBSH": [
-        "from_bus",
-        "operation",
-        "to_bus",
-        "dbsh_circuit",
-        "control_mode",
-        "minimum_voltage",
-        "maximum_voltage",
-        "controlled_bus",
-        "initial_reactive_injection",
-        "control_type",
-        "clear_dbar_data",
-        "extremity_bus"
-      ],
-      "DBSH_BANK": [
-        "parent_record_index",
-        "bank_number",
-        "operation",
-        "state",
-        "total_units",
-        "units_in_operation",
-        "reactive_power_per_unit"
-      ],
-      "DARE": [
-        "area_number",
-        "net_interchange",
-        "name",
-        "minimum_net_interchange",
-        "maximum_net_interchange"
-      ],
-      "DCAI": [
-        "bus",
-        "operation",
-        "group",
-        "state",
-        "total_units",
-        "units_in_operation",
-        "active_power",
-        "reactive_power",
-        "parameter_a",
-        "parameter_b",
-        "parameter_c",
-        "parameter_d",
-        "voltage_limit",
-        "voltage_for_load_definition"
-      ],
-      "DCER": [
-        "bus",
-        "operation",
-        "group",
-        "units",
-        "controlled_bus",
-        "slope",
-        "reactive_generation",
-        "min_reactive_generation",
-        "max_reactive_generation",
-        "control_mode",
-        "state"
-      ],
-      "DCSC": [
-        "from_bus",
-        "to_bus",
-        "dcsc_circuit",
-        "operation",
-        "state",
-        "owner",
-        "bypass",
-        "min_reactance",
-        "max_reactance",
-        "initial_reactance",
-        "control_mode",
-        "specified_value",
-        "measurement_terminal",
-        "number_of_stages",
-        "dcsc_capacity"
-      ],
-      "DCTR": [
-        "from_bus",
-        "operation",
-        "to_bus",
-        "dctr_circuit",
-        "minimum_voltage",
-        "maximum_voltage",
-        "voltage_control_type",
-        "phase_mode",
-        "minimum_phase_shift",
-        "maximum_phase_shift",
-        "phase_control_type",
-        "specified_value",
-        "measurement_terminal",
-        "number_of_taps",
-        "curve_id"
-      ],
-      "DGER": [
-        "number",
-        "operation",
-        "min_active_generation",
-        "max_active_generation",
-        "participation_factor",
-        "remote_control_participation_factor",
-        "nominal_power_factor",
-        "armature_service_factor",
-        "rotor_service_factor",
-        "load_angle",
-        "machine_reactance",
-        "nominal_apparent_power"
-      ],
-      "DTPF": [
-        "element_type_1",
-        "element_id_1",
-        "condition_1",
-        "element_type_2",
-        "element_id_2",
-        "main_condition",
-        "element_type_3",
-        "element_id_3",
-        "condition_2",
-        "element_type_4",
-        "element_id_4",
-        "operation",
-        "interconnection"
-      ],
-      "DTPF_CIRC": [
-        "from_bus_1",
-        "to_bus_1",
-        "circuit_1",
-        "from_bus_2",
-        "to_bus_2",
-        "circuit_2",
-        "from_bus_3",
-        "to_bus_3",
-        "circuit_3",
-        "from_bus_4",
-        "to_bus_4",
-        "circuit_4",
-        "from_bus_5",
-        "to_bus_5",
-        "circuit_5",
-        "operation"
-      ],
-      "DLIN": [
-        "from_bus",
-        "to_bus",
-        "dlin_circuit",
-        "from_bus_opening",
-        "to_bus_opening",
-        "operation",
-        "state",
-        "owner",
-        "resistance",
-        "reactance",
-        "susceptance",
-        "tap",
-        "tap_minimum",
-        "tap_maximum",
-        "phase_shift",
-        "controlled_bus",
-        "normal_capacity",
-        "emergency_capacity",
-        "number_of_taps",
-        "equipment_capacity"
-      ],
-      "DSHL": [
-        "from_bus",
-        "operation",
-        "to_bus",
-        "dshl_circuit",
-        "shunt_from",
-        "shunt_to",
-        "state_from",
-        "state_to"
-      ],
-      "DCCV": [
-        "number",
-        "operation",
-        "slack",
-        "inverter_control_mode",
-        "converter_control_type",
-        "specified_value",
-        "current_margin",
-        "maximum_overcurrent",
-        "converter_angle",
-        "minimum_converter_angle",
-        "maximum_converter_angle",
-        "minimum_transformer_tap",
-        "maximum_transformer_tap",
-        "transformer_tap_steps",
-        "dc_voltage_minimum_for_power_control",
-        "tap_himvar_mode",
-        "tap_reduced_voltage_mode"
-      ],
-      "DCBA": [
-        "number",
-        "operation",
-        "type",
-        "polarity",
-        "name",
-        "voltage_limit_group",
-        "voltage",
-        "ground_electrode_resistance",
-        "dc_link_number"
-      ],
-      "DCLI": [
-        "from_bus",
-        "operation",
-        "to_bus",
-        "dcli_circuit",
-        "owner",
-        "resistance",
-        "inductance",
-        "capacity"
-      ],
-      "DCNV": [
-        "number",
-        "operation",
-        "ac_bus",
-        "dc_bus",
-        "neutral_bus",
-        "mode",
-        "six_pulse_bridges",
-        "current",
-        "commutation_reactance",
-        "secondary_voltage",
-        "transformer_power",
-        "reactor_resistance",
-        "reactor_inductance",
-        "ccc_capacitance",
-        "frequency"
-      ],
-      "DELO": [
-        "number",
-        "operation",
-        "voltage",
-        "power_base",
-        "name",
-        "himvar_mode",
-        "state"
-      ],
-      "DGBT": [
-        "group",
-        "voltage"
-      ],
-      "DGLT": [
-        "group",
-        "minimum_voltage_limit",
-        "maximum_voltage_limit",
-        "emergency_minimum_voltage_limit",
-        "emergency_maximum_voltage_limit"
-      ],
-      "TITU": [
-        "title_line"
-      ]
     }
   }
 }

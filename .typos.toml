@@ -1,0 +1,5 @@
+[default.extend-words]
+Inicial = "Inicial"
+MOR = "MOR"
+PARM = "PARM"
+VART = "VART"
