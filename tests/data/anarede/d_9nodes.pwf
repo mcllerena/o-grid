@@ -1,0 +1,50 @@
+TITU
+Sistema-Teste de 9 Barras - Caso Inicial                                        
+DOPC IMPR
+(Op) E (Op) E (Op) E (Op) E (Op) E (Op) E (Op) E (Op) E (Op) E (Op) E
+QLIM L CREM L CTAP L NEWT L MOCT L MOCG L MOCF L RCVG L RMON L
+99999
+DBAR
+(Num)OETGb(   nome   )Gl( V)( A)( Pg)( Qg)( Qn)( Qm)(Bc  )( Pl)( Ql)( Sh)Are(Vf)
+    1  2 A BAR-1 GER1  A1000  0.230.2 35.4-99999999.                       11000
+    2  1 A BAR-2 GER2  A1000-8.4 100.24.48-99999999.                       11000
+    3    E BAR-3       A 989-7.1                                           11000
+    4    E BAR-4       A 984-13.                                           11000
+    5    E BAR-5 CAR1  A 966-12.                            55.  27.       11000
+    6    E BAR-6 CAR2  A 977-14.                            37.  18.       11000
+    7    E BAR-7 CAR3  A 959-16.                            68.  45.       11000
+    8    E BAR-8 CAR4  A 972-14.                            90.  35.       11000
+    9    E BAR-9 CAR5  A 952-18.                            75.  28.       11000
+99999
+DLIN
+(De )d O d(Pa )NcEP ( R% )( X% )(Mvar)(Tap)(Tmn)(Tmx)(Phs)(Bc  )(Cn)(Ce)Ns(Cq)
+    1         3 1           5.34         1.                      300 300      
+    2         4 1           7.68         1.                      230 230      
+    3         5 1      1.7   9.2  15.8                           200 200      
+    3         8 1       1.   8.5  17.6                           200 200      
+    4         7 1       .9   7.9  16.2                           200 200      
+    5         7 1      3.2  16.1  30.6                           200 200      
+    6         4 1      .85   7.2  14.9                           200 200      
+    6         8 1      1.1   8.4  25.6                           200 200      
+    7         9 1     1.19 10.08  20.9                           200 200      
+    8         9 1      3.9   17.  35.8                           200 200      
+99999
+DGLT
+(G (Vmn) (Vmx) (Vmne (Vmxe
+ A   .95  1.05    .9  1.05
+99999
+DARE
+(Ar    (Xchg)     (      Identificacao da area       ) (Xmin) (Xmax)
+  1        0.     *** AREA 1 ***                                    
+99999
+DGBT
+(G ( kV)
+ A  13.8
+ E  230.
+99999
+DGGB
+(G Co Es
+ A  0  1
+ E  0  1
+99999
+FIM
