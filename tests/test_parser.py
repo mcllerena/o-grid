@@ -7,9 +7,12 @@ import pytest
 from o_grid import export_rows, parse_rows
 from o_grid.constants import REQUIRED_KEYS
 from o_grid.models import (
+    ACBranch,
     ACBus,
     ACLine,
+    Branch,
     BusShunt,
+    Line,
     LineShunt,
     PhaseShiftingTransformer,
     TapChangingTransformer,
@@ -87,11 +90,20 @@ def test_export_rows_uses_separator() -> None:
 def test_models_package_exports_expected_types() -> None:
     assert ACBus.__name__ == "ACBus"
     assert ACLine.__name__ == "ACLine"
+    assert Branch.__name__ == "Branch"
+    assert ACBranch.__name__ == "ACBranch"
+    assert Line.__name__ == "Line"
     assert BusShunt.__name__ == "BusShunt"
     assert LineShunt.__name__ == "LineShunt"
     assert TapChangingTransformer.__name__ == "TapChangingTransformer"
     assert PhaseShiftingTransformer.__name__ == "PhaseShiftingTransformer"
     assert TapTransformerControl.__name__ == "TapTransformerControl"
+
+
+def test_acline_follows_branch_hierarchy() -> None:
+    assert issubclass(ACLine, Line)
+    assert issubclass(Line, ACBranch)
+    assert issubclass(ACBranch, Branch)
 
 
 def test_parse_anarede_d9nodes_to_infrasys() -> None:
@@ -132,9 +144,7 @@ def test_parse_anarede_derives_tap_changers_from_dlin() -> None:
 
     dlin_records = parsed.components_by_block["DLIN"]
     expected_tap_count = sum(
-        1
-        for rec in dlin_records
-        if getattr(rec, "tap", None) not in (None, 1, 1.0)
+        1 for rec in dlin_records if getattr(rec, "tap", None) not in (None, 1, 1.0)
     )
 
     assert expected_tap_count > 0

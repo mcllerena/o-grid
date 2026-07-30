@@ -2,18 +2,90 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Annotated
 
 from pydantic import Field
 
-from o_grid.models.base import AnaredeComponent, ParsedScalar
+from o_grid.models.base import AnaredeComponent
+from o_grid.models.topology import ACBus, Arc
 
 
-class ACLine(AnaredeComponent):
+@dataclass(slots=True)
+class MinMax:
+    """Simple minimum/maximum pair for limits."""
+
+    min: float
+    max: float
+
+
+@dataclass(slots=True)
+class FromToToFrom:
+    """Directional pair values for from->to and to->from quantities."""
+
+    from_to: float
+    to_from: float
+
+
+class Branch(AnaredeComponent):
+    """Class representing a connection between components."""
+
+    @classmethod
+    def example(cls) -> Branch:
+        return Branch(name="ExampleBranch")
+
+
+class ACBranch(Branch):
+    """Class representing an AC connection between components."""
+
+    arc: Annotated[Arc | None, Field(description="The branch's connections.")] = None
+    r: Annotated[float | None, Field(description="Resistance of the branch")] = None
+    x: Annotated[float | None, Field(description="Reactance of the branch")] = None
+    rating: Annotated[float | None, Field(ge=0, description="Thermal rating of the line.")] = None
+
+
+class Line(ACBranch):
+    """Class representing an AC transmission line."""
+
+    b: Annotated[FromToToFrom | None, Field(description="Shunt susceptance in pu")] = None
+    g: Annotated[FromToToFrom | None, Field(description="Shunt conductance in pu")] = None
+    rating_b: Annotated[
+        float | None,
+        Field(description="Second thermal rating of the line."),
+    ] = None
+    rating_c: Annotated[
+        float | None,
+        Field(description="Third thermal rating of the line."),
+    ] = None
+    active_power_flow: Annotated[
+        float,
+        Field(description="Initial condition of active power flow on the line (MW)", ge=0),
+    ] = 0.0
+    reactive_power_flow: Annotated[
+        float,
+        Field(description="Initial condition of reactive power flow on the line (MVAR)", ge=0),
+    ] = 0.0
+    angle_limits: Annotated[MinMax | None, Field(description="The branch angle limits")] = None
+
+    @classmethod
+    def example(cls) -> Line:
+        return Line(
+            name="ExampleLine",
+            arc=Arc(from_to=ACBus.example(), to_from=ACBus.example()),
+            rating=100,
+            rating_b=120,
+            rating_c=150,
+            active_power_flow=100,
+            reactive_power_flow=100,
+            angle_limits=MinMax(min=-0.03, max=0.03),
+        )
+
+
+class ACLine(Line):
     """AC transmission line model."""
 
     controlled_bus: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "In the case of transformer type circuits with automatic tap variation, "
@@ -21,15 +93,15 @@ class ACLine(AnaredeComponent):
                 "be controlled."
             ),
         ),
-    ] = 'From Bus'
+    ] = "From Bus"
     dlin_circuit: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description="Identification number of the parallel AC circuit.",
         ),
     ] = None
     emergency_capacity: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Circuit loading capacity under emergency conditions for flow monitoring "
@@ -37,18 +109,18 @@ class ACLine(AnaredeComponent):
             ),
             json_schema_extra={"units": "MVA"},
         ),
-    ] = 'Normal Capacity'
+    ] = "Normal Capacity"
     equipment_capacity: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Loading capacity of the equipment with the smallest loading capacity "
                 "connected to the circuit."
             ),
         ),
-    ] = 'Normal Capacity'
+    ] = "Normal Capacity"
     from_bus: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Number of the bus at one end of the circuit as defined in the Number "
@@ -57,13 +129,13 @@ class ACLine(AnaredeComponent):
         ),
     ] = None
     from_bus_opening: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description="L - Connected.\\nD - Disconnected",
         ),
-    ] = 'L'
+    ] = "L"
     normal_capacity: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Circuit loading capacity under normal conditions for flow monitoring "
@@ -73,7 +145,7 @@ class ACLine(AnaredeComponent):
         ),
     ] = 99999.0
     number_of_taps: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Number of positions of the variable tap transformer, including the "
@@ -82,16 +154,16 @@ class ACLine(AnaredeComponent):
         ),
     ] = 33
     operation: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "A or 0 - Circuit data addition.\\nE or 1 - Circuit data elimination.\\nM "
                 "or 2 - Circuit data modification."
             ),
         ),
-    ] = 'A'
+    ] = "A"
     owner: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "F if the circuit belongs to the area of the bus defined in the From Bus "
@@ -99,9 +171,9 @@ class ACLine(AnaredeComponent):
                 "To Bus field."
             ),
         ),
-    ] = 'F'
+    ] = "F"
     phase_shift: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Phase shift angle value, in degrees, for phase shifting transformers. "
@@ -113,7 +185,7 @@ class ACLine(AnaredeComponent):
         ),
     ] = 0.0
     reactance: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Circuit reactance value, in %. For transformers this value corresponds "
@@ -124,7 +196,7 @@ class ACLine(AnaredeComponent):
         ),
     ] = 0.0
     resistance: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Circuit resistance value, in %. For transformers this value corresponds "
@@ -135,16 +207,16 @@ class ACLine(AnaredeComponent):
         ),
     ] = 0.0
     state: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "L if the circuit is in operation (connected).\\nD if the circuit is out "
                 "of operation (disconnected)."
             ),
         ),
-    ] = 'L'
+    ] = "L"
     susceptance: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Total shunt susceptance value of the circuit, in Mvar. Implicit decimal "
@@ -153,7 +225,7 @@ class ACLine(AnaredeComponent):
         ),
     ] = 0.0
     tap: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Tap value referred to the bus defined in the From Bus field, in p.u., "
@@ -165,7 +237,7 @@ class ACLine(AnaredeComponent):
         ),
     ] = None
     tap_maximum: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Maximum value that the tap can assume, in p.u., for automatic tap "
@@ -175,7 +247,7 @@ class ACLine(AnaredeComponent):
         ),
     ] = None
     tap_minimum: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Minimum value that the tap can assume, in p.u., for automatic tap "
@@ -185,7 +257,7 @@ class ACLine(AnaredeComponent):
         ),
     ] = None
     to_bus: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Number of the bus at the other end of the circuit as defined in the "
@@ -194,26 +266,27 @@ class ACLine(AnaredeComponent):
         ),
     ] = None
     to_bus_opening: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description="L - Connected.\\nD - Disconnected",
         ),
-    ] = 'L'
+    ] = "L"
+
 
 class SeriesCompensator(AnaredeComponent):
     """Series compensation element model."""
 
     bypass: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "L if the bypass switch is closed (connected).\\nD if the bypass switch is "
                 "open (disconnected)."
             ),
         ),
-    ] = 'D'
+    ] = "D"
     control_mode: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "P - Constant power. The specified value for active power flow in the "
@@ -224,22 +297,22 @@ class SeriesCompensator(AnaredeComponent):
                 "fixed at the specified value."
             ),
         ),
-    ] = 'X'
+    ] = "X"
     dcsc_capacity: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description="CSC nominal capacity, in MVA.",
             json_schema_extra={"units": "MVA"},
         ),
     ] = 9999.0
     dcsc_circuit: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description="Identification number of the parallel AC circuit.",
         ),
     ] = None
     from_bus: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Number of the bus at one end of the CSC as defined in the Number field "
@@ -248,21 +321,21 @@ class SeriesCompensator(AnaredeComponent):
         ),
     ] = None
     initial_reactance: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description="Initial value of CSC reactance, in %.",
             json_schema_extra={"units": "%"},
         ),
     ] = None
     max_reactance: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description="Maximum value of CSC reactance, in %.",
             json_schema_extra={"units": "%"},
         ),
     ] = 9999.0
     measurement_terminal: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Number of the CSC terminal bus at which power or current is measured, as "
@@ -271,14 +344,14 @@ class SeriesCompensator(AnaredeComponent):
         ),
     ] = None
     min_reactance: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description="Minimum value of CSC reactance, in %.",
             json_schema_extra={"units": "%"},
         ),
     ] = -9999.0
     number_of_stages: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Number of stages of the discrete CSC (TSSC - Thyristor Switched Series "
@@ -288,16 +361,16 @@ class SeriesCompensator(AnaredeComponent):
         ),
     ] = None
     operation: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "A or 0 - CSC data addition.\\nE or 1 - CSC data elimination.\\nM or 2 - "
                 "CSC data modification."
             ),
         ),
-    ] = 'A'
+    ] = "A"
     owner: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "F if the circuit belongs to the area of the bus defined in the From Bus "
@@ -305,9 +378,9 @@ class SeriesCompensator(AnaredeComponent):
                 "To Bus field."
             ),
         ),
-    ] = 'F'
+    ] = "F"
     specified_value: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Active Power Flow in the CSC, in MW, if the specified control mode is "
@@ -318,16 +391,16 @@ class SeriesCompensator(AnaredeComponent):
         ),
     ] = None
     state: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "L if the circuit is in operation (connected).\\nD if the circuit is out "
                 "of operation (disconnected)."
             ),
         ),
-    ] = 'L'
+    ] = "L"
     to_bus: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Number of the bus at the other end of the CSC as defined in the Number "
@@ -336,11 +409,12 @@ class SeriesCompensator(AnaredeComponent):
         ),
     ] = None
 
+
 class TapChangingTransformer(AnaredeComponent):
     """Tap-changing transformer derived from line tap values."""
 
     controlled_bus: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "In the case of transformer type circuits with automatic tap variation, "
@@ -348,15 +422,15 @@ class TapChangingTransformer(AnaredeComponent):
                 "be controlled."
             ),
         ),
-    ] = 'From Bus'
+    ] = "From Bus"
     dlin_circuit: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description="Identification number of the parallel AC circuit.",
         ),
     ] = None
     emergency_capacity: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Circuit loading capacity under emergency conditions for flow monitoring "
@@ -364,18 +438,18 @@ class TapChangingTransformer(AnaredeComponent):
             ),
             json_schema_extra={"units": "MVA"},
         ),
-    ] = 'Normal Capacity'
+    ] = "Normal Capacity"
     equipment_capacity: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Loading capacity of the equipment with the smallest loading capacity "
                 "connected to the circuit."
             ),
         ),
-    ] = 'Normal Capacity'
+    ] = "Normal Capacity"
     from_bus: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Number of the bus at one end of the circuit as defined in the Number "
@@ -384,13 +458,13 @@ class TapChangingTransformer(AnaredeComponent):
         ),
     ] = None
     from_bus_opening: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description="L - Connected.\\nD - Disconnected",
         ),
-    ] = 'L'
+    ] = "L"
     normal_capacity: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Circuit loading capacity under normal conditions for flow monitoring "
@@ -400,7 +474,7 @@ class TapChangingTransformer(AnaredeComponent):
         ),
     ] = 99999.0
     number_of_taps: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Number of positions of the variable tap transformer, including the "
@@ -409,16 +483,16 @@ class TapChangingTransformer(AnaredeComponent):
         ),
     ] = 33
     operation: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "A or 0 - Circuit data addition.\\nE or 1 - Circuit data elimination.\\nM "
                 "or 2 - Circuit data modification."
             ),
         ),
-    ] = 'A'
+    ] = "A"
     owner: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "F if the circuit belongs to the area of the bus defined in the From Bus "
@@ -426,9 +500,9 @@ class TapChangingTransformer(AnaredeComponent):
                 "To Bus field."
             ),
         ),
-    ] = 'F'
+    ] = "F"
     phase_shift: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Phase shift angle value, in degrees, for phase shifting transformers. "
@@ -440,7 +514,7 @@ class TapChangingTransformer(AnaredeComponent):
         ),
     ] = 0.0
     reactance: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Circuit reactance value, in %. For transformers this value corresponds "
@@ -451,7 +525,7 @@ class TapChangingTransformer(AnaredeComponent):
         ),
     ] = 0.0
     resistance: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Circuit resistance value, in %. For transformers this value corresponds "
@@ -462,16 +536,16 @@ class TapChangingTransformer(AnaredeComponent):
         ),
     ] = 0.0
     state: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "L if the circuit is in operation (connected).\\nD if the circuit is out "
                 "of operation (disconnected)."
             ),
         ),
-    ] = 'L'
+    ] = "L"
     susceptance: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Total shunt susceptance value of the circuit, in Mvar. Implicit decimal "
@@ -480,7 +554,7 @@ class TapChangingTransformer(AnaredeComponent):
         ),
     ] = 0.0
     tap: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Tap value referred to the bus defined in the From Bus field, in p.u., "
@@ -492,7 +566,7 @@ class TapChangingTransformer(AnaredeComponent):
         ),
     ] = None
     tap_maximum: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Maximum value that the tap can assume, in p.u., for automatic tap "
@@ -502,7 +576,7 @@ class TapChangingTransformer(AnaredeComponent):
         ),
     ] = None
     tap_minimum: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Minimum value that the tap can assume, in p.u., for automatic tap "
@@ -512,7 +586,7 @@ class TapChangingTransformer(AnaredeComponent):
         ),
     ] = None
     to_bus: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Number of the bus at the other end of the circuit as defined in the "
@@ -521,17 +595,18 @@ class TapChangingTransformer(AnaredeComponent):
         ),
     ] = None
     to_bus_opening: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description="L - Connected.\\nD - Disconnected",
         ),
-    ] = 'L'
+    ] = "L"
+
 
 class PhaseShiftingTransformer(AnaredeComponent):
     """Phase-shifting transformer derived from line phase-shift angle."""
 
     controlled_bus: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "In the case of transformer type circuits with automatic tap variation, "
@@ -539,15 +614,15 @@ class PhaseShiftingTransformer(AnaredeComponent):
                 "be controlled."
             ),
         ),
-    ] = 'From Bus'
+    ] = "From Bus"
     dlin_circuit: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description="Identification number of the parallel AC circuit.",
         ),
     ] = None
     emergency_capacity: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Circuit loading capacity under emergency conditions for flow monitoring "
@@ -555,18 +630,18 @@ class PhaseShiftingTransformer(AnaredeComponent):
             ),
             json_schema_extra={"units": "MVA"},
         ),
-    ] = 'Normal Capacity'
+    ] = "Normal Capacity"
     equipment_capacity: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Loading capacity of the equipment with the smallest loading capacity "
                 "connected to the circuit."
             ),
         ),
-    ] = 'Normal Capacity'
+    ] = "Normal Capacity"
     from_bus: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Number of the bus at one end of the circuit as defined in the Number "
@@ -575,13 +650,13 @@ class PhaseShiftingTransformer(AnaredeComponent):
         ),
     ] = None
     from_bus_opening: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description="L - Connected.\\nD - Disconnected",
         ),
-    ] = 'L'
+    ] = "L"
     normal_capacity: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Circuit loading capacity under normal conditions for flow monitoring "
@@ -591,7 +666,7 @@ class PhaseShiftingTransformer(AnaredeComponent):
         ),
     ] = 99999.0
     number_of_taps: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Number of positions of the variable tap transformer, including the "
@@ -600,16 +675,16 @@ class PhaseShiftingTransformer(AnaredeComponent):
         ),
     ] = 33
     operation: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "A or 0 - Circuit data addition.\\nE or 1 - Circuit data elimination.\\nM "
                 "or 2 - Circuit data modification."
             ),
         ),
-    ] = 'A'
+    ] = "A"
     owner: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "F if the circuit belongs to the area of the bus defined in the From Bus "
@@ -617,9 +692,9 @@ class PhaseShiftingTransformer(AnaredeComponent):
                 "To Bus field."
             ),
         ),
-    ] = 'F'
+    ] = "F"
     phase_shift: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Phase shift angle value, in degrees, for phase shifting transformers. "
@@ -631,7 +706,7 @@ class PhaseShiftingTransformer(AnaredeComponent):
         ),
     ] = 0.0
     reactance: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Circuit reactance value, in %. For transformers this value corresponds "
@@ -642,7 +717,7 @@ class PhaseShiftingTransformer(AnaredeComponent):
         ),
     ] = 0.0
     resistance: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Circuit resistance value, in %. For transformers this value corresponds "
@@ -653,16 +728,16 @@ class PhaseShiftingTransformer(AnaredeComponent):
         ),
     ] = 0.0
     state: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "L if the circuit is in operation (connected).\\nD if the circuit is out "
                 "of operation (disconnected)."
             ),
         ),
-    ] = 'L'
+    ] = "L"
     susceptance: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Total shunt susceptance value of the circuit, in Mvar. Implicit decimal "
@@ -671,7 +746,7 @@ class PhaseShiftingTransformer(AnaredeComponent):
         ),
     ] = 0.0
     tap: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Tap value referred to the bus defined in the From Bus field, in p.u., "
@@ -683,7 +758,7 @@ class PhaseShiftingTransformer(AnaredeComponent):
         ),
     ] = None
     tap_maximum: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Maximum value that the tap can assume, in p.u., for automatic tap "
@@ -693,7 +768,7 @@ class PhaseShiftingTransformer(AnaredeComponent):
         ),
     ] = None
     tap_minimum: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Minimum value that the tap can assume, in p.u., for automatic tap "
@@ -703,7 +778,7 @@ class PhaseShiftingTransformer(AnaredeComponent):
         ),
     ] = None
     to_bus: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Number of the bus at the other end of the circuit as defined in the "
@@ -712,23 +787,24 @@ class PhaseShiftingTransformer(AnaredeComponent):
         ),
     ] = None
     to_bus_opening: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description="L - Connected.\\nD - Disconnected",
         ),
-    ] = 'L'
+    ] = "L"
+
 
 class ShuntLine(AnaredeComponent):
     """Shunt line model."""
 
     dshl_circuit: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description="Identification number of the parallel AC circuit.",
         ),
     ] = None
     from_bus: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Number of the bus at one end of the AC circuit as defined in the Number "
@@ -737,7 +813,7 @@ class ShuntLine(AnaredeComponent):
         ),
     ] = None
     operation: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "A or 0 - addition of AC circuit shunt device data.\\nE or 1 - elimination "
@@ -745,9 +821,9 @@ class ShuntLine(AnaredeComponent):
                 "shunt device data."
             ),
         ),
-    ] = 'A'
+    ] = "A"
     shunt_from: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Reactive power of shunts at the end defined in the From Bus field for "
@@ -756,7 +832,7 @@ class ShuntLine(AnaredeComponent):
         ),
     ] = 0.0
     shunt_to: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Reactive power of shunts at the end defined in the To Bus field for "
@@ -765,25 +841,25 @@ class ShuntLine(AnaredeComponent):
         ),
     ] = 0.0
     state_from: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "L if the line shunt at this end is in operation (connected).\\nD if the "
                 "line shunt at this end is out of operation (disconnected)."
             ),
         ),
-    ] = 'L'
+    ] = "L"
     state_to: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "L if the line shunt at this end is in operation (connected).\\nD if the "
                 "line shunt at this end is out of operation (disconnected)."
             ),
         ),
-    ] = 'L'
+    ] = "L"
     to_bus: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Number of the bus at the other end of the circuit as defined in the "
@@ -792,24 +868,25 @@ class ShuntLine(AnaredeComponent):
         ),
     ] = None
 
+
 class DCLink(AnaredeComponent):
     """DC link model."""
 
     capacity: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description="DC line loading capacity, in MW, for flow monitoring purposes.",
             json_schema_extra={"units": "MW"},
         ),
     ] = 0.0
     dcli_circuit: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description="Identification number of the parallel DC line.",
         ),
     ] = None
     from_bus: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Number of the DC bus at one end of the DC line, as defined in the Number "
@@ -818,33 +895,33 @@ class DCLink(AnaredeComponent):
         ),
     ] = None
     inductance: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description="DC line inductance, in mH.",
             json_schema_extra={"units": "mH"},
         ),
     ] = 0.0
     operation: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description="A or 0 - DC line data addition. M or 2 - DC line data modification.",
         ),
-    ] = 'A'
+    ] = "A"
     owner: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description="Owner flag. This field is not used in this version.",
         ),
     ] = None
     resistance: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description="DC line resistance, in ohms.",
             json_schema_extra={"units": "ohm"},
         ),
     ] = None
     to_bus: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Number of the DC bus at the other end of the DC line, as defined in the "
@@ -853,104 +930,105 @@ class DCLink(AnaredeComponent):
         ),
     ] = None
 
+
 class TransferFunctionCircuit(AnaredeComponent):
     """Circuit selector row for transfer-function constraints."""
 
     circuit_1: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description="Identification number of the first selected parallel AC circuit.",
         ),
     ] = None
     circuit_2: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description="Identification number of the second selected parallel AC circuit.",
         ),
     ] = None
     circuit_3: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description="Identification number of the third selected parallel AC circuit.",
         ),
     ] = None
     circuit_4: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description="Identification number of the fourth selected parallel AC circuit.",
         ),
     ] = None
     circuit_5: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description="Identification number of the fifth selected parallel AC circuit.",
         ),
     ] = None
     from_bus_1: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description="From bus of the first selected circuit.",
         ),
     ] = None
     from_bus_2: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description="From bus of the second selected circuit.",
         ),
     ] = None
     from_bus_3: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description="From bus of the third selected circuit.",
         ),
     ] = None
     from_bus_4: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description="From bus of the fourth selected circuit.",
         ),
     ] = None
     from_bus_5: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description="From bus of the fifth selected circuit.",
         ),
     ] = None
     operation: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "A - addition of fixed CTAP-control data. E - elimination of fixed "
                 "CTAP-control data."
             ),
         ),
-    ] = 'A'
+    ] = "A"
     to_bus_1: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description="To bus of the first selected circuit.",
         ),
     ] = None
     to_bus_2: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description="To bus of the second selected circuit.",
         ),
     ] = None
     to_bus_3: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description="To bus of the third selected circuit.",
         ),
     ] = None
     to_bus_4: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description="To bus of the fourth selected circuit.",
         ),
     ] = None
     to_bus_5: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description="To bus of the fifth selected circuit.",
         ),

@@ -2,17 +2,21 @@
 
 from __future__ import annotations
 
-from o_grid.models.base import AnaredeComponent
+from o_grid.models.base import AnaredeComponent, OGridComponent
 from o_grid.models.branch import (
+    ACBranch,
     ACLine,
+    Branch,
     DCLink,
+    FromToToFrom,
+    Line,
+    MinMax,
     PhaseShiftingTransformer,
     SeriesCompensator,
     ShuntLine,
     TapChangingTransformer,
     TransferFunctionCircuit,
 )
-from o_grid.models.buses import ACBus, ControlArea, DCBus, VoltageBaseGroup, VoltageLimitGroup
 from o_grid.models.case import CaseTitle
 from o_grid.models.control import (
     ConverterControl,
@@ -30,6 +34,18 @@ from o_grid.models.load import (
     LineShunt,
     ShuntBank,
     ShuntCompensator,
+)
+from o_grid.models.topology import (
+    ACBus,
+    Arc,
+    Area,
+    Bus,
+    ControlArea,
+    DCBus,
+    LoadZone,
+    Topology,
+    VoltageBaseGroup,
+    VoltageLimitGroup,
 )
 
 BLOCK_BASE_CLASSES: dict[str, type[AnaredeComponent]] = {
@@ -62,9 +78,14 @@ BLOCK_BASE_CLASSES: dict[str, type[AnaredeComponent]] = {
 
 __all__ = [
     "ACBus",
+    "ACBranch",
     "ACLine",
     "AnaredeComponent",
+    "Arc",
+    "Area",
     "BLOCK_BASE_CLASSES",
+    "Branch",
+    "Bus",
     "BusShunt",
     "CaseTitle",
     "ControlArea",
@@ -75,7 +96,12 @@ __all__ = [
     "DCLink",
     "DCLinkOwner",
     "GeneratorDispatchData",
+    "FromToToFrom",
     "LineShunt",
+    "Line",
+    "LoadZone",
+    "MinMax",
+    "OGridComponent",
     "PhaseShiftingTransformer",
     "PowerFlowOption",
     "ProgramConstant",
@@ -86,6 +112,7 @@ __all__ = [
     "ShuntLine",
     "TapTransformerControl",
     "TapChangingTransformer",
+    "Topology",
     "TransferFunctionCircuit",
     "TransferFunctionConstraint",
     "VoltageBaseGroup",

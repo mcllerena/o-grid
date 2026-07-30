@@ -6,14 +6,14 @@ from typing import Annotated
 
 from pydantic import Field
 
-from o_grid.models.base import AnaredeComponent, ParsedScalar
+from o_grid.models.base import AnaredeComponent
 
 
 class CurrentInjectionLoad(AnaredeComponent):
     """Current-injection load model."""
 
     active_power: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Active power value of the individualized load group, in MW. If the load "
@@ -24,7 +24,7 @@ class CurrentInjectionLoad(AnaredeComponent):
         ),
     ] = 0.0
     bus: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Bus identification number, as defined in the Bus field of the DBAR "
@@ -34,7 +34,7 @@ class CurrentInjectionLoad(AnaredeComponent):
         ),
     ] = None
     group: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Identification number of the individualized load group. Multiple groups "
@@ -44,7 +44,7 @@ class CurrentInjectionLoad(AnaredeComponent):
         ),
     ] = 1
     operation: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "A or 0 - addition of individualized load group data.\\nE or 1 - "
@@ -52,9 +52,9 @@ class CurrentInjectionLoad(AnaredeComponent):
                 "individualized load group data."
             ),
         ),
-    ] = 'A'
+    ] = "A"
     parameter_a: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Portion of individualized active load that varies linearly with voltage "
@@ -64,7 +64,7 @@ class CurrentInjectionLoad(AnaredeComponent):
         ),
     ] = 0.0
     parameter_b: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Portion of individualized active load that varies with the square of "
@@ -74,7 +74,7 @@ class CurrentInjectionLoad(AnaredeComponent):
         ),
     ] = 0.0
     parameter_c: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Portion of individualized reactive load that varies linearly with "
@@ -84,7 +84,7 @@ class CurrentInjectionLoad(AnaredeComponent):
         ),
     ] = 0.0
     parameter_d: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Portion of individualized reactive load that varies with the square of "
@@ -94,7 +94,7 @@ class CurrentInjectionLoad(AnaredeComponent):
         ),
     ] = 0.0
     reactive_power: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Reactive power value of the individualized load group, in MVAr. If the "
@@ -104,16 +104,16 @@ class CurrentInjectionLoad(AnaredeComponent):
         ),
     ] = 0.0
     state: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "L if the load group is in operation (connected).\\nD if the load group is "
                 "out of operation (disconnected)."
             ),
         ),
-    ] = 'L'
+    ] = "L"
     total_units: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Total number of equal units that compose the individualized load group. "
@@ -123,7 +123,7 @@ class CurrentInjectionLoad(AnaredeComponent):
         ),
     ] = 1
     units_in_operation: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Number of equal units or stages that compose the individualized load "
@@ -132,7 +132,7 @@ class CurrentInjectionLoad(AnaredeComponent):
         ),
     ] = 1
     voltage_for_load_definition: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Voltage value in p.u. for which the active and reactive load portions "
@@ -143,7 +143,7 @@ class CurrentInjectionLoad(AnaredeComponent):
         ),
     ] = 1.0
     voltage_limit: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Voltage value below which the constant power portion of functional "
@@ -153,29 +153,30 @@ class CurrentInjectionLoad(AnaredeComponent):
         ),
     ] = 0.0
 
+
 class BusShunt(AnaredeComponent):
     """Bus shunt model."""
 
     clear_dbar_data: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "S if the value informed in the DBAR Capacitor/Reactor field must be "
                 "cleared. Otherwise the DBAR value is preserved."
             ),
         ),
-    ] = 'N'
+    ] = "N"
     control_mode: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Automatic bank switching control mode: C for continuous control, D for "
                 "discrete control, or F for fixed control."
             ),
         ),
-    ] = 'C'
+    ] = "C"
     control_type: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Voltage control type: C if control is performed by the center of the "
@@ -183,9 +184,9 @@ class BusShunt(AnaredeComponent):
                 "voltage range."
             ),
         ),
-    ] = 'C'
+    ] = "C"
     controlled_bus: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Bus number whose voltage magnitude is controlled by automatic switching "
@@ -194,9 +195,9 @@ class BusShunt(AnaredeComponent):
                 "the selected control type."
             ),
         ),
-    ] = 'From Bus'
+    ] = "From Bus"
     dbsh_circuit: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Identification number of the parallel AC circuit when the individualized "
@@ -205,7 +206,7 @@ class BusShunt(AnaredeComponent):
         ),
     ] = 1
     extremity_bus: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Bus number corresponding to the circuit extremity where the shunt "
@@ -214,7 +215,7 @@ class BusShunt(AnaredeComponent):
         ),
     ] = None
     from_bus: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Bus identification number to which the shunt capacitor/reactor bank is "
@@ -224,7 +225,7 @@ class BusShunt(AnaredeComponent):
         ),
     ] = None
     initial_reactive_injection: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Initial total reactive power injection at the terminal bus, in MVAr, due "
@@ -235,7 +236,7 @@ class BusShunt(AnaredeComponent):
         ),
     ] = 0.0
     maximum_voltage: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Maximum voltage limit of the control range that determines automatic "
@@ -244,9 +245,9 @@ class BusShunt(AnaredeComponent):
                 "decimal point between columns 25 and 26."
             ),
         ),
-    ] = 'DGLT maximum voltage limit'
+    ] = "DGLT maximum voltage limit"
     minimum_voltage: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Minimum voltage limit of the control range that determines automatic "
@@ -255,18 +256,18 @@ class BusShunt(AnaredeComponent):
                 "decimal point between columns 20 and 21."
             ),
         ),
-    ] = 'DGLT minimum voltage limit'
+    ] = "DGLT minimum voltage limit"
     operation: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "A or 0 - terminal bus data addition. E or 1 - terminal bus data "
                 "elimination. M or 2 - terminal bus data modification."
             ),
         ),
-    ] = 'A'
+    ] = "A"
     to_bus: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Bus number of the other circuit terminal for line capacitor/reactor "
@@ -275,11 +276,12 @@ class BusShunt(AnaredeComponent):
         ),
     ] = None
 
+
 class LineShunt(AnaredeComponent):
     """Shunt bank/segment model linked to a bus shunt."""
 
     bank_number: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Identification number of the capacitor and/or reactor group or bank. One "
@@ -289,16 +291,16 @@ class LineShunt(AnaredeComponent):
         ),
     ] = None
     operation: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "A or 0 - group or bank data addition. E or 1 - group or bank data "
                 "elimination. M or 2 - group or bank data modification."
             ),
         ),
-    ] = 'A'
+    ] = "A"
     reactive_power_per_unit: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Total reactive power injected at the bus by one unit or stage of the "
@@ -308,16 +310,16 @@ class LineShunt(AnaredeComponent):
         ),
     ] = None
     state: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "L if the group or bank is in operation. D if the group or bank is out of "
                 "operation."
             ),
         ),
-    ] = 'L'
+    ] = "L"
     total_units: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Total number of equal units or stages that compose the capacitor/reactor "
@@ -326,14 +328,14 @@ class LineShunt(AnaredeComponent):
         ),
     ] = None
     units_in_operation: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Number of equal units or stages of the capacitor/reactor group or bank "
                 "that are effectively in operation."
             ),
         ),
-    ] = 'Capacitor/Reactor units'
+    ] = "Capacitor/Reactor units"
     parent_record_index: Annotated[
         int | None,
         Field(
@@ -341,10 +343,12 @@ class LineShunt(AnaredeComponent):
         ),
     ] = None
 
+
 class ShuntCompensator(BusShunt):
     """Backwards-compatible name for bus shunt components."""
 
     pass
+
 
 class ShuntBank(LineShunt):
     """Backwards-compatible name for line shunt/bank components."""

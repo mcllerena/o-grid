@@ -6,14 +6,14 @@ from typing import Annotated
 
 from pydantic import Field
 
-from o_grid.models.base import AnaredeComponent, ParsedScalar
+from o_grid.models.base import AnaredeComponent
 
 
 class PowerFlowOption(AnaredeComponent):
     """Power flow option row."""
 
     option: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Power-flow execution option mnemonic. Examples include QLIM, CREM, STEP, "
@@ -22,36 +22,37 @@ class PowerFlowOption(AnaredeComponent):
         ),
     ] = None
     state: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
-                "Option activation state. L indicates that the execution option is "
-                "enabled."
+                "Option activation state. L indicates that the execution option is enabled."
             ),
         ),
-    ] = 'L'
+    ] = "L"
+
 
 class ProgramConstant(AnaredeComponent):
     """Program constant row."""
 
     mnemonic: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description="Constant mnemonic to be modified before execution of codes that use it.",
         ),
     ] = None
     value: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description="New value associated with the DCTE constant mnemonic.",
         ),
     ] = 0.0
 
+
 class TapTransformerControl(AnaredeComponent):
     """Control data for automatic tap-changing transformers (DCTR)."""
 
     curve_id: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Identifier of the point-curve data associated with the complementary "
@@ -60,13 +61,13 @@ class TapTransformerControl(AnaredeComponent):
         ),
     ] = None
     dctr_circuit: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description="Identification number of the parallel AC circuit.",
         ),
     ] = None
     from_bus: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Number of one terminal bus of the circuit, as defined in the Number "
@@ -75,7 +76,7 @@ class TapTransformerControl(AnaredeComponent):
         ),
     ] = None
     maximum_phase_shift: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Maximum phase-angle value, in degrees. Implicit decimal point between "
@@ -85,7 +86,7 @@ class TapTransformerControl(AnaredeComponent):
         ),
     ] = None
     maximum_voltage: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Maximum voltage magnitude of the controlled bus, in p.u. Implicit "
@@ -95,13 +96,13 @@ class TapTransformerControl(AnaredeComponent):
         ),
     ] = None
     measurement_terminal: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description="Bus where the control variable is measured.",
         ),
-    ] = 'From Bus'
+    ] = "From Bus"
     minimum_phase_shift: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Minimum phase-angle value, in degrees. Implicit decimal point between "
@@ -111,7 +112,7 @@ class TapTransformerControl(AnaredeComponent):
         ),
     ] = None
     minimum_voltage: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Minimum voltage magnitude of the controlled bus, in p.u. Implicit "
@@ -121,7 +122,7 @@ class TapTransformerControl(AnaredeComponent):
         ),
     ] = None
     number_of_taps: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Number of phase-shifting transformer tap positions, including minimum "
@@ -131,7 +132,7 @@ class TapTransformerControl(AnaredeComponent):
         ),
     ] = 99
     operation: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "A or 0 - addition of complementary transformer data. E or 1 - "
@@ -139,21 +140,21 @@ class TapTransformerControl(AnaredeComponent):
                 "complementary transformer data."
             ),
         ),
-    ] = 'A'
+    ] = "A"
     phase_control_type: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description="F - Fixed. C - Current control. P - Active-power control.",
         ),
-    ] = 'F'
+    ] = "F"
     phase_mode: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description="C - Continuous phase control. D - Discrete phase control.",
         ),
-    ] = 'C'
+    ] = "C"
     specified_value: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Specified current when Phase Control Type is C, in p.u.; or specified "
@@ -162,7 +163,7 @@ class TapTransformerControl(AnaredeComponent):
         ),
     ] = None
     to_bus: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Number of the other terminal bus of the circuit, as defined in the "
@@ -171,17 +172,18 @@ class TapTransformerControl(AnaredeComponent):
         ),
     ] = None
     voltage_control_type: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description="C - Center of voltage band. L - Voltage band limits.",
         ),
-    ] = 'C'
+    ] = "C"
+
 
 class ConverterControl(AnaredeComponent):
     """Converter control settings model."""
 
     converter_angle: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Desired firing angle for a rectifier, extinction angle for a "
@@ -192,7 +194,7 @@ class ConverterControl(AnaredeComponent):
         ),
     ] = 0.0
     converter_control_type: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Converter control type: C for constant-current control, or P for "
@@ -201,7 +203,7 @@ class ConverterControl(AnaredeComponent):
         ),
     ] = None
     current_margin: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Inverter current margin, in percent of the nominal current defined in "
@@ -211,7 +213,7 @@ class ConverterControl(AnaredeComponent):
         ),
     ] = 10.0
     dc_voltage_minimum_for_power_control: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Minimum DC voltage, in p.u., below which a converter in power control "
@@ -222,7 +224,7 @@ class ConverterControl(AnaredeComponent):
         ),
     ] = 0.0
     inverter_control_mode: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Inverter control mode for CCC inverters: G for gamma control, or T for "
@@ -231,7 +233,7 @@ class ConverterControl(AnaredeComponent):
         ),
     ] = None
     maximum_converter_angle: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Maximum firing angle for a rectifier, extinction angle for a "
@@ -242,7 +244,7 @@ class ConverterControl(AnaredeComponent):
         ),
     ] = 0.0
     maximum_overcurrent: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Maximum overcurrent allowed for the converter, in percent of the nominal "
@@ -253,13 +255,13 @@ class ConverterControl(AnaredeComponent):
         ),
     ] = 9999.0
     maximum_transformer_tap: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description="Maximum tap value of the converter transformer.",
         ),
     ] = None
     minimum_converter_angle: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Minimum firing angle for a rectifier, extinction angle for a "
@@ -270,13 +272,13 @@ class ConverterControl(AnaredeComponent):
         ),
     ] = 0.0
     minimum_transformer_tap: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description="Minimum tap value of the converter transformer.",
         ),
     ] = None
     number: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Converter identification number, as defined in the Number field of the "
@@ -285,25 +287,25 @@ class ConverterControl(AnaredeComponent):
         ),
     ] = None
     operation: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "A or 0 - converter control data addition. E or 1 - converter control "
                 "data elimination. M or 2 - converter control data modification."
             ),
         ),
-    ] = 'A'
+    ] = "A"
     slack: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "F for a slack converter, or N for a normal converter. One slack "
                 "converter must be specified for each pole of the DC link."
             ),
         ),
-    ] = 'N'
+    ] = "N"
     specified_value: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Specified converter control value, in A for current control or MW for "
@@ -313,7 +315,7 @@ class ConverterControl(AnaredeComponent):
         ),
     ] = None
     tap_himvar_mode: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Converter transformer tap used when the DC link operates in HiMVAr "
@@ -322,16 +324,15 @@ class ConverterControl(AnaredeComponent):
         ),
     ] = None
     tap_reduced_voltage_mode: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
-                "Converter transformer tap used when the DC link operates in "
-                "reduced-voltage mode."
+                "Converter transformer tap used when the DC link operates in reduced-voltage mode."
             ),
         ),
-    ] = 'Maximum transformer tap minus one step, or 1.0 when the tap step is not available'
+    ] = "Maximum transformer tap minus one step, or 1.0 when the tap step is not available"
     transformer_tap_steps: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Number of converter transformer tap steps. The tap step is calculated by "
@@ -339,13 +340,14 @@ class ConverterControl(AnaredeComponent):
                 "this number of steps."
             ),
         ),
-    ] = 'Infinity'
+    ] = "Infinity"
+
 
 class ConverterStation(AnaredeComponent):
     """Converter station model."""
 
     ac_bus: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "AC bus number to which the converter is connected, as defined in the "
@@ -354,14 +356,14 @@ class ConverterStation(AnaredeComponent):
         ),
     ] = None
     ccc_capacitance: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description="CCC capacitance, in microfarads.",
             json_schema_extra={"units": "microfarad"},
         ),
     ] = 0.0
     commutation_reactance: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Commutation reactance per six-pulse bridge, in percent on the converter "
@@ -371,14 +373,14 @@ class ConverterStation(AnaredeComponent):
         ),
     ] = None
     current: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description="Nominal converter current, in A.",
             json_schema_extra={"units": "A"},
         ),
     ] = None
     dc_bus: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "DC bus number to which the converter is connected, as defined in the "
@@ -387,20 +389,20 @@ class ConverterStation(AnaredeComponent):
         ),
     ] = None
     frequency: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description="Frequency, in Hz, of the AC system to which the CCC is connected.",
             json_schema_extra={"units": "Hz"},
         ),
     ] = 60
     mode: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description="Converter operating mode: R for rectifier, or I for inverter.",
         ),
     ] = None
     neutral_bus: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Neutral DC bus number to which the converter is connected, as defined in "
@@ -409,33 +411,33 @@ class ConverterStation(AnaredeComponent):
         ),
     ] = None
     number: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description="Converter identification number.",
         ),
     ] = None
     operation: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description="A or 0 - converter data addition. M or 2 - converter data modification.",
         ),
-    ] = 'A'
+    ] = "A"
     reactor_inductance: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description="Smoothing reactor inductance, in mH.",
             json_schema_extra={"units": "mH"},
         ),
     ] = 0.0
     reactor_resistance: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description="Smoothing reactor resistance, in ohms.",
             json_schema_extra={"units": "ohm"},
         ),
     ] = None
     secondary_voltage: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Line-to-line base voltage of the secondary side of the six-pulse bridge "
@@ -445,24 +447,25 @@ class ConverterStation(AnaredeComponent):
         ),
     ] = None
     six_pulse_bridges: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description="Number of six-pulse converter bridges.",
         ),
     ] = None
     transformer_power: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description="Power base of the six-pulse bridge converter transformer, in MVA.",
             json_schema_extra={"units": "MVA"},
         ),
     ] = None
 
+
 class TransferFunctionConstraint(AnaredeComponent):
     """Transfer-function constraint model."""
 
     condition_1: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "First condition operator. A specifies an interval condition. E specifies "
@@ -471,7 +474,7 @@ class TransferFunctionConstraint(AnaredeComponent):
         ),
     ] = None
     condition_2: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Second condition operator. A specifies an interval condition. E "
@@ -480,7 +483,7 @@ class TransferFunctionConstraint(AnaredeComponent):
         ),
     ] = None
     element_id_1: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Identifier of the first element: bus number, area number, voltage base, "
@@ -489,7 +492,7 @@ class TransferFunctionConstraint(AnaredeComponent):
         ),
     ] = None
     element_id_2: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Identifier of the second element: bus number, area number, voltage base, "
@@ -498,7 +501,7 @@ class TransferFunctionConstraint(AnaredeComponent):
         ),
     ] = None
     element_id_3: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Identifier of the third element: bus number, area number, voltage base, "
@@ -507,7 +510,7 @@ class TransferFunctionConstraint(AnaredeComponent):
         ),
     ] = None
     element_id_4: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Identifier of the fourth element: bus number, area number, voltage base, "
@@ -516,7 +519,7 @@ class TransferFunctionConstraint(AnaredeComponent):
         ),
     ] = None
     element_type_1: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "First element type. BARR specifies a bus, AREA an area, TENS a voltage "
@@ -525,7 +528,7 @@ class TransferFunctionConstraint(AnaredeComponent):
         ),
     ] = None
     element_type_2: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Second element type. BARR specifies a bus, AREA an area, TENS a voltage "
@@ -534,7 +537,7 @@ class TransferFunctionConstraint(AnaredeComponent):
         ),
     ] = None
     element_type_3: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Third element type. BARR specifies a bus, AREA an area, TENS a voltage "
@@ -543,7 +546,7 @@ class TransferFunctionConstraint(AnaredeComponent):
         ),
     ] = None
     element_type_4: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Fourth element type. BARR specifies a bus, AREA an area, TENS a voltage "
@@ -552,16 +555,16 @@ class TransferFunctionConstraint(AnaredeComponent):
         ),
     ] = None
     interconnection: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "T fixes automatic tap voltage control for all selected transformers. I "
                 "fixes only selected interconnection circuits."
             ),
         ),
-    ] = 'T'
+    ] = "T"
     main_condition: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "Main condition between the sets defined by conditions 1 and 2. X means "
@@ -570,60 +573,61 @@ class TransferFunctionConstraint(AnaredeComponent):
         ),
     ] = None
     operation: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "A - addition of fixed CTAP-control data. E - elimination of fixed "
                 "CTAP-control data."
             ),
         ),
-    ] = 'A'
+    ] = "A"
+
 
 class DCLinkOwner(AnaredeComponent):
     """DC link owner model."""
 
     himvar_mode: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description=(
                 "DC link operating mode selector: N for normal operation, or H for HiMVAr "
                 "Consumption mode."
             ),
         ),
-    ] = 'N'
+    ] = "N"
     anarede_name: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description="Alphanumeric identification of the DC link name.",
         ),
     ] = None
     number: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description="DC link identification number.",
         ),
     ] = None
     operation: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description="A or 0 - DC link data addition. M or 2 - DC link data modification.",
         ),
-    ] = 'A'
+    ] = "A"
     power_base: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description="DC link power base, in MW.",
             json_schema_extra={"units": "MW"},
         ),
-    ] = 'DASE constant base'
+    ] = "DASE constant base"
     state: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description="L if the DC link is in operation. D if the DC link is out of operation.",
         ),
-    ] = 'L'
+    ] = "L"
     voltage: Annotated[
-        ParsedScalar,
+        int | float | str | None,
         Field(
             description="Nominal DC link operating voltage, in kV.",
             json_schema_extra={"units": "kV"},
