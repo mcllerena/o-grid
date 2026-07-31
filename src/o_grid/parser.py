@@ -10,9 +10,11 @@ from pathlib import Path
 from typing import Any, TypeAlias
 
 from infrasys import System
+from loguru import logger
 
 from o_grid.constants import REQUIRED_KEYS
-from o_grid.models import BLOCK_BASE_CLASSES, AnaredeComponent, Arc, Area
+from o_grid.models import BLOCK_BASE_CLASSES, AnaredeComponent, Arc, Area, MinMax
+from o_grid.units import Voltage
 from o_grid.utils.utils_parser import normalize_row
 
 ParsedScalar: TypeAlias = int | float | str | None
@@ -105,7 +107,7 @@ class AnaredeInfrasysParser:
         if field_name == "name":
             return "anarede_name"
         if field_name == "type":
-            return "bus_type"
+            return "bustype"
         return field_name
 
     def _to_model_values(self, values: Mapping[str, ParsedScalar]) -> dict[str, ParsedScalar]:
@@ -161,8 +163,8 @@ class AnaredeInfrasysParser:
 
             if active_block in {"DOPC", "DCTE"}:
                 for record in self._parse_pair_records(active_block, line, components_by_block):
-                    system.add_component(record)
                     components_by_block[active_block].append(record)
+                    self._add_component(system, record)
                 continue
 
             if (
@@ -175,8 +177,8 @@ class AnaredeInfrasysParser:
                     len(components_by_block["DBSH_BANK"]) + 1,
                     parent_record_index=current_dbsh.record_index,
                 )
-                system.add_component(bank_record)
                 components_by_block["DBSH_BANK"].append(bank_record)
+                self._add_component(system, bank_record)
                 continue
 
             record = self._parse_record(
@@ -188,18 +190,18 @@ class AnaredeInfrasysParser:
             if active_block == "DLIN":
                 arc = self._build_arc_from_dlin_record(record, len(components_by_block["DLIN"]))
                 setattr(record, "arc", arc)
-                system.add_component(arc)
+                self._add_component(system, arc)
 
             if active_block not in BUS_INTERNAL_GROUP_BLOCKS and active_block != "DBAR":
                 if active_block != "DLIN" or not self._is_transformer_dlin_record(record):
-                    system.add_component(record)
+                    self._add_component(system, record)
 
             if active_block == "DLIN":
                 for derived in self._derive_transformer_records_from_line(
                     record,
                     components_by_block,
                 ):
-                    system.add_component(derived)
+                    self._add_component(system, derived)
 
             if active_block == "DBSH":
                 current_dbsh = record
@@ -208,6 +210,7 @@ class AnaredeInfrasysParser:
             system.description = "\n".join(title_lines)
 
         self._attach_bus_voltage_groups(components_by_block)
+        self._log_component_summary(system)
 
         return ParsedAnaredeSystem(
             source=source,
@@ -215,6 +218,18 @@ class AnaredeInfrasysParser:
             components_by_block={k: v for k, v in components_by_block.items() if v},
             component_classes=self.component_classes,
         )
+
+    def _add_component(self, system: System, component: AnaredeComponent) -> None:
+        system.add_component(component)
+
+    def _log_component_summary(self, system: System) -> None:
+        counts: dict[str, int] = {}
+        for component in system._component_mgr.iter_all():
+            component_name = type(component).__name__
+            counts[component_name] = counts.get(component_name, 0) + 1
+
+        for component_name, count in counts.items():
+            logger.info("Parsed {} component(s): {}", component_name, count)
 
     def _attach_bus_areas(
         self, system: System, components_by_block: dict[str, list[AnaredeComponent]]
@@ -231,14 +246,16 @@ class AnaredeInfrasysParser:
                 continue
 
             area = areas_by_key.get(area_key)
+            area_number = int(float(area_key)) if self._looks_numeric(area_key) else None
             if area is None:
-                area_number = int(float(area_key)) if self._looks_numeric(area_key) else None
                 area = Area(name=f"Area_{area_key}", area_number=area_number)
                 areas_by_key[area_key] = area
-                system.add_component(area)
+                self._add_component(system, area)
 
             setattr(bus, "area", area)
-            system.add_component(bus)
+            self._add_component(system, bus)
+            if area_number is None:
+                logger.warning("Bus {} references a non-numeric area key {}", bus.name, area_key)
 
     def _build_arc_from_dlin_record(self, line_record: AnaredeComponent, record_index: int) -> Arc:
         from_bus = getattr(line_record, "from_bus", None)
@@ -270,18 +287,25 @@ class AnaredeInfrasysParser:
             base_group = base_by_group.get(base_key)
             setattr(bus, "voltage_base_group_data", base_group)
             if base_group is not None:
-                setattr(bus, "base_voltage", getattr(base_group, "voltage", None))
+                voltage = getattr(base_group, "voltage", None)
+                setattr(
+                    bus,
+                    "base_voltage",
+                    Voltage(voltage, "kV") if voltage is not None else None,
+                )
 
             limit_key = self._normalize_group_key(getattr(bus, "voltage_limit_group", None))
             limit_group = limit_by_group.get(limit_key)
             setattr(bus, "voltage_limit_group_data", limit_group)
             if limit_group is not None:
+                minimum_voltage_limit = getattr(limit_group, "minimum_voltage_limit", None)
+                maximum_voltage_limit = getattr(limit_group, "maximum_voltage_limit", None)
                 setattr(
                     bus,
                     "voltage_limits",
-                    (
-                        getattr(limit_group, "minimum_voltage_limit", None),
-                        getattr(limit_group, "maximum_voltage_limit", None),
+                    MinMax(
+                        min=minimum_voltage_limit if minimum_voltage_limit is not None else 0.0,
+                        max=maximum_voltage_limit if maximum_voltage_limit is not None else 0.0,
                     ),
                 )
 
@@ -301,6 +325,18 @@ class AnaredeInfrasysParser:
             return ""
         if isinstance(value, float) and value.is_integer():
             return str(int(value))
+        if hasattr(value, "area_number"):
+            area_number = getattr(value, "area_number", None)
+            if area_number is not None:
+                return str(area_number).strip().upper()
+        if hasattr(value, "load_zone_number"):
+            load_zone_number = getattr(value, "load_zone_number", None)
+            if load_zone_number is not None:
+                return str(load_zone_number).strip().upper()
+        if hasattr(value, "group"):
+            group = getattr(value, "group", None)
+            if group is not None:
+                return str(group).strip().upper()
         return str(value).strip().upper()
 
     @staticmethod

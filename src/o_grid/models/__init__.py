@@ -29,6 +29,7 @@ from o_grid.models.control import (
     TapTransformerControl,
     TransferFunctionConstraint,
 )
+from o_grid.models.enums import ACBusTypes
 from o_grid.models.generators import (
     GeneratorDispatchData,
     ReactiveCompensator,
@@ -83,6 +84,7 @@ BLOCK_BASE_CLASSES: dict[str, type[AnaredeComponent]] = {
 }
 
 __all__ = [
+    "ACBusTypes",
     "ACBus",
     "ACBranch",
     "ACLine",

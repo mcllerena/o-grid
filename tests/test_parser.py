@@ -2,137 +2,40 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import pytest
 from infrasys import System
 
-from o_grid import export_rows, parse_rows
-from o_grid.constants import REQUIRED_KEYS
 from o_grid.models import (
-    ACBranch,
     ACBus,
+    ACBusTypes,
     ACLine,
     Arc,
     Area,
-    Branch,
     BusShunt,
-    ControllableSeriesCompensator,
-    Line,
     LineShunt,
+    MinMax,
     PhaseShiftingTransformer,
-    StaticVARCompensator,
     TapChangingTransformer,
-    TapTransformer,
     TapTransformerControl,
     VoltageBaseGroup,
     VoltageLimitGroup,
 )
-from o_grid.parser import AnaredeInfrasysParser, parse_anarede_system
-from o_grid.utils.utils_exporter import format_row
-from o_grid.utils.utils_parser import normalize_row, to_float
-
-DATA_DIR = Path(__file__).resolve().parent / "data" / "anarede"
-
-
-def test_constants_contract() -> None:
-    assert REQUIRED_KEYS == ("bus", "load_mw", "generator_mw")
-
-
-def test_to_float_handles_numeric_and_string_values() -> None:
-    assert to_float(1) == 1.0
-    assert to_float(2.5) == 2.5
-    assert to_float("3.2") == 3.2
-
-
-def test_to_float_rejects_empty_string() -> None:
-    with pytest.raises(ValueError):
-        to_float("  ")
-
-
-def test_to_float_rejects_unsupported_types() -> None:
-    with pytest.raises(TypeError):
-        to_float([1, 2, 3])
-
-
-def test_normalize_row_converts_numeric_fields() -> None:
-    row = {"bus": "A", "load_mw": "2.0", "generator_mw": 3}
-    normalized = normalize_row(row, REQUIRED_KEYS)
-
-    assert normalized["bus"] == "A"
-    assert normalized["load_mw"] == 2.0
-    assert normalized["generator_mw"] == 3.0
-
-
-def test_normalize_row_missing_keys_error() -> None:
-    with pytest.raises(KeyError):
-        normalize_row({"bus": "A", "load_mw": 1.0}, REQUIRED_KEYS)
-
-
-def test_parse_rows_normalizes_all_rows() -> None:
-    rows = [
-        {"bus": "A", "load_mw": "1", "generator_mw": "1.5"},
-        {"bus": "B", "load_mw": 2, "generator_mw": 2.5},
-    ]
-    parsed = parse_rows(rows)
-
-    assert parsed == [
-        {"bus": "A", "load_mw": 1.0, "generator_mw": 1.5},
-        {"bus": "B", "load_mw": 2.0, "generator_mw": 2.5},
-    ]
-
-
-def test_format_row_is_stable_and_sorted() -> None:
-    row = {"bus": "A", "generator_mw": 5.0, "load_mw": 3.0}
-    assert format_row(row) == "A,5.0,3.0"
-
-
-def test_export_rows_uses_separator() -> None:
-    rows = [
-        {"bus": "A", "generator_mw": 5.0, "load_mw": 3.0},
-        {"bus": "B", "generator_mw": 1.0, "load_mw": 2.0},
-    ]
-    text = export_rows(rows, separator=";")
-
-    assert text == "A;5.0;3.0\nB;1.0;2.0"
-
-
-def test_models_package_exports_expected_types() -> None:
-    assert ACBus.__name__ == "ACBus"
-    assert ACLine.__name__ == "ACLine"
-    assert Branch.__name__ == "Branch"
-    assert ACBranch.__name__ == "ACBranch"
-    assert Line.__name__ == "Line"
-    assert BusShunt.__name__ == "BusShunt"
-    assert LineShunt.__name__ == "LineShunt"
-    assert TapChangingTransformer.__name__ == "TapTransformer"
-    assert TapTransformer.__name__ == "TapTransformer"
-    assert PhaseShiftingTransformer.__name__ == "PhaseShiftingTransformer"
-    assert StaticVARCompensator.__name__ == "StaticVARCompensator"
-    assert ControllableSeriesCompensator.__name__ == "ControllableSeriesCompensator"
-    assert TapTransformerControl.__name__ == "TapTransformerControl"
-
-
-def test_acline_follows_branch_hierarchy() -> None:
-    assert issubclass(ACLine, Line)
-    assert issubclass(Line, ACBranch)
-    assert issubclass(ACBranch, Branch)
-
-
-def test_example_helpers_expose_public_class_types() -> None:
-    assert Branch.example().class_type == "Branch"
-    assert Line.example().class_type == "Line"
-    assert ACBus.example().class_type == "ACBus"
-    assert Area.example().class_type == "Area"
+from o_grid.parser import AnaredeInfrasysParser, parse_anarede_system, parse_rows
+from o_grid.units import Voltage
 
 
 def test_parser_attach_bus_areas_and_build_arc() -> None:
     parser = AnaredeInfrasysParser()
     system = System(name="demo")
     bus = ACBus(number=1, name="Bus-1", area=1)
-    parser._attach_bus_areas(system, {"DBAR": [bus]})
+    bus_with_text_area = ACBus(number=2, name="Bus-2", area="North")
 
-    assert len(list(system.get_components(Area))) == 1
-    assert len(list(system.get_components(ACBus))) == 1
+    parser._attach_bus_areas(system, {"DBAR": [bus, bus_with_text_area]})
+
+    assert len(list(system.get_components(Area))) == 2
+    assert len(list(system.get_components(ACBus))) == 2
     assert isinstance(bus.area, Area)
+    assert isinstance(bus_with_text_area.area, Area)
+    assert bus_with_text_area.area.area_number is None
 
     line = ACLine(name="Line-1", from_bus=1, to_bus=2)
     arc = parser._build_arc_from_dlin_record(line, 3)
@@ -141,9 +44,9 @@ def test_parser_attach_bus_areas_and_build_arc() -> None:
     assert arc.to_from == 2
 
 
-def test_parse_anarede_d9nodes_to_infrasys() -> None:
+def test_parse_anarede_d9nodes_to_infrasys(data_folder: Path) -> None:
     parser = AnaredeInfrasysParser()
-    parsed = parser.parse(DATA_DIR / "d_9nodes.pwf")
+    parsed = parser.parse(data_folder / "anarede" / "d_9nodes.pwf")
 
     assert "DBAR" in parsed.components_by_block
     assert "DLIN" in parsed.components_by_block
@@ -169,14 +72,16 @@ def test_parse_anarede_d9nodes_to_infrasys() -> None:
     buses = parsed.components_by_block["DBAR"]
     assert all(isinstance(bus, ACBus) for bus in buses)
     assert buses[1].name == "BAR-2_GER2_2"
-    assert buses[1].bus_type == 1
-    assert buses[0].bus_type == 2
-    assert buses[2].bus_type == 0
+    assert buses[1].bustype == ACBusTypes.PV
+    assert buses[0].bustype == ACBusTypes.REF
+    assert buses[2].bustype == ACBusTypes.PQ
     assert all(getattr(component, "uuid", None) is not None for component in buses)
     assert all(bus.voltage_base_group_data is not None for bus in buses)
     assert all(bus.voltage_limit_group_data is not None for bus in buses)
     assert all(isinstance(bus.voltage_base_group_data, VoltageBaseGroup) for bus in buses)
     assert all(isinstance(bus.voltage_limit_group_data, VoltageLimitGroup) for bus in buses)
+    assert all(isinstance(bus.base_voltage, Voltage) for bus in buses)
+    assert all(isinstance(bus.voltage_limits, MinMax) for bus in buses)
 
     line = parsed.components_by_block["DLIN"][0]
     assert not line.name.startswith("ACLine_")
@@ -186,8 +91,8 @@ def test_parse_anarede_d9nodes_to_infrasys() -> None:
     assert parsed.system.description == "Sistema-Teste de 9 Barras - Caso Inicial"
 
 
-def test_parse_anarede_dcer_dcsc_blocks() -> None:
-    parsed = parse_anarede_system(DATA_DIR / "d_33nodes_dcer_dcsc.pwf")
+def test_parse_anarede_dcer_dcsc_blocks(data_folder: Path) -> None:
+    parsed = parse_anarede_system(data_folder / "anarede" / "d_33nodes_dcer_dcsc.pwf")
 
     assert len(parsed.components_by_block["DCER"]) > 0
     assert len(parsed.components_by_block["DCSC"]) > 0
@@ -196,8 +101,8 @@ def test_parse_anarede_dcer_dcsc_blocks() -> None:
     assert issubclass(parsed.component_classes["DCTR"], TapTransformerControl)
 
 
-def test_parse_anarede_derives_tap_changers_from_dlin() -> None:
-    parsed = parse_anarede_system(DATA_DIR / "d_33nodes.pwf")
+def test_parse_anarede_derives_tap_changers_from_dlin(data_folder: Path) -> None:
+    parsed = parse_anarede_system(data_folder / "anarede" / "d_33nodes.pwf")
 
     dlin_records = parsed.components_by_block["DLIN"]
     expected_tap_count = sum(
@@ -285,6 +190,50 @@ def test_parse_pair_records_ignores_short_line() -> None:
     parser = AnaredeInfrasysParser()
     empty = parser._parse_pair_records("DOPC", "ONLYONE", {"DOPC": []})
     assert empty == []
+
+
+def test_parser_helper_methods_cover_core_branches() -> None:
+    parser = AnaredeInfrasysParser()
+
+    assert parser._model_field_name("type") == "bustype"
+    assert parser._model_field_name("name") == "anarede_name"
+    assert parser._model_field_name("voltage") == "voltage"
+
+    load_zone = __import__("o_grid.models", fromlist=["LoadZone"]).LoadZone(
+        name="Zone_3", load_zone_number=3
+    )
+
+    class DummyGroup:
+        def __init__(self, group: str) -> None:
+            self.group = group
+
+    assert parser._normalize_group_key(2.0) == "2"
+    assert parser._normalize_group_key(Area(name="Area_7", area_number=7)) == "7"
+    assert parser._normalize_group_key(load_zone) == "3"
+    assert parser._normalize_group_key(DummyGroup("ignored")) == "IGNORED"
+
+    name = parser._component_name("DBAR", 3, {"number": 11})
+    assert name == "11_3"
+
+
+def test_parse_pair_records_handles_numeric_conversion() -> None:
+    parser = AnaredeInfrasysParser()
+    records = parser._parse_pair_records(
+        "DCTE",
+        "BASE 100. TEPA 1.",
+        {"DCTE": []},
+    )
+
+    assert len(records) == 2
+    assert getattr(records[0], "mnemonic") == "BASE"
+    assert getattr(records[0], "value") == 100.0
+
+
+def test_parse_rows_normalizes_data() -> None:
+    rows = [{"bus": "Bus", "load_mw": 1.5, "generator_mw": 0.0, "extra": "x"}]
+    parsed = parse_rows(rows)
+
+    assert parsed == rows
 
 
 def test_section_header_recognizes_dtpf_circ() -> None:

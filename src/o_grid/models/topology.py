@@ -4,9 +4,12 @@ from __future__ import annotations
 
 from typing import Annotated
 
-from pydantic import Field
+from pydantic import Field, field_validator
 
 from o_grid.models.base import AnaredeComponent
+from o_grid.models.enums import ACBusTypes
+from o_grid.models.named_tuples import MinMax
+from o_grid.units import Voltage
 
 
 class Topology(AnaredeComponent):
@@ -77,30 +80,48 @@ class Bus(Topology):
         int | None,
         Field(description="A unique bus identification number."),
     ] = None
-    bus_type: Annotated[
-        int | str | None,
+    bustype: Annotated[
+        ACBusTypes | None,
         Field(description="Type/category of bus."),
     ] = None
     area: Annotated[
-        Area | int | None,
+        Area | None,
         Field(description="Area containing the bus."),
     ] = None
     load_zone: Annotated[
-        LoadZone | int | str | None,
+        LoadZone | None,
         Field(description="Load zone containing the bus."),
     ] = None
     voltage_limits: Annotated[
-        tuple[float, float] | None,
+        MinMax | None,
         Field(description="Voltage limits (min, max)."),
     ] = None
     base_voltage: Annotated[
-        float | None,
+        Voltage | None,
         Field(description="Base voltage in kV.", json_schema_extra={"units": "kV"}),
     ] = None
     magnitude: Annotated[
         float | None,
         Field(description="Voltage as a multiple of base voltage."),
     ] = None
+
+    @field_validator("area", mode="before")
+    @classmethod
+    def _coerce_area(cls, value: object) -> Area | None:
+        if value is None or isinstance(value, Area):
+            return value
+        if isinstance(value, int):
+            return Area(name=f"Area_{value}", area_number=value)
+        return Area(name=str(value), area_number=None)
+
+    @field_validator("load_zone", mode="before")
+    @classmethod
+    def _coerce_load_zone(cls, value: object) -> LoadZone | None:
+        if value is None or isinstance(value, LoadZone):
+            return value
+        if isinstance(value, int):
+            return LoadZone(name=f"LoadZone_{value}", load_zone_number=value)
+        return LoadZone(name=str(value), load_zone_number=None)
 
 
 class Arc(Topology):
@@ -120,6 +141,29 @@ class ACBus(Bus):
             exclude=True,
         ),
     ] = None
+
+    @field_validator("bustype", mode="before")
+    @classmethod
+    def _coerce_bus_type(cls, value: object) -> ACBusTypes | None:
+        if value is None or value == "":
+            return ACBusTypes.PQ
+        if isinstance(value, ACBusTypes):
+            return value
+        if isinstance(value, int):
+            return {0: ACBusTypes.PQ, 1: ACBusTypes.PV, 2: ACBusTypes.REF}.get(value, ACBusTypes.PQ)
+        text = str(value).strip().upper()
+        if not text:
+            return ACBusTypes.PQ
+        return ACBusTypes[text] if text in ACBusTypes.__members__ else ACBusTypes.PQ
+
+    @property
+    def bus_type(self) -> ACBusTypes | None:
+        return self.bustype
+
+    @bus_type.setter
+    def bus_type(self, value: ACBusTypes | int | str | None) -> None:
+        self.bustype = self._coerce_bus_type(value)
+
     voltage_limit_group_data: Annotated[
         VoltageLimitGroup | None,
         Field(
@@ -324,7 +368,14 @@ class ACBus(Bus):
 
     @classmethod
     def example(cls) -> ACBus:
-        return ACBus(number=1, name="ExampleACBus", area=Area.example())
+        return ACBus(
+            number=1,
+            name="ExampleACBus",
+            area=Area.example(),
+            bustype=ACBusTypes.PV,
+            base_voltage=Voltage(138.0, "kV"),
+            voltage_limits=MinMax(min=0.9, max=1.1),
+        )
 
 
 class DCBus(Bus):
@@ -406,7 +457,7 @@ class DCBus(Bus):
 
     @classmethod
     def example(cls) -> DCBus:
-        return DCBus(number=1, name="ExampleDCBus", area=Area.example())
+        return DCBus(number=1, name="ExampleDCBus", area=Area.example(), bustype=ACBusTypes.PV)
 
 
 class VoltageLimitGroup(AnaredeComponent):
