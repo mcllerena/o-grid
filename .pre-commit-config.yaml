@@ -48,12 +48,12 @@ repos:
         types_or: [toml]
       - id: ruff-format
         name: ruff format check
-        entry: uv run --locked --group dev ruff format --check
+        entry: uv run --locked --group dev ruff format
         language: system
         types_or: [python, pyi]
       - id: ruff-check
         name: ruff check
-        entry: uv run --locked --group dev ruff check
+        entry: uv run --locked --group dev ruff check --fix
         language: system
         types_or: [python, pyi]
       - id: ty-check

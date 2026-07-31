@@ -51,6 +51,9 @@ class ActivePower(BaseQuantity):
 class ApparentPower(BaseQuantity):
     __base_unit__ = "MVA"
 
+    def __repr__(self) -> str:
+        return f"<Quantity({self.magnitude!r}, 'MVA')>"
+
 
 class ReactivePower(BaseQuantity):
     __base_unit__ = "MVAr"

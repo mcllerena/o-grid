@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from infrasys import Component
+
 from o_grid.models.base import AnaredeComponent, OGridComponent
 from o_grid.models.branch import (
     ACBranch,
@@ -11,12 +13,12 @@ from o_grid.models.branch import (
     DCLink,
     FromToToFrom,
     Line,
+    LTCTransformer,
     MinMax,
     PhaseShiftingTransformer,
     SeriesCompensator,
     ShuntLine,
     TapChangingTransformer,
-    TapTransformer,
     TransferFunctionCircuit,
 )
 from o_grid.models.case import CaseTitle
@@ -29,7 +31,13 @@ from o_grid.models.control import (
     TapTransformerControl,
     TransferFunctionConstraint,
 )
-from o_grid.models.enums import ACBusTypes, CSCControlMode, SVCControlMode
+from o_grid.models.enums import (
+    ACBusTypes,
+    CircuitState,
+    CSCControlMode,
+    OptionState,
+    SVCControlMode,
+)
 from o_grid.models.generators import (
     GeneratorDispatchData,
     ReactiveCompensator,
@@ -54,7 +62,7 @@ from o_grid.models.topology import (
     VoltageLimitGroup,
 )
 
-BLOCK_BASE_CLASSES: dict[str, type[AnaredeComponent]] = {
+BLOCK_BASE_CLASSES: dict[str, type[Component]] = {
     "TITU": CaseTitle,
     "DOPC": PowerFlowOption,
     "DCTE": ProgramConstant,
@@ -78,13 +86,15 @@ BLOCK_BASE_CLASSES: dict[str, type[AnaredeComponent]] = {
     "DSHL": ShuntLine,
     "DTPF": TransferFunctionConstraint,
     "DTPF_CIRC": TransferFunctionCircuit,
-    "DLIN_TAP": TapTransformer,
+    "DLIN_TAP": LTCTransformer,
     "DLIN_PHASE_SHIFT": PhaseShiftingTransformer,
 }
 
 __all__ = [
     "ACBusTypes",
     "CSCControlMode",
+    "OptionState",
+    "CircuitState",
     "ACBus",
     "ACBranch",
     "ACLine",
@@ -121,7 +131,7 @@ __all__ = [
     "ShuntCompensator",
     "ShuntLine",
     "TapTransformerControl",
-    "TapTransformer",
+    "LTCTransformer",
     "TapChangingTransformer",
     "Topology",
     "TransferFunctionCircuit",

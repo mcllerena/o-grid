@@ -7,10 +7,16 @@ from typing import Annotated
 from pydantic import Field, model_validator
 
 from o_grid.models.base import AnaredeComponent
-from o_grid.models.enums import CSCControlMode
+from o_grid.models.enums import CircuitState, CSCControlMode
 from o_grid.models.named_tuples import FromToToFrom, MinMax
 from o_grid.models.topology import ACBus, Arc, Area
-from o_grid.units import ActivePower, ApparentPower, Percentage, PerUnit, get_magnitude
+from o_grid.units import (
+    ActivePower,
+    ApparentPower,
+    Percentage,
+    PerUnit,
+    get_magnitude,
+)
 
 
 class Branch(AnaredeComponent):
@@ -25,32 +31,25 @@ class ACBranch(Branch):
     """Class representing an AC connection between components."""
 
     arc: Annotated[Arc | None, Field(description="The branch's connections.")] = None
-    r: Annotated[float | None, Field(description="Resistance of the branch")] = None
-    x: Annotated[float | None, Field(description="Reactance of the branch")] = None
-    rating: Annotated[float | None, Field(ge=0, description="Thermal rating of the line.")] = None
+    r: Annotated[
+        Percentage | None,
+        Field(description="Resistance of the branch, in %."),
+    ] = None
+    x: Annotated[
+        Percentage | None,
+        Field(description="Reactance of the branch, in %."),
+    ] = None
+    rating: Annotated[
+        ApparentPower | None,
+        Field(description="Thermal rating of the line, in MVA."),
+    ] = None
 
 
 class Line(ACBranch):
     """Class representing an AC transmission line."""
 
-    b: Annotated[FromToToFrom | None, Field(description="Shunt susceptance in pu")] = None
-    g: Annotated[FromToToFrom | None, Field(description="Shunt conductance in pu")] = None
-    rating_b: Annotated[
-        float | None,
-        Field(description="Second thermal rating of the line."),
-    ] = None
-    rating_c: Annotated[
-        float | None,
-        Field(description="Third thermal rating of the line."),
-    ] = None
-    active_power_flow: Annotated[
-        float,
-        Field(description="Initial condition of active power flow on the line (MW)", ge=0),
-    ] = 0.0
-    reactive_power_flow: Annotated[
-        float,
-        Field(description="Initial condition of reactive power flow on the line (MVAR)", ge=0),
-    ] = 0.0
+    b: Annotated[FromToToFrom | None, Field(description="Shunt susceptance in MVAr")] = None
+    g: Annotated[FromToToFrom | None, Field(description="Shunt conductance in MW")] = None
     angle_limits: Annotated[MinMax | None, Field(description="The branch angle limits")] = None
 
     @classmethod
@@ -58,11 +57,7 @@ class Line(ACBranch):
         return Line(
             name="ExampleLine",
             arc=Arc(from_to=ACBus.example(), to_from=ACBus.example()),
-            rating=100,
-            rating_b=120,
-            rating_c=150,
-            active_power_flow=100,
-            reactive_power_flow=100,
+            rating=ApparentPower(100, "MVA"),
             angle_limits=MinMax(min=-0.03, max=0.03),
         )
 
@@ -71,7 +66,7 @@ class ACLine(Line):
     """AC transmission line model."""
 
     controlled_bus: Annotated[
-        int | float | str | None,
+        ACBus | None,
         Field(
             description=(
                 "In the case of transformer type circuits with automatic tap variation, "
@@ -79,15 +74,15 @@ class ACLine(Line):
                 "be controlled."
             ),
         ),
-    ] = "From Bus"
-    dlin_circuit: Annotated[
+    ] = None
+    line_circuit: Annotated[
         int | float | str | None,
         Field(
             description="Identification number of the parallel AC circuit.",
         ),
     ] = None
     emergency_capacity: Annotated[
-        int | float | str | None,
+        ApparentPower | None,
         Field(
             description=(
                 "Circuit loading capacity under emergency conditions for flow monitoring "
@@ -95,16 +90,7 @@ class ACLine(Line):
             ),
             json_schema_extra={"units": "MVA"},
         ),
-    ] = "Normal Capacity"
-    equipment_capacity: Annotated[
-        int | float | str | None,
-        Field(
-            description=(
-                "Loading capacity of the equipment with the smallest loading capacity "
-                "connected to the circuit."
-            ),
-        ),
-    ] = "Normal Capacity"
+    ] = None
     from_bus: Annotated[
         int | float | str | None,
         Field(
@@ -115,13 +101,13 @@ class ACLine(Line):
         ),
     ] = None
     from_bus_opening: Annotated[
-        int | float | str | None,
+        CircuitState | None,
         Field(
             description="L - Connected.\\nD - Disconnected",
         ),
-    ] = "L"
+    ] = CircuitState.CLOSED
     normal_capacity: Annotated[
-        int | float | str | None,
+        ApparentPower | None,
         Field(
             description=(
                 "Circuit loading capacity under normal conditions for flow monitoring "
@@ -129,7 +115,7 @@ class ACLine(Line):
             ),
             json_schema_extra={"units": "MVA"},
         ),
-    ] = 99999.0
+    ] = ApparentPower(99999.0, "MVA")
     number_of_taps: Annotated[
         int | float | str | None,
         Field(
@@ -139,107 +125,13 @@ class ACLine(Line):
             ),
         ),
     ] = 33
-    operation: Annotated[
-        int | float | str | None,
-        Field(
-            description=(
-                "A or 0 - Circuit data addition.\\nE or 1 - Circuit data elimination.\\nM "
-                "or 2 - Circuit data modification."
-            ),
-        ),
-    ] = "A"
     owner: Annotated[
-        int | float | str | None,
+        Area | None,
         Field(
             description=(
-                "F if the circuit belongs to the area of the bus defined in the From Bus "
-                "field.\\nT if the circuit belongs to the area of the bus defined in the "
-                "To Bus field."
+                "Area that owns the line. This is resolved from the selected terminal "
+                "bus area during parsing."
             ),
-        ),
-    ] = "F"
-    phase_shift: Annotated[
-        int | float | str | None,
-        Field(
-            description=(
-                "Phase shift angle value, in degrees, for phase shifting transformers. "
-                "The specified angular phase shift is applied relative to the angle of "
-                "the bus defined in the From Bus field. Implicit decimal point between "
-                "columns 56 and 57."
-            ),
-            json_schema_extra={"units": "degrees"},
-        ),
-    ] = 0.0
-    reactance: Annotated[
-        int | float | str | None,
-        Field(
-            description=(
-                "Circuit reactance value, in %. For transformers this value corresponds "
-                "to the reactance value for the nominal tap. Implicit decimal point "
-                "between columns 30 and 31."
-            ),
-            json_schema_extra={"units": "%"},
-        ),
-    ] = 0.0
-    resistance: Annotated[
-        int | float | str | None,
-        Field(
-            description=(
-                "Circuit resistance value, in %. For transformers this value corresponds "
-                "to the resistance value for the nominal tap. Implicit decimal point "
-                "between columns 24 and 25."
-            ),
-            json_schema_extra={"units": "%"},
-        ),
-    ] = 0.0
-    state: Annotated[
-        int | float | str | None,
-        Field(
-            description=(
-                "L if the circuit is in operation (connected).\\nD if the circuit is out "
-                "of operation (disconnected)."
-            ),
-        ),
-    ] = "L"
-    susceptance: Annotated[
-        int | float | str | None,
-        Field(
-            description=(
-                "Total shunt susceptance value of the circuit, in Mvar. Implicit decimal "
-                "point between columns 35 and 36."
-            ),
-        ),
-    ] = 0.0
-    tap: Annotated[
-        int | float | str | None,
-        Field(
-            description=(
-                "Tap value referred to the bus defined in the From Bus field, in p.u., "
-                "for fixed tap transformers or an estimate of this value for automatic "
-                "tap changing transformers (LTC). Implicit decimal point between columns "
-                "40 and 41."
-            ),
-            json_schema_extra={"units": "p.u."},
-        ),
-    ] = None
-    tap_maximum: Annotated[
-        int | float | str | None,
-        Field(
-            description=(
-                "Maximum value that the tap can assume, in p.u., for automatic tap "
-                "changing transformers. Implicit decimal point between columns 50 and 51."
-            ),
-            json_schema_extra={"units": "p.u."},
-        ),
-    ] = None
-    tap_minimum: Annotated[
-        int | float | str | None,
-        Field(
-            description=(
-                "Minimum value that the tap can assume, in p.u., for automatic tap "
-                "changing transformers. Implicit decimal point between columns 45 and 46."
-            ),
-            json_schema_extra={"units": "p.u."},
         ),
     ] = None
     to_bus: Annotated[
@@ -252,11 +144,11 @@ class ACLine(Line):
         ),
     ] = None
     to_bus_opening: Annotated[
-        int | float | str | None,
+        CircuitState | None,
         Field(
             description="L - Connected.\\nD - Disconnected",
         ),
-    ] = "L"
+    ] = CircuitState.CLOSED
 
 
 class ControllableSeriesCompensator(AnaredeComponent):
@@ -321,7 +213,7 @@ class ControllableSeriesCompensator(AnaredeComponent):
         ),
     ] = Percentage(9999.0, "%")
     measurement_terminal: Annotated[
-        int | float | str | None,
+        ACBus | None,
         Field(
             description=(
                 "Number of the CSC terminal bus at which power or current is measured, as "
@@ -403,11 +295,11 @@ class ControllableSeriesCompensator(AnaredeComponent):
 SeriesCompensator = ControllableSeriesCompensator
 
 
-class TapTransformer(AnaredeComponent):
-    """Tap-changing transformer derived from line tap values."""
+class LTCTransformer(AnaredeComponent):
+    """Load Tap Changer Transformer derived from line tap values."""
 
     controlled_bus: Annotated[
-        int | float | str | None,
+        ACBus | None,
         Field(
             description=(
                 "In the case of transformer type circuits with automatic tap variation, "
@@ -415,15 +307,15 @@ class TapTransformer(AnaredeComponent):
                 "be controlled."
             ),
         ),
-    ] = "From Bus"
-    dlin_circuit: Annotated[
+    ] = None
+    line_circuit: Annotated[
         int | float | str | None,
         Field(
             description="Identification number of the parallel AC circuit.",
         ),
     ] = None
     emergency_capacity: Annotated[
-        int | float | str | None,
+        ApparentPower | None,
         Field(
             description=(
                 "Circuit loading capacity under emergency conditions for flow monitoring "
@@ -431,16 +323,7 @@ class TapTransformer(AnaredeComponent):
             ),
             json_schema_extra={"units": "MVA"},
         ),
-    ] = "Normal Capacity"
-    equipment_capacity: Annotated[
-        int | float | str | None,
-        Field(
-            description=(
-                "Loading capacity of the equipment with the smallest loading capacity "
-                "connected to the circuit."
-            ),
-        ),
-    ] = "Normal Capacity"
+    ] = ApparentPower(99999.0, "MVA")
     from_bus: Annotated[
         int | float | str | None,
         Field(
@@ -451,13 +334,13 @@ class TapTransformer(AnaredeComponent):
         ),
     ] = None
     from_bus_opening: Annotated[
-        int | float | str | None,
+        CircuitState | None,
         Field(
             description="L - Connected.\\nD - Disconnected",
         ),
-    ] = "L"
+    ] = CircuitState.CLOSED
     normal_capacity: Annotated[
-        int | float | str | None,
+        ApparentPower | None,
         Field(
             description=(
                 "Circuit loading capacity under normal conditions for flow monitoring "
@@ -465,7 +348,7 @@ class TapTransformer(AnaredeComponent):
             ),
             json_schema_extra={"units": "MVA"},
         ),
-    ] = 99999.0
+    ] = ApparentPower(99999.0, "MVA")
     number_of_taps: Annotated[
         int | float | str | None,
         Field(
@@ -475,59 +358,15 @@ class TapTransformer(AnaredeComponent):
             ),
         ),
     ] = 33
-    operation: Annotated[
-        int | float | str | None,
-        Field(
-            description=(
-                "A or 0 - Circuit data addition.\\nE or 1 - Circuit data elimination.\\nM "
-                "or 2 - Circuit data modification."
-            ),
-        ),
-    ] = "A"
     owner: Annotated[
-        int | float | str | None,
+        Area | None,
         Field(
             description=(
-                "F if the circuit belongs to the area of the bus defined in the From Bus "
-                "field.\\nT if the circuit belongs to the area of the bus defined in the "
-                "To Bus field."
+                "Area that owns the line. This is resolved from the selected terminal "
+                "bus area during parsing."
             ),
         ),
-    ] = "F"
-    phase_shift: Annotated[
-        int | float | str | None,
-        Field(
-            description=(
-                "Phase shift angle value, in degrees, for phase shifting transformers. "
-                "The specified angular phase shift is applied relative to the angle of "
-                "the bus defined in the From Bus field. Implicit decimal point between "
-                "columns 56 and 57."
-            ),
-            json_schema_extra={"units": "degrees"},
-        ),
-    ] = 0.0
-    reactance: Annotated[
-        int | float | str | None,
-        Field(
-            description=(
-                "Circuit reactance value, in %. For transformers this value corresponds "
-                "to the reactance value for the nominal tap. Implicit decimal point "
-                "between columns 30 and 31."
-            ),
-            json_schema_extra={"units": "%"},
-        ),
-    ] = 0.0
-    resistance: Annotated[
-        int | float | str | None,
-        Field(
-            description=(
-                "Circuit resistance value, in %. For transformers this value corresponds "
-                "to the resistance value for the nominal tap. Implicit decimal point "
-                "between columns 24 and 25."
-            ),
-            json_schema_extra={"units": "%"},
-        ),
-    ] = 0.0
+    ] = None
     state: Annotated[
         int | float | str | None,
         Field(
@@ -537,17 +376,21 @@ class TapTransformer(AnaredeComponent):
             ),
         ),
     ] = "L"
-    susceptance: Annotated[
-        int | float | str | None,
-        Field(
-            description=(
-                "Total shunt susceptance value of the circuit, in Mvar. Implicit decimal "
-                "point between columns 35 and 36."
-            ),
-        ),
-    ] = 0.0
+    r: Annotated[
+        Percentage | None,
+        Field(description="Resistance of the branch, in %."),
+    ] = None
+    x: Annotated[
+        Percentage | None,
+        Field(description="Reactance of the branch, in %."),
+    ] = None
+    rating: Annotated[
+        ApparentPower | None,
+        Field(description="Thermal rating of the line, in MVA."),
+    ] = None
+    b: Annotated[FromToToFrom | None, Field(description="Shunt susceptance in MVAr")] = None
     tap: Annotated[
-        int | float | str | None,
+        PerUnit | None,
         Field(
             description=(
                 "Tap value referred to the bus defined in the From Bus field, in p.u., "
@@ -559,7 +402,7 @@ class TapTransformer(AnaredeComponent):
         ),
     ] = None
     tap_maximum: Annotated[
-        int | float | str | None,
+        PerUnit | None,
         Field(
             description=(
                 "Maximum value that the tap can assume, in p.u., for automatic tap "
@@ -569,7 +412,7 @@ class TapTransformer(AnaredeComponent):
         ),
     ] = None
     tap_minimum: Annotated[
-        int | float | str | None,
+        PerUnit | None,
         Field(
             description=(
                 "Minimum value that the tap can assume, in p.u., for automatic tap "
@@ -588,21 +431,21 @@ class TapTransformer(AnaredeComponent):
         ),
     ] = None
     to_bus_opening: Annotated[
-        int | float | str | None,
+        CircuitState | None,
         Field(
             description="L - Connected.\\nD - Disconnected",
         ),
-    ] = "L"
+    ] = CircuitState.CLOSED
 
 
-TapChangingTransformer = TapTransformer
+TapChangingTransformer = LTCTransformer
 
 
 class PhaseShiftingTransformer(AnaredeComponent):
     """Phase-shifting transformer derived from line phase-shift angle."""
 
     controlled_bus: Annotated[
-        int | float | str | None,
+        ACBus | None,
         Field(
             description=(
                 "In the case of transformer type circuits with automatic tap variation, "
@@ -610,15 +453,15 @@ class PhaseShiftingTransformer(AnaredeComponent):
                 "be controlled."
             ),
         ),
-    ] = "From Bus"
-    dlin_circuit: Annotated[
+    ] = None
+    line_circuit: Annotated[
         int | float | str | None,
         Field(
             description="Identification number of the parallel AC circuit.",
         ),
     ] = None
     emergency_capacity: Annotated[
-        int | float | str | None,
+        ApparentPower | None,
         Field(
             description=(
                 "Circuit loading capacity under emergency conditions for flow monitoring "
@@ -626,16 +469,7 @@ class PhaseShiftingTransformer(AnaredeComponent):
             ),
             json_schema_extra={"units": "MVA"},
         ),
-    ] = "Normal Capacity"
-    equipment_capacity: Annotated[
-        int | float | str | None,
-        Field(
-            description=(
-                "Loading capacity of the equipment with the smallest loading capacity "
-                "connected to the circuit."
-            ),
-        ),
-    ] = "Normal Capacity"
+    ] = ApparentPower(99999.0, "MVA")
     from_bus: Annotated[
         int | float | str | None,
         Field(
@@ -646,13 +480,13 @@ class PhaseShiftingTransformer(AnaredeComponent):
         ),
     ] = None
     from_bus_opening: Annotated[
-        int | float | str | None,
+        CircuitState | None,
         Field(
             description="L - Connected.\\nD - Disconnected",
         ),
-    ] = "L"
+    ] = CircuitState.CLOSED
     normal_capacity: Annotated[
-        int | float | str | None,
+        ApparentPower | None,
         Field(
             description=(
                 "Circuit loading capacity under normal conditions for flow monitoring "
@@ -660,7 +494,7 @@ class PhaseShiftingTransformer(AnaredeComponent):
             ),
             json_schema_extra={"units": "MVA"},
         ),
-    ] = 99999.0
+    ] = ApparentPower(99999.0, "MVA")
     number_of_taps: Annotated[
         int | float | str | None,
         Field(
@@ -680,49 +514,14 @@ class PhaseShiftingTransformer(AnaredeComponent):
         ),
     ] = "A"
     owner: Annotated[
-        int | float | str | None,
+        Area | None,
         Field(
             description=(
-                "F if the circuit belongs to the area of the bus defined in the From Bus "
-                "field.\\nT if the circuit belongs to the area of the bus defined in the "
-                "To Bus field."
+                "Area that owns the line. This is resolved from the selected terminal "
+                "bus area during parsing."
             ),
         ),
-    ] = "F"
-    phase_shift: Annotated[
-        int | float | str | None,
-        Field(
-            description=(
-                "Phase shift angle value, in degrees, for phase shifting transformers. "
-                "The specified angular phase shift is applied relative to the angle of "
-                "the bus defined in the From Bus field. Implicit decimal point between "
-                "columns 56 and 57."
-            ),
-            json_schema_extra={"units": "degrees"},
-        ),
-    ] = 0.0
-    reactance: Annotated[
-        int | float | str | None,
-        Field(
-            description=(
-                "Circuit reactance value, in %. For transformers this value corresponds "
-                "to the reactance value for the nominal tap. Implicit decimal point "
-                "between columns 30 and 31."
-            ),
-            json_schema_extra={"units": "%"},
-        ),
-    ] = 0.0
-    resistance: Annotated[
-        int | float | str | None,
-        Field(
-            description=(
-                "Circuit resistance value, in %. For transformers this value corresponds "
-                "to the resistance value for the nominal tap. Implicit decimal point "
-                "between columns 24 and 25."
-            ),
-            json_schema_extra={"units": "%"},
-        ),
-    ] = 0.0
+    ] = None
     state: Annotated[
         int | float | str | None,
         Field(
@@ -732,17 +531,21 @@ class PhaseShiftingTransformer(AnaredeComponent):
             ),
         ),
     ] = "L"
-    susceptance: Annotated[
-        int | float | str | None,
-        Field(
-            description=(
-                "Total shunt susceptance value of the circuit, in Mvar. Implicit decimal "
-                "point between columns 35 and 36."
-            ),
-        ),
-    ] = 0.0
+    r: Annotated[
+        Percentage | None,
+        Field(description="Resistance of the branch, in %."),
+    ] = None
+    x: Annotated[
+        Percentage | None,
+        Field(description="Reactance of the branch, in %."),
+    ] = None
+    rating: Annotated[
+        ApparentPower | None,
+        Field(description="Thermal rating of the line, in MVA."),
+    ] = None
+    b: Annotated[FromToToFrom | None, Field(description="Shunt susceptance in MVAr")] = None
     tap: Annotated[
-        int | float | str | None,
+        PerUnit | None,
         Field(
             description=(
                 "Tap value referred to the bus defined in the From Bus field, in p.u., "
@@ -754,7 +557,7 @@ class PhaseShiftingTransformer(AnaredeComponent):
         ),
     ] = None
     tap_maximum: Annotated[
-        int | float | str | None,
+        PerUnit | None,
         Field(
             description=(
                 "Maximum value that the tap can assume, in p.u., for automatic tap "
@@ -764,7 +567,7 @@ class PhaseShiftingTransformer(AnaredeComponent):
         ),
     ] = None
     tap_minimum: Annotated[
-        int | float | str | None,
+        PerUnit | None,
         Field(
             description=(
                 "Minimum value that the tap can assume, in p.u., for automatic tap "
@@ -783,11 +586,11 @@ class PhaseShiftingTransformer(AnaredeComponent):
         ),
     ] = None
     to_bus_opening: Annotated[
-        int | float | str | None,
+        CircuitState | None,
         Field(
             description="L - Connected.\\nD - Disconnected",
         ),
-    ] = "L"
+    ] = CircuitState.CLOSED
 
 
 class ShuntLine(AnaredeComponent):

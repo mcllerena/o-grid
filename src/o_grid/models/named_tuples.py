@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from o_grid.units import ActivePower, ReactivePower
+
 
 @dataclass(slots=True)
 class MinMax:
@@ -17,5 +19,5 @@ class MinMax:
 class FromToToFrom:
     """Directional pair values for from->to and to->from quantities."""
 
-    from_to: float
-    to_from: float
+    from_to: float | ActivePower | ReactivePower
+    to_from: float | ActivePower | ReactivePower

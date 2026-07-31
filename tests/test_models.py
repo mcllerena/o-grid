@@ -8,17 +8,19 @@ from o_grid.models import (
     Area,
     Branch,
     BusShunt,
+    CircuitState,
     ControllableSeriesCompensator,
     CSCControlMode,
     DCBus,
     Line,
     LineShunt,
+    LTCTransformer,
     MinMax,
     PhaseShiftingTransformer,
+    ProgramConstant,
     StaticVARCompensator,
     SVCControlMode,
     TapChangingTransformer,
-    TapTransformer,
     TapTransformerControl,
 )
 from o_grid.units import (
@@ -41,8 +43,8 @@ def test_models_package_exports_expected_types() -> None:
     assert Line.__name__ == "Line"
     assert BusShunt.__name__ == "BusShunt"
     assert LineShunt.__name__ == "LineShunt"
-    assert TapChangingTransformer.__name__ == "TapTransformer"
-    assert TapTransformer.__name__ == "TapTransformer"
+    assert TapChangingTransformer.__name__ == "LTCTransformer"
+    assert LTCTransformer.__name__ == "LTCTransformer"
     assert PhaseShiftingTransformer.__name__ == "PhaseShiftingTransformer"
     assert StaticVARCompensator.__name__ == "StaticVARCompensator"
     assert ControllableSeriesCompensator.__name__ == "ControllableSeriesCompensator"
@@ -134,6 +136,15 @@ def test_csc_enums_and_fields_match_mapping() -> None:
     assert not hasattr(csc, "state")
 
 
+def test_circuit_state_enum_for_line_openings() -> None:
+    line = ACLine(from_bus_opening="L", to_bus_opening="D")
+
+    assert CircuitState.CLOSED == "L"
+    assert CircuitState.OPEN == "D"
+    assert line.from_bus_opening == CircuitState.CLOSED
+    assert line.to_bus_opening == CircuitState.OPEN
+
+
 def test_csc_specified_value_units_follow_control_mode() -> None:
     csc_power = ControllableSeriesCompensator(control_mode="P", specified_value=120)
     csc_current = ControllableSeriesCompensator(control_mode="I", specified_value=0.95)
@@ -175,3 +186,16 @@ def test_reactive_power_registry_exposes_mvar() -> None:
     assert quantity.units == ureg.MVAr
     assert quantity.to("MVAr").magnitude == 50
     assert ReactivePower(50, "MVAr").magnitude == 50
+
+
+def test_program_constant_coerces_units_and_defaults() -> None:
+    base = ProgramConstant(name="BASE_1", mnemonic="BASE", value=100.0)
+    tepa_default = ProgramConstant(name="TEPA_1", mnemonic="TEPA", value=None)
+
+    assert isinstance(base.value, ApparentPower)
+    assert base.value.magnitude == 100.0
+    assert isinstance(tepa_default.value, ActivePower)
+    assert tepa_default.value.magnitude == 0.1
+    assert not hasattr(base, "available")
+    assert not hasattr(base, "category")
+    assert not hasattr(base, "ext")

@@ -15,14 +15,24 @@ from o_grid.models import (
     BusShunt,
     LineShunt,
     MinMax,
+    OptionState,
     PhaseShiftingTransformer,
+    ProgramConstant,
     TapChangingTransformer,
     TapTransformerControl,
     VoltageBaseGroup,
     VoltageLimitGroup,
 )
 from o_grid.parser import AnaredeInfrasysParser, parse_anarede_system, parse_rows
-from o_grid.units import ActivePower, Angle, Percentage, PerUnit, ReactivePower, Voltage
+from o_grid.units import (
+    ActivePower,
+    Angle,
+    ApparentPower,
+    Percentage,
+    PerUnit,
+    ReactivePower,
+    Voltage,
+)
 
 
 def test_parser_attach_bus_areas_and_build_arc() -> None:
@@ -114,10 +124,20 @@ def test_parse_anarede_d9nodes_to_infrasys(data_folder: Path) -> None:
     assert isinstance(interchange.maximum_net_interchange, ActivePower)
 
     line = parsed.components_by_block["DLIN"][0]
-    assert not line.name.startswith("ACLine_")
+    assert line.name == f"{line.from_bus.name}_{line.to_bus.name}_{line.line_circuit}"
     assert getattr(line, "uuid", None) is not None
     assert isinstance(line.from_bus, ACBus)
     assert isinstance(line.to_bus, ACBus)
+    assert isinstance(line.controlled_bus, ACBus)
+    assert line.controlled_bus == line.from_bus
+    assert line.line_circuit == 1
+    assert isinstance(line.r, Percentage)
+    assert isinstance(line.x, Percentage)
+    assert isinstance(line.rating, ApparentPower)
+    assert line.b is not None
+    assert line.g is not None
+    assert isinstance(line.g.from_to, ActivePower)
+    assert isinstance(line.g.to_from, ActivePower)
 
     assert "TITU" not in parsed.components_by_block
     assert parsed.system.description == "Sistema-Teste de 9 Barras - Caso Inicial"
@@ -147,19 +167,90 @@ def test_parse_anarede_dcer_dcsc_blocks(data_folder: Path) -> None:
     assert isinstance(to_bus_area, Area)
     assert csc.owner == to_bus_area
 
+    line = parsed.components_by_block["DLIN"][0]
+    from_bus_area = getattr(line.from_bus, "area", None)
+    assert isinstance(from_bus_area, Area)
+    assert isinstance(line.owner, Area)
+    assert line.owner == from_bus_area
+
+    mapped_line = next(
+        rec
+        for rec in parsed.components_by_block["DLIN"]
+        if isinstance(rec.from_bus, ACBus)
+        and isinstance(rec.to_bus, ACBus)
+        and rec.from_bus.number == 824
+        and rec.to_bus.number == 933
+        and rec.line_circuit == 2
+    )
+    assert isinstance(mapped_line.r, Percentage)
+    assert isinstance(mapped_line.x, Percentage)
+    assert isinstance(mapped_line.rating, ApparentPower)
+    assert mapped_line.b is not None
+    assert isinstance(mapped_line.b.from_to, ReactivePower)
+    assert isinstance(mapped_line.b.to_from, ReactivePower)
+    assert mapped_line.g is not None
+    assert isinstance(mapped_line.g.from_to, ActivePower)
+    assert isinstance(mapped_line.g.to_from, ActivePower)
+    assert mapped_line.r.magnitude == pytest.approx(0.01)
+    assert mapped_line.x.magnitude == pytest.approx(0.126)
+    assert mapped_line.rating.magnitude == pytest.approx(2182.0)
+    assert mapped_line.b.from_to.magnitude == pytest.approx(15.428)
+    assert mapped_line.b.to_from.magnitude == pytest.approx(15.428)
+    assert mapped_line.g.from_to.magnitude == pytest.approx(0.0)
+    assert mapped_line.g.to_from.magnitude == pytest.approx(0.0)
+
+    to_owner_line = next(
+        rec
+        for rec in parsed.components_by_block["DLIN"]
+        if str(getattr(rec, "ext", {}).get("pwf_values", {}).get("owner", "")).strip().upper()
+        == "T"
+    )
+    to_bus_area = getattr(to_owner_line.to_bus, "area", None)
+    assert isinstance(to_bus_area, Area)
+    assert to_owner_line.owner == to_bus_area
+
+    negative_controlled_line = next(
+        rec
+        for rec in parsed.components_by_block["DLIN"]
+        if isinstance(
+            getattr(rec, "ext", {}).get("pwf_values", {}).get("controlled_bus"),
+            (int, float),
+        )
+        and float(getattr(rec, "ext", {}).get("pwf_values", {}).get("controlled_bus")) < 0
+    )
+    assert isinstance(negative_controlled_line.controlled_bus, ACBus)
+    assert negative_controlled_line.controlled_bus == negative_controlled_line.to_bus
+
 
 def test_parse_anarede_derives_tap_changers_from_dlin(data_folder: Path) -> None:
     parsed = parse_anarede_system(data_folder / "anarede" / "d_33nodes.pwf")
 
     dlin_records = parsed.components_by_block["DLIN"]
     expected_tap_count = sum(
-        1 for rec in dlin_records if getattr(rec, "tap", None) not in (None, 1, 1.0)
+        1
+        for rec in dlin_records
+        if AnaredeInfrasysParser._has_non_default_tap(
+            getattr(rec, "ext", {}).get("pwf_values", {}).get("tap")
+        )
     )
 
     assert expected_tap_count > 0
     assert "DLIN_TAP" in parsed.components_by_block
     assert len(parsed.components_by_block["DLIN_TAP"]) == expected_tap_count
     assert issubclass(parsed.component_classes["DLIN_TAP"], TapChangingTransformer)
+
+    tap_transformer = parsed.components_by_block["DLIN_TAP"][0]
+    assert isinstance(tap_transformer.controlled_bus, ACBus)
+    assert isinstance(tap_transformer.owner, Area)
+    assert isinstance(tap_transformer.r, Percentage)
+    assert isinstance(tap_transformer.x, Percentage)
+    assert isinstance(tap_transformer.rating, ApparentPower)
+    assert tap_transformer.b is not None
+    assert isinstance(tap_transformer.b.from_to, ReactivePower)
+    assert isinstance(tap_transformer.b.to_from, ReactivePower)
+    assert tap_transformer.name == (
+        f"{tap_transformer.from_bus.name}_{tap_transformer.to_bus.name}_{tap_transformer.line_circuit}"
+    )
 
 
 def test_parse_anarede_derives_phase_shifter_from_dlin_angle(tmp_path: Path) -> None:
@@ -192,6 +283,83 @@ def test_parse_anarede_derives_phase_shifter_from_dlin_angle(tmp_path: Path) -> 
     assert "DLIN_PHASE_SHIFT" in parsed.components_by_block
     assert len(parsed.components_by_block["DLIN_PHASE_SHIFT"]) == 1
     assert issubclass(parsed.component_classes["DLIN_PHASE_SHIFT"], PhaseShiftingTransformer)
+
+
+def test_rename_dlin_components_applies_to_derived_transformers() -> None:
+    parser = AnaredeInfrasysParser()
+    from_bus = ACBus(number=1, name="FROM")
+    to_bus = ACBus(number=2, name="TO")
+
+    tap = TapChangingTransformer(name="tap", from_bus=1, to_bus=2, line_circuit=7)
+    phase = PhaseShiftingTransformer(name="phase", from_bus=1, to_bus=2, line_circuit=8)
+    object.__setattr__(tap, "from_bus", from_bus)
+    object.__setattr__(tap, "to_bus", to_bus)
+    object.__setattr__(phase, "from_bus", from_bus)
+    object.__setattr__(phase, "to_bus", to_bus)
+
+    parser._rename_dlin_components(
+        {
+            "DLIN": [],
+            "DLIN_TAP": [tap],
+            "DLIN_PHASE_SHIFT": [phase],
+        }
+    )
+
+    assert tap.name == "FROM_TO_7"
+    assert phase.name == "FROM_TO_8"
+
+
+def test_dlin_helper_parsers_handle_quantity_and_text_inputs() -> None:
+    assert AnaredeInfrasysParser._has_non_default_tap(PerUnit(0.98, "pu"))
+    assert not AnaredeInfrasysParser._has_non_default_tap("   ")
+    assert AnaredeInfrasysParser._has_non_default_tap("X")
+
+    assert AnaredeInfrasysParser._has_non_zero_angle(Angle(1.5, "degree"))
+    assert not AnaredeInfrasysParser._has_non_zero_angle("X")
+
+
+def test_components_store_pwf_values(data_folder: Path) -> None:
+    parsed = parse_anarede_system(data_folder / "anarede" / "d_9nodes.pwf")
+
+    bus = parsed.components_by_block["DBAR"][0]
+    line = parsed.components_by_block["DLIN"][0]
+    option = parsed.components_by_block["DOPC"][0]
+
+    assert "pwf_values" in bus.ext
+    assert isinstance(bus.ext["pwf_values"], dict)
+
+    assert "pwf_values" in line.ext
+    assert isinstance(line.ext["pwf_values"], dict)
+
+    assert option.state == OptionState.ACTIVATED
+    assert not hasattr(option, "available")
+    assert not hasattr(option, "category")
+    assert not hasattr(option, "ext")
+
+
+def test_program_constant_shape_is_minimal(data_folder: Path) -> None:
+    parsed = parse_anarede_system(data_folder / "anarede" / "d_33nodes_dcer_dcsc.pwf")
+
+    constant = parsed.components_by_block["DCTE"][0]
+
+    assert isinstance(constant, ProgramConstant)
+    assert not hasattr(constant, "available")
+    assert not hasattr(constant, "category")
+    assert not hasattr(constant, "ext")
+
+
+def test_parse_anarede_csc_measurement_terminal_is_bus(data_folder: Path) -> None:
+    parsed = parse_anarede_system(data_folder / "anarede" / "d_33nodes_dcer_dcsc.pwf")
+
+    csc = parsed.components_by_block["DCSC"][0]
+    assert isinstance(csc.measurement_terminal, ACBus)
+
+
+def test_parse_anarede_svc_controlled_bus_is_bus(data_folder: Path) -> None:
+    parsed = parse_anarede_system(data_folder / "anarede" / "d_33nodes_dcer_dcsc.pwf")
+
+    svc = parsed.components_by_block["DCER"][0]
+    assert isinstance(svc.controlled_bus, ACBus)
 
 
 def test_parse_anarede_handles_dbsh_bank_section(tmp_path: Path) -> None:
@@ -268,7 +436,11 @@ def test_parse_pair_records_handles_numeric_conversion() -> None:
 
     assert len(records) == 2
     assert getattr(records[0], "mnemonic") == "BASE"
-    assert getattr(records[0], "value") == 100.0
+    assert isinstance(getattr(records[0], "value"), ApparentPower)
+    assert getattr(records[0], "value").magnitude == 100.0
+    assert getattr(records[1], "mnemonic") == "TEPA"
+    assert isinstance(getattr(records[1], "value"), ActivePower)
+    assert getattr(records[1], "value").magnitude == 1.0
 
 
 def test_parse_rows_normalizes_data() -> None:

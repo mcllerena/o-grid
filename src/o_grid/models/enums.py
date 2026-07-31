@@ -28,3 +28,17 @@ class CSCControlMode(StrEnum):
     POWER = "P"
     CURRENT = "I"
     REACTANCE = "X"
+
+
+class CircuitState(StrEnum):
+    """Enum defining circuit connected/disconnected states."""
+
+    CLOSED = "L"
+    OPEN = "D"
+
+
+class OptionState(StrEnum):
+    """Enum defining power-flow option activation states."""
+
+    ACTIVATED = "L"
+    DEACTIVATED = "D"

@@ -2,8 +2,8 @@ TITU
 Sistema-Teste de 33 Barras - Caso Base
 DOPC IMPR
 (Op) E (Op) E (Op) E (Op) E (Op) E (Op) E (Op) E (Op) E (Op) E (Op) E
-QLIM L CREM L CTAP L STEP L NEWT L MOCT L MOCG L MOCF L RCVG L RMON L
-FILE L
+QLIM L VLIM L CREM L CTAP L STEP L NEWT L RCVG L RMON L FILE L SUBS L
+CONT L NOVO L CELO L MFCT L AREG L STPO L VLCR L CPHS L IANG L
 99999
 DCTE
 (Mn) ( Val) (Mn) ( Val) (Mn) ( Val) (Mn) ( Val) (Mn) ( Val) (Mn) ( Val)

@@ -4,16 +4,138 @@ from __future__ import annotations
 
 from typing import Annotated
 
-from pydantic import Field
+from infrasys import Component
+from pydantic import Field, model_validator
 
 from o_grid.models.base import AnaredeComponent
+from o_grid.models.enums import OptionState
+from o_grid.units import ActivePower, Angle, ApparentPower, Percentage, ReactivePower, get_magnitude
+
+PROGRAM_CONSTANT_DEFAULTS: dict[str, int | float] = {
+    "TEPA": 0.1,
+    "TEPR": 0.1,
+    "TLPR": 0.1,
+    "TLVC": 0.5,
+    "TLTC": 0.01,
+    "TETP": 5.0,
+    "TBPA": 5.0,
+    "TSFR": 0.01,
+    "TUDC": 0.001,
+    "TADC": 0.01,
+    "BASE": 100.0,
+    "DASE": 100.0,
+    "ZMAX": 500.0,
+    "ACIT": 30,
+    "LPIT": 50,
+    "LFLP": 10,
+    "LFIT": 10,
+    "DCIT": 10,
+    "VSIT": 10,
+    "LCRT": 23,
+    "LPRT": 60,
+    "LFCV": 1,
+    "TPST": 0.2,
+    "QLST": 0.4,
+    "EXST": 0.4,
+    "TLPP": 1.0,
+    "TSBZ": 0.01,
+    "TSBA": 5.0,
+    "PGER": 30.0,
+    "VDVN": 40.0,
+    "VDVM": 200.0,
+    "ASTP": 0.05,
+    "VSTP": 5.0,
+    "CSTP": 5.0,
+    "VFLD": 70.0,
+    "ZMIN": 0.001,
+    "PDIT": 10,
+    "ICIT": 30,
+    "FDIV": 2.0,
+    "DMAX": 5,
+    "ICMN": 0.05,
+    "VART": 5.0,
+    "TSTP": 33,
+    "ICMV": 0.5,
+    "APAS": 90.0,
+    "CPAR": 70.0,
+    "VAVT": 2.0,
+    "VAVF": 5.0,
+    "VMVF": 15.0,
+    "VPVT": 2.0,
+    "VPVF": 5.0,
+    "VPMF": 10.0,
+    "VSVF": 20.0,
+    "VINF": 1.0,
+    "VSUP": 1.0,
+    "TSDC": 0.02,
+    "ASDC": 1.0,
+    "TLSI": 0.0,
+    "NDIR": 20,
+    "STIR": 1,
+    "STTR": 5.0,
+    "TRPT": 100.0,
+    "BFPO": 1.0,
+    "LFPO": 0.1,
+    "TLMT": 0.0,
+    "TLMF": 0.0,
+    "TLMG": 0.0,
+    "PARS": 10.0,
+}
+
+PROGRAM_CONSTANT_UNITS: dict[str, tuple[type, str]] = {
+    "TEPA": (ActivePower, "MW"),
+    "TETP": (ActivePower, "MW"),
+    "TBPA": (ActivePower, "MW"),
+    "TSBZ": (ActivePower, "MW"),
+    "TSBA": (ActivePower, "MW"),
+    "VMVF": (ActivePower, "MW"),
+    "VPMF": (ActivePower, "MW"),
+    "DASE": (ActivePower, "MW"),
+    "TEPR": (ReactivePower, "MVAr"),
+    "TLPR": (ReactivePower, "MVAr"),
+    "BFPO": (ReactivePower, "MVAr"),
+    "BASE": (ApparentPower, "MVA"),
+    "TLVC": (Percentage, "%"),
+    "TLTC": (Percentage, "%"),
+    "TSFR": (Percentage, "%"),
+    "TUDC": (Percentage, "%"),
+    "TADC": (Percentage, "%"),
+    "ZMAX": (Percentage, "%"),
+    "TLPP": (Percentage, "%"),
+    "PGER": (Percentage, "%"),
+    "VDVN": (Percentage, "%"),
+    "VDVM": (Percentage, "%"),
+    "VSTP": (Percentage, "%"),
+    "CSTP": (Percentage, "%"),
+    "VFLD": (Percentage, "%"),
+    "ZMIN": (Percentage, "%"),
+    "ICMN": (Percentage, "%"),
+    "VART": (Percentage, "%"),
+    "ICMV": (Percentage, "%"),
+    "APAS": (Percentage, "%"),
+    "CPAR": (Percentage, "%"),
+    "VAVT": (Percentage, "%"),
+    "VAVF": (Percentage, "%"),
+    "VPVT": (Percentage, "%"),
+    "VPVF": (Percentage, "%"),
+    "VSVF": (Percentage, "%"),
+    "STTR": (Percentage, "%"),
+    "TRPT": (Percentage, "%"),
+    "TLMT": (Percentage, "%"),
+    "TLMF": (Percentage, "%"),
+    "TLMG": (Percentage, "%"),
+    "PARS": (Percentage, "%"),
+    "ASTP": (Angle, "radian"),
+    "ASDC": (Angle, "degree"),
+    "LFPO": (ActivePower, "MW"),
+}
 
 
-class PowerFlowOption(AnaredeComponent):
+class PowerFlowOption(Component):
     """Power flow option row."""
 
     option: Annotated[
-        int | float | str | None,
+        str | None,
         Field(
             description=(
                 "Power-flow execution option mnemonic. Examples include QLIM, CREM, STEP, "
@@ -22,30 +144,56 @@ class PowerFlowOption(AnaredeComponent):
         ),
     ] = None
     state: Annotated[
-        int | float | str | None,
+        OptionState,
         Field(
             description=(
                 "Option activation state. L indicates that the execution option is enabled."
             ),
         ),
-    ] = "L"
+    ] = OptionState.ACTIVATED
 
 
-class ProgramConstant(AnaredeComponent):
+class ProgramConstant(Component):
     """Program constant row."""
 
     mnemonic: Annotated[
-        int | float | str | None,
+        str | None,
         Field(
             description="Constant mnemonic to be modified before execution of codes that use it.",
         ),
     ] = None
     value: Annotated[
-        int | float | str | None,
+        ActivePower | ReactivePower | ApparentPower | Percentage | Angle | int | float | None,
         Field(
             description="New value associated with the DCTE constant mnemonic.",
         ),
     ] = 0.0
+
+    @model_validator(mode="after")
+    def _apply_defaults_and_units(self) -> ProgramConstant:
+        mnemonic = (self.mnemonic or "").strip().upper()
+        object.__setattr__(self, "mnemonic", mnemonic or None)
+
+        value = self.value
+        if value is None and mnemonic in PROGRAM_CONSTANT_DEFAULTS:
+            value = PROGRAM_CONSTANT_DEFAULTS[mnemonic]
+        if isinstance(value, str):
+            stripped = value.strip()
+            value = float(stripped) if stripped else None
+
+        unit_spec = PROGRAM_CONSTANT_UNITS.get(mnemonic)
+        if unit_spec is None:
+            object.__setattr__(self, "value", value)
+            return self
+
+        quantity_type, unit_name = unit_spec
+        if value is None:
+            object.__setattr__(self, "value", None)
+            return self
+
+        magnitude = get_magnitude(value)
+        object.__setattr__(self, "value", quantity_type(float(magnitude), unit_name))
+        return self
 
 
 class TapTransformerControl(AnaredeComponent):
