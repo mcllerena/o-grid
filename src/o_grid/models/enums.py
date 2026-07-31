@@ -13,3 +13,18 @@ class ACBusTypes(StrEnum):
     REF = "REF"
     SLACK = "SLACK"
     ISOLATED = "ISOLATED"
+
+
+class SVCControlMode(StrEnum):
+    """Enum defining SVC control modes."""
+
+    POWER = "P"
+    CURRENT = "I"
+
+
+class CSCControlMode(StrEnum):
+    """Enum defining CSC control modes."""
+
+    POWER = "P"
+    CURRENT = "I"
+    REACTANCE = "X"

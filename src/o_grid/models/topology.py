@@ -9,7 +9,7 @@ from pydantic import Field, field_validator
 from o_grid.models.base import AnaredeComponent
 from o_grid.models.enums import ACBusTypes
 from o_grid.models.named_tuples import MinMax
-from o_grid.units import Voltage
+from o_grid.units import ActivePower, Angle, PerUnit, ReactivePower, Voltage
 
 
 class Topology(AnaredeComponent):
@@ -28,49 +28,17 @@ class Area(AggregationTopology):
         Field(description="Identifier of the control/operational area."),
     ] = None
     peak_active_power: Annotated[
-        float,
+        ActivePower,
         Field(description="Peak active power in the area", json_schema_extra={"units": "MW"}),
-    ] = 0.0
+    ] = ActivePower(0.0, "MW")
     peak_reactive_power: Annotated[
-        float,
-        Field(description="Peak reactive power in the area", json_schema_extra={"units": "MVAR"}),
-    ] = 0.0
-    load_response: Annotated[
-        float,
-        Field(
-            description=(
-                "Load-frequency damping parameter modeling how much area load "
-                "changes due to frequency (MW/Hz)."
-            )
-        ),
-    ] = 0.0
+        ReactivePower,
+        Field(description="Peak reactive power in the area", json_schema_extra={"units": "MVAr"}),
+    ] = ReactivePower(0.0, "MVAr")
 
     @classmethod
     def example(cls) -> Area:
         return Area(name="ExampleArea")
-
-
-class LoadZone(AggregationTopology):
-    """Collection of buses for load aggregation/analysis."""
-
-    load_zone_number: Annotated[
-        int | None,
-        Field(description="Identifier of the load zone."),
-    ] = None
-    peak_active_power: Annotated[
-        float,
-        Field(description="Peak active power in the load zone", json_schema_extra={"units": "MW"}),
-    ] = 0.0
-    peak_reactive_power: Annotated[
-        float,
-        Field(
-            description="Peak reactive power in the load zone", json_schema_extra={"units": "MVAR"}
-        ),
-    ] = 0.0
-
-    @classmethod
-    def example(cls) -> LoadZone:
-        return LoadZone(name="ExampleLoadZone")
 
 
 class Bus(Topology):
@@ -88,10 +56,6 @@ class Bus(Topology):
         Area | None,
         Field(description="Area containing the bus."),
     ] = None
-    load_zone: Annotated[
-        LoadZone | None,
-        Field(description="Load zone containing the bus."),
-    ] = None
     voltage_limits: Annotated[
         MinMax | None,
         Field(description="Voltage limits (min, max)."),
@@ -99,10 +63,6 @@ class Bus(Topology):
     base_voltage: Annotated[
         Voltage | None,
         Field(description="Base voltage in kV.", json_schema_extra={"units": "kV"}),
-    ] = None
-    magnitude: Annotated[
-        float | None,
-        Field(description="Voltage as a multiple of base voltage."),
     ] = None
 
     @field_validator("area", mode="before")
@@ -114,15 +74,6 @@ class Bus(Topology):
             return Area(name=f"Area_{value}", area_number=value)
         return Area(name=str(value), area_number=None)
 
-    @field_validator("load_zone", mode="before")
-    @classmethod
-    def _coerce_load_zone(cls, value: object) -> LoadZone | None:
-        if value is None or isinstance(value, LoadZone):
-            return value
-        if isinstance(value, int):
-            return LoadZone(name=f"LoadZone_{value}", load_zone_number=value)
-        return LoadZone(name=str(value), load_zone_number=None)
-
 
 class Arc(Topology):
     """Topological directed edge connecting two buses."""
@@ -133,14 +84,6 @@ class Arc(Topology):
 
 class ACBus(Bus):
     """AC bus model."""
-
-    voltage_base_group_data: Annotated[
-        VoltageBaseGroup | None,
-        Field(
-            description=("Resolved voltage base group record associated with this bus."),
-            exclude=True,
-        ),
-    ] = None
 
     @field_validator("bustype", mode="before")
     @classmethod
@@ -164,16 +107,8 @@ class ACBus(Bus):
     def bus_type(self, value: ACBusTypes | int | str | None) -> None:
         self.bustype = self._coerce_bus_type(value)
 
-    voltage_limit_group_data: Annotated[
-        VoltageLimitGroup | None,
-        Field(
-            description=("Resolved voltage limit group record associated with this bus."),
-            exclude=True,
-        ),
-    ] = None
-
     active_generation: Annotated[
-        int | float | str | None,
+        ActivePower | None,
         Field(
             description=(
                 "Active power generation value at the bus, in MW. This field defines the "
@@ -184,9 +119,9 @@ class ACBus(Bus):
             ),
             json_schema_extra={"units": "MW"},
         ),
-    ] = 0.0
+    ] = ActivePower(0.0, "MW")
     active_load: Annotated[
-        int | float | str | None,
+        ActivePower | None,
         Field(
             description=(
                 "Bus active load value, in MW. In case the load varies with bus voltage "
@@ -195,14 +130,14 @@ class ACBus(Bus):
             ),
             json_schema_extra={"units": "MW"},
         ),
-    ] = 0.0
+    ] = ActivePower(0.0, "MW")
     angle: Annotated[
-        int | float | str | None,
+        Angle | None,
         Field(
             description="Initial phase angle of bus voltage, in degrees.",
             json_schema_extra={"units": "degrees"},
         ),
-    ] = 0.0
+    ] = Angle(0.0, "degree")
     area: Annotated[
         Area | int | None,
         Field(
@@ -210,7 +145,7 @@ class ACBus(Bus):
         ),
     ] = 1
     capacitor_reactor: Annotated[
-        int | float | str | None,
+        ReactivePower | None,
         Field(
             description=(
                 "Total reactive power injected at the bus, in MVAr, by capacitor/reactor "
@@ -219,7 +154,7 @@ class ACBus(Bus):
                 "capacitors and negative for reactors."
             ),
         ),
-    ] = 0.0
+    ] = ReactivePower(0.0, "MVAr")
     controlled_bus: Annotated[
         int | float | str | None,
         Field(
@@ -232,21 +167,15 @@ class ACBus(Bus):
         ),
     ] = None
     max_reactive_generation: Annotated[
-        int | float | str | None,
+        ReactivePower | None,
         Field(
             description="Maximum reactive power generation limit value at the bus, in MVAr.",
         ),
     ] = None
     min_reactive_generation: Annotated[
-        int | float | str | None,
+        ReactivePower | None,
         Field(
             description="Minimum reactive power generation limit value at the bus, in MVAr.",
-        ),
-    ] = None
-    anarede_name: Annotated[
-        int | float | str | None,
-        Field(
-            description="Alphanumeric identification of the bus.",
         ),
     ] = None
     number: Annotated[
@@ -255,17 +184,8 @@ class ACBus(Bus):
             description="Identification number of AC bus.",
         ),
     ] = None
-    operation: Annotated[
-        int | float | str | None,
-        Field(
-            description=(
-                "A or 0 - Bus data addition.\\nE or 1 - Elimination of bus data.\\nM or 2 - "
-                "Modification of bus data."
-            ),
-        ),
-    ] = "A"
     reactive_generation: Annotated[
-        int | float | str | None,
+        ReactivePower | None,
         Field(
             description=(
                 "Reactive power generation value at the bus, in MVAr. For load bus this "
@@ -275,9 +195,9 @@ class ACBus(Bus):
                 "generation limits, this field can be left blank."
             ),
         ),
-    ] = 0.0
+    ] = ReactivePower(0.0, "MVAr")
     reactive_load: Annotated[
-        int | float | str | None,
+        ReactivePower | None,
         Field(
             description=(
                 "Bus reactive load value, in MVAr. In case the load varies with bus "
@@ -285,40 +205,9 @@ class ACBus(Bus):
                 "specified in the Voltage For Load Definition field."
             ),
         ),
-    ] = 0.0
-    state: Annotated[
-        int | float | str | None,
-        Field(
-            description=(
-                "L - Bus in service (connected/ligado) \\nD - Bus out of service "
-                "(disconnected/desligado)"
-            ),
-        ),
-    ] = "L"
-    type: Annotated[
-        int | float | str | None,
-        Field(
-            description=(
-                "0 - Load bus (PQ - Fixed active and reactive power injections).\\n1 - "
-                "Voltage regulated bus (PV - Fixed active power injection and voltage "
-                "magnitude).\\n2 - Reference bus (V - Fixed voltage magnitude and phase "
-                "angle).\\n3 - Load bus with voltage limits (PQ - Fixed active and "
-                "reactive power injections while voltage magnitude remains within limit "
-                "values)."
-            ),
-        ),
-    ] = 0
-    visualization_mode: Annotated[
-        int | float | str | None,
-        Field(
-            description=(
-                "Enter in this field the AC bus visualization mode in the single-line "
-                "diagram:\\n0 - normal bus.\\n1 - midpoint bus.\\n2 - auxiliary bus."
-            ),
-        ),
-    ] = 0
-    voltage: Annotated[
-        int | float | str | None,
+    ] = ReactivePower(0.0, "MVAr")
+    initial_voltage: Annotated[
+        PerUnit | None,
         Field(
             description=(
                 "Initial value of voltage magnitude, in p.u. For voltage controlled bus, "
@@ -328,9 +217,9 @@ class ACBus(Bus):
             ),
             json_schema_extra={"units": "p.u."},
         ),
-    ] = 1.0
+    ] = PerUnit(1.0, "pu")
     voltage_base_group: Annotated[
-        int | float | str | None,
+        VoltageBaseGroup | int | float | str | None,
         Field(
             description=(
                 "Voltage Base Group identifier to which the AC bus belongs, composed of "
@@ -342,7 +231,7 @@ class ACBus(Bus):
         ),
     ] = "0"
     voltage_for_load_definition: Annotated[
-        int | float | str | None,
+        PerUnit | None,
         Field(
             description=(
                 "Enter in this field the p.u. voltage value for which the active and "
@@ -351,9 +240,9 @@ class ACBus(Bus):
                 "columns 77 and 78."
             ),
         ),
-    ] = 1.0
+    ] = PerUnit(1.0, "pu")
     voltage_limit_group: Annotated[
-        int | float | str | None,
+        VoltageLimitGroup | int | float | str | None,
         Field(
             description=(
                 "Voltage Limit Group identifier to which the AC bus belongs, composed of "
@@ -375,6 +264,13 @@ class ACBus(Bus):
             bustype=ACBusTypes.PV,
             base_voltage=Voltage(138.0, "kV"),
             voltage_limits=MinMax(min=0.9, max=1.1),
+            active_generation=ActivePower(1000.0, "MW"),
+            active_load=ActivePower(0.0, "MW"),
+            reactive_generation=ReactivePower(0.0, "MVAr"),
+            reactive_load=ReactivePower(0.0, "MVAr"),
+            capacitor_reactor=ReactivePower(0.0, "MVAr"),
+            max_reactive_generation=ReactivePower(600.0, "MVAr"),
+            min_reactive_generation=ReactivePower(-600.0, "MVAr"),
         )
 
 
@@ -464,7 +360,7 @@ class VoltageLimitGroup(AnaredeComponent):
     """Voltage operating limit group."""
 
     emergency_maximum_voltage_limit: Annotated[
-        int | float | str | None,
+        PerUnit | None,
         Field(
             description=(
                 "Maximum voltage limit, in p.u., associated with the voltage limit group "
@@ -472,9 +368,9 @@ class VoltageLimitGroup(AnaredeComponent):
             ),
             json_schema_extra={"units": "p.u."},
         ),
-    ] = "Maximum voltage limit"
+    ] = None
     emergency_minimum_voltage_limit: Annotated[
-        int | float | str | None,
+        PerUnit | None,
         Field(
             description=(
                 "Minimum voltage limit, in p.u., associated with the voltage limit group "
@@ -482,7 +378,7 @@ class VoltageLimitGroup(AnaredeComponent):
             ),
             json_schema_extra={"units": "p.u."},
         ),
-    ] = "Minimum voltage limit"
+    ] = None
     group: Annotated[
         int | float | str | None,
         Field(
@@ -493,19 +389,19 @@ class VoltageLimitGroup(AnaredeComponent):
         ),
     ] = None
     maximum_voltage_limit: Annotated[
-        int | float | str | None,
+        PerUnit | None,
         Field(
             description="Maximum voltage limit, in p.u., associated with the voltage limit group.",
             json_schema_extra={"units": "p.u."},
         ),
-    ] = 1.2
+    ] = PerUnit(1.2, "pu")
     minimum_voltage_limit: Annotated[
-        int | float | str | None,
+        PerUnit | None,
         Field(
             description="Minimum voltage limit, in p.u., associated with the voltage limit group.",
             json_schema_extra={"units": "p.u."},
         ),
-    ] = 0.8
+    ] = PerUnit(0.8, "pu")
 
 
 class VoltageBaseGroup(AnaredeComponent):
@@ -521,16 +417,16 @@ class VoltageBaseGroup(AnaredeComponent):
         ),
     ] = 0
     voltage: Annotated[
-        int | float | str | None,
+        Voltage | None,
         Field(
             description="Base voltage associated with the group, in kV.",
             json_schema_extra={"units": "kV"},
         ),
-    ] = 1.0
+    ] = Voltage(1.0, "kV")
 
 
-class ControlArea(AnaredeComponent):
-    """Control area model."""
+class AreaInterchange(AnaredeComponent):
+    """Area interchange limits and target model."""
 
     area_number: Annotated[
         int | float | str | None,
@@ -539,7 +435,7 @@ class ControlArea(AnaredeComponent):
         ),
     ] = None
     maximum_net_interchange: Annotated[
-        int | float | str | None,
+        ActivePower | None,
         Field(
             description=(
                 "Maximum net active power interchange of the area, in MW. Positive values "
@@ -547,9 +443,9 @@ class ControlArea(AnaredeComponent):
             ),
             json_schema_extra={"units": "MW"},
         ),
-    ] = 0.0
+    ] = ActivePower(0.0, "MW")
     minimum_net_interchange: Annotated[
-        int | float | str | None,
+        ActivePower | None,
         Field(
             description=(
                 "Minimum net active power interchange of the area, in MW. Positive values "
@@ -557,7 +453,7 @@ class ControlArea(AnaredeComponent):
             ),
             json_schema_extra={"units": "MW"},
         ),
-    ] = 0.0
+    ] = ActivePower(0.0, "MW")
     anarede_name: Annotated[
         int | float | str | None,
         Field(
@@ -565,7 +461,7 @@ class ControlArea(AnaredeComponent):
         ),
     ] = None
     net_interchange: Annotated[
-        int | float | str | None,
+        ActivePower | None,
         Field(
             description=(
                 "Net active power interchange of the area, in MW. Positive values "
@@ -573,4 +469,4 @@ class ControlArea(AnaredeComponent):
             ),
             json_schema_extra={"units": "MW"},
         ),
-    ] = 0.0
+    ] = ActivePower(0.0, "MW")

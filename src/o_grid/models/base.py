@@ -6,7 +6,7 @@ from typing import Annotated, ClassVar
 from uuid import UUID, uuid4
 
 from infrasys import Component
-from pydantic import Field, computed_field
+from pydantic import Field
 
 
 class OGridComponent(Component):
@@ -26,16 +26,9 @@ class OGridComponent(Component):
     ] = None
     ext: dict = Field(default_factory=dict, description="Additional metadata for the component.")
 
-    @computed_field  # type: ignore[prop-decorator]
-    @property
-    def class_type(self) -> str:
-        """Return the concrete class name for serialization and debugging."""
-        return type(self).__name__
-
 
 class AnaredeComponent(OGridComponent):
     """Base infrasys component for ANAREDE-derived models."""
 
     name: str = ""
-    record_index: int = 0
     block: ClassVar[str] = ""

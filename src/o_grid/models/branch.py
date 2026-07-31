@@ -4,11 +4,13 @@ from __future__ import annotations
 
 from typing import Annotated
 
-from pydantic import Field
+from pydantic import Field, model_validator
 
 from o_grid.models.base import AnaredeComponent
+from o_grid.models.enums import CSCControlMode
 from o_grid.models.named_tuples import FromToToFrom, MinMax
-from o_grid.models.topology import ACBus, Arc
+from o_grid.models.topology import ACBus, Arc, Area
+from o_grid.units import ActivePower, ApparentPower, Percentage, PerUnit, get_magnitude
 
 
 class Branch(AnaredeComponent):
@@ -270,7 +272,7 @@ class ControllableSeriesCompensator(AnaredeComponent):
         ),
     ] = "D"
     control_mode: Annotated[
-        int | float | str | None,
+        CSCControlMode | None,
         Field(
             description=(
                 "P - Constant power. The specified value for active power flow in the "
@@ -281,14 +283,14 @@ class ControllableSeriesCompensator(AnaredeComponent):
                 "fixed at the specified value."
             ),
         ),
-    ] = "X"
+    ] = CSCControlMode.REACTANCE
     dcsc_capacity: Annotated[
-        int | float | str | None,
+        ApparentPower | None,
         Field(
             description="CSC nominal capacity, in MVA.",
             json_schema_extra={"units": "MVA"},
         ),
-    ] = 9999.0
+    ] = ApparentPower(9999.0, "MVA")
     dcsc_circuit: Annotated[
         int | float | str | None,
         Field(
@@ -305,19 +307,19 @@ class ControllableSeriesCompensator(AnaredeComponent):
         ),
     ] = None
     initial_reactance: Annotated[
-        int | float | str | None,
+        Percentage | None,
         Field(
             description="Initial value of CSC reactance, in %.",
             json_schema_extra={"units": "%"},
         ),
     ] = None
     max_reactance: Annotated[
-        int | float | str | None,
+        Percentage | None,
         Field(
             description="Maximum value of CSC reactance, in %.",
             json_schema_extra={"units": "%"},
         ),
-    ] = 9999.0
+    ] = Percentage(9999.0, "%")
     measurement_terminal: Annotated[
         int | float | str | None,
         Field(
@@ -328,12 +330,12 @@ class ControllableSeriesCompensator(AnaredeComponent):
         ),
     ] = None
     min_reactance: Annotated[
-        int | float | str | None,
+        Percentage | None,
         Field(
             description="Minimum value of CSC reactance, in %.",
             json_schema_extra={"units": "%"},
         ),
-    ] = -9999.0
+    ] = Percentage(-9999.0, "%")
     number_of_stages: Annotated[
         int | float | str | None,
         Field(
@@ -344,27 +346,17 @@ class ControllableSeriesCompensator(AnaredeComponent):
             ),
         ),
     ] = None
-    operation: Annotated[
-        int | float | str | None,
-        Field(
-            description=(
-                "A or 0 - CSC data addition.\\nE or 1 - CSC data elimination.\\nM or 2 - "
-                "CSC data modification."
-            ),
-        ),
-    ] = "A"
     owner: Annotated[
-        int | float | str | None,
+        Area | None,
         Field(
             description=(
-                "F if the circuit belongs to the area of the bus defined in the From Bus "
-                "field.\\nT if the circuit belongs to the area of the bus defined in the "
-                "To Bus field."
+                "Area that owns the CSC. This is resolved from the selected terminal "
+                "bus area during parsing."
             ),
         ),
-    ] = "F"
+    ] = None
     specified_value: Annotated[
-        int | float | str | None,
+        ActivePower | PerUnit | Percentage | float | None,
         Field(
             description=(
                 "Active Power Flow in the CSC, in MW, if the specified control mode is "
@@ -374,15 +366,6 @@ class ControllableSeriesCompensator(AnaredeComponent):
             ),
         ),
     ] = None
-    state: Annotated[
-        int | float | str | None,
-        Field(
-            description=(
-                "L if the circuit is in operation (connected).\\nD if the circuit is out "
-                "of operation (disconnected)."
-            ),
-        ),
-    ] = "L"
     to_bus: Annotated[
         int | float | str | None,
         Field(
@@ -392,6 +375,29 @@ class ControllableSeriesCompensator(AnaredeComponent):
             ),
         ),
     ] = None
+
+    @model_validator(mode="after")
+    def _coerce_specified_value_units(self) -> ControllableSeriesCompensator:
+        value = self.specified_value
+        if value is None:
+            return self
+
+        magnitude = get_magnitude(value)
+        if isinstance(magnitude, str):
+            text = magnitude.strip()
+            if not text:
+                object.__setattr__(self, "specified_value", None)
+                return self
+            magnitude = float(text)
+
+        mode = self.control_mode or CSCControlMode.REACTANCE
+        if mode == CSCControlMode.POWER:
+            object.__setattr__(self, "specified_value", ActivePower(float(magnitude), "MW"))
+        elif mode == CSCControlMode.CURRENT:
+            object.__setattr__(self, "specified_value", PerUnit(float(magnitude), "pu"))
+        else:
+            object.__setattr__(self, "specified_value", Percentage(float(magnitude), "%"))
+        return self
 
 
 SeriesCompensator = ControllableSeriesCompensator

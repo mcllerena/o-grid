@@ -13,8 +13,8 @@ from infrasys import System
 from loguru import logger
 
 from o_grid.constants import REQUIRED_KEYS
-from o_grid.models import BLOCK_BASE_CLASSES, AnaredeComponent, Arc, Area, MinMax
-from o_grid.units import Voltage
+from o_grid.models import BLOCK_BASE_CLASSES, ACBus, AnaredeComponent, Arc, Area, MinMax
+from o_grid.units import ActivePower, ReactivePower, Voltage, get_magnitude
 from o_grid.utils.utils_parser import normalize_row
 
 ParsedScalar: TypeAlias = int | float | str | None
@@ -123,7 +123,7 @@ class AnaredeInfrasysParser:
         }
 
         active_block: str | None = None
-        current_dbsh: AnaredeComponent | None = None
+        current_dbsh_parent_index: int | None = None
 
         for line in lines:
             stripped = line.strip()
@@ -133,7 +133,7 @@ class AnaredeInfrasysParser:
             section_header = self._section_header_name(stripped)
             if section_header is not None:
                 active_block = section_header
-                current_dbsh = None
+                current_dbsh_parent_index = None
                 continue
 
             if active_block is None:
@@ -148,11 +148,11 @@ class AnaredeInfrasysParser:
                 if active_block == "DBAR":
                     self._attach_bus_areas(system, components_by_block)
                 active_block = None
-                current_dbsh = None
+                current_dbsh_parent_index = None
                 continue
 
             if active_block == "DBSH" and upper == "FBAN":
-                current_dbsh = None
+                current_dbsh_parent_index = None
                 continue
 
             if active_block == "TITU":
@@ -169,13 +169,13 @@ class AnaredeInfrasysParser:
 
             if (
                 active_block == "DBSH"
-                and current_dbsh is not None
+                and current_dbsh_parent_index is not None
                 and "DBSH_BANK" in self.component_classes
             ):
                 bank_record = self._parse_bank_record(
                     line,
                     len(components_by_block["DBSH_BANK"]) + 1,
-                    parent_record_index=current_dbsh.record_index,
+                    parent_record_index=current_dbsh_parent_index,
                 )
                 components_by_block["DBSH_BANK"].append(bank_record)
                 self._add_component(system, bank_record)
@@ -204,12 +204,15 @@ class AnaredeInfrasysParser:
                     self._add_component(system, derived)
 
             if active_block == "DBSH":
-                current_dbsh = record
+                current_dbsh_parent_index = len(components_by_block["DBSH"])
 
         if title_lines:
             system.description = "\n".join(title_lines)
 
         self._attach_bus_voltage_groups(components_by_block)
+        self._attach_area_generation_peaks(components_by_block)
+        self._attach_dcsc_owner_areas(components_by_block)
+        self._attach_component_bus_references(components_by_block)
         self._log_component_summary(system)
 
         return ParsedAnaredeSystem(
@@ -266,6 +269,102 @@ class AnaredeInfrasysParser:
             to_from=to_bus,
         )
 
+    def _attach_dcsc_owner_areas(
+        self,
+        components_by_block: dict[str, list[AnaredeComponent]],
+    ) -> None:
+        buses = components_by_block.get("DBAR")
+        csc_records = components_by_block.get("DCSC")
+        if not buses or not csc_records:
+            return
+
+        buses_by_number = {
+            self._normalize_group_key(getattr(bus, "number", None)): bus for bus in buses
+        }
+        for csc in csc_records:
+            owner_token = str(csc.ext.pop("owner_token", "")).strip().upper()
+            bus_attr = "from_bus" if owner_token == "F" else "to_bus"
+            bus_number = getattr(csc, bus_attr, None)
+            bus_key = self._normalize_group_key(bus_number)
+            owner_bus = buses_by_number.get(bus_key)
+            owner_area = getattr(owner_bus, "area", None) if owner_bus is not None else None
+            setattr(csc, "owner", owner_area)
+
+    def _attach_area_generation_peaks(
+        self,
+        components_by_block: dict[str, list[AnaredeComponent]],
+    ) -> None:
+        buses = components_by_block.get("DBAR")
+        if not buses:
+            return
+
+        areas_by_id: dict[int, Area] = {}
+        active_totals: dict[int, float] = {}
+        reactive_totals: dict[int, float] = {}
+        for bus in buses:
+            area = getattr(bus, "area", None)
+            if isinstance(area, Area):
+                area_id = id(area)
+                areas_by_id[area_id] = area
+                active_totals.setdefault(area_id, 0.0)
+                reactive_totals.setdefault(area_id, 0.0)
+
+        for bus in buses:
+            area = getattr(bus, "area", None)
+            if not isinstance(area, Area):
+                continue
+
+            area_id = id(area)
+            active_generation = getattr(bus, "active_generation", None)
+            reactive_generation = getattr(bus, "reactive_generation", None)
+            active_totals[area_id] += (
+                float(get_magnitude(active_generation)) if active_generation is not None else 0.0
+            )
+            reactive_totals[area_id] += (
+                float(get_magnitude(reactive_generation))
+                if reactive_generation is not None
+                else 0.0
+            )
+
+        for area_id, area in areas_by_id.items():
+            object.__setattr__(area, "peak_active_power", ActivePower(active_totals[area_id], "MW"))
+            object.__setattr__(
+                area,
+                "peak_reactive_power",
+                ReactivePower(reactive_totals[area_id], "MVAr"),
+            )
+
+    def _attach_component_bus_references(
+        self,
+        components_by_block: dict[str, list[AnaredeComponent]],
+    ) -> None:
+        buses = components_by_block.get("DBAR")
+        if not buses:
+            return
+
+        buses_by_number = {
+            self._normalize_group_key(getattr(bus, "number", None)): bus for bus in buses
+        }
+        for components in components_by_block.values():
+            for component in components:
+                for bus_field in ("from_bus", "to_bus"):
+                    bus_value = getattr(component, bus_field, None)
+                    if bus_value is None or isinstance(bus_value, ACBus):
+                        continue
+                    bus_key = self._normalize_group_key(bus_value)
+                    bus_component = buses_by_number.get(bus_key)
+                    if bus_component is not None:
+                        object.__setattr__(component, bus_field, bus_component)
+
+                arc = getattr(component, "arc", None)
+                if isinstance(arc, Arc):
+                    from_bus = getattr(component, "from_bus", None)
+                    to_bus = getattr(component, "to_bus", None)
+                    if isinstance(from_bus, ACBus):
+                        object.__setattr__(arc, "from_to", from_bus)
+                    if isinstance(to_bus, ACBus):
+                        object.__setattr__(arc, "to_from", to_bus)
+
     def _is_transformer_dlin_record(self, record: AnaredeComponent) -> bool:
         values = self._extract_dlin_values(record)
         return self._has_non_default_tap(values.get("tap")) or self._has_non_zero_angle(
@@ -285,18 +384,18 @@ class AnaredeInfrasysParser:
         for bus in buses:
             base_key = self._normalize_group_key(getattr(bus, "voltage_base_group", None))
             base_group = base_by_group.get(base_key)
-            setattr(bus, "voltage_base_group_data", base_group)
+            object.__setattr__(bus, "voltage_base_group", base_group)
             if base_group is not None:
                 voltage = getattr(base_group, "voltage", None)
                 setattr(
                     bus,
                     "base_voltage",
-                    Voltage(voltage, "kV") if voltage is not None else None,
+                    voltage if isinstance(voltage, Voltage) else Voltage(voltage, "kV"),
                 )
 
             limit_key = self._normalize_group_key(getattr(bus, "voltage_limit_group", None))
             limit_group = limit_by_group.get(limit_key)
-            setattr(bus, "voltage_limit_group_data", limit_group)
+            object.__setattr__(bus, "voltage_limit_group", limit_group)
             if limit_group is not None:
                 minimum_voltage_limit = getattr(limit_group, "minimum_voltage_limit", None)
                 maximum_voltage_limit = getattr(limit_group, "maximum_voltage_limit", None)
@@ -304,8 +403,16 @@ class AnaredeInfrasysParser:
                     bus,
                     "voltage_limits",
                     MinMax(
-                        min=minimum_voltage_limit if minimum_voltage_limit is not None else 0.0,
-                        max=maximum_voltage_limit if maximum_voltage_limit is not None else 0.0,
+                        min=(
+                            float(get_magnitude(minimum_voltage_limit))
+                            if minimum_voltage_limit is not None
+                            else 0.0
+                        ),
+                        max=(
+                            float(get_magnitude(maximum_voltage_limit))
+                            if maximum_voltage_limit is not None
+                            else 0.0
+                        ),
                     ),
                 )
 
@@ -329,10 +436,6 @@ class AnaredeInfrasysParser:
             area_number = getattr(value, "area_number", None)
             if area_number is not None:
                 return str(area_number).strip().upper()
-        if hasattr(value, "load_zone_number"):
-            load_zone_number = getattr(value, "load_zone_number", None)
-            if load_zone_number is not None:
-                return str(load_zone_number).strip().upper()
         if hasattr(value, "group"):
             group = getattr(value, "group", None)
             if group is not None:
@@ -349,16 +452,37 @@ class AnaredeInfrasysParser:
             name: self._parse_fixed_value(self._slice_field(line, spec), spec)
             for name, spec in field_specs.items()
         }
+        owner_token: ParsedScalar = None
         if block == "DBAR":
             values = self._repair_dbar_values(line, field_specs, values)
+            values = self._normalize_dbar_values(values)
+        if block in {"DCER", "DCSC"}:
+            values = self._map_anarede_state_to_available(values)
+        if block == "DCSC":
+            owner_token = values.get("owner")
+            values["owner"] = None
 
         model = self.component_classes[block]
         record_data: dict[str, Any] = {
             "name": self._component_name(block, record_index, values),
-            "record_index": record_index,
             **self._to_model_values(values),
         }
-        return model(**record_data)
+        if block == "DBAR":
+            record_data.pop("anarede_name", None)
+        component = model(**record_data)
+        if block == "DCSC" and owner_token is not None:
+            component.ext["owner_token"] = str(owner_token).strip().upper()
+        return component
+
+    @staticmethod
+    def _normalize_dbar_values(values: dict[str, ParsedScalar]) -> dict[str, ParsedScalar]:
+        normalized = dict(values)
+        for field_name in ("operation", "state", "visualization_mode", "load_zone"):
+            normalized.pop(field_name, None)
+
+        if "voltage" in normalized:
+            normalized["initial_voltage"] = normalized.pop("voltage")
+        return normalized
 
     def _parse_bank_record(
         self, line: str, record_index: int, parent_record_index: int
@@ -371,7 +495,6 @@ class AnaredeInfrasysParser:
         model = self.component_classes["DBSH_BANK"]
         record_data: dict[str, Any] = {
             "name": self._component_name("DBSH_BANK", record_index, values),
-            "record_index": record_index,
             **self._to_model_values(values),
         }
         return model(**record_data)
@@ -426,7 +549,6 @@ class AnaredeInfrasysParser:
         model = self.component_classes[block]
         record_data: dict[str, Any] = {
             "name": self._component_name(block, record_index, values),
-            "record_index": record_index,
             **self._to_model_values(values),
         }
         return model(**record_data)
@@ -482,11 +604,29 @@ class AnaredeInfrasysParser:
             values = {left_field: tokens[i], right_field: value}
             record_data: dict[str, Any] = {
                 "name": self._component_name(block, record_index, values),
-                "record_index": record_index,
                 **self._to_model_values(values),
             }
             records.append(model(**record_data))
         return records
+
+    @staticmethod
+    def _map_anarede_state_to_available(
+        values: dict[str, ParsedScalar],
+    ) -> dict[str, ParsedScalar]:
+        mapped = dict(values)
+        mapped.pop("operation", None)
+        state = mapped.pop("state", None)
+        if state is None:
+            return mapped
+
+        state_text = str(state).strip().upper()
+        if state_text == "D":
+            mapped["available"] = False
+        elif state_text == "L" or state_text == "":
+            mapped["available"] = True
+        else:
+            mapped["available"] = True
+        return mapped
 
     @staticmethod
     def _slice_field(line: str, field_spec: dict[str, Any]) -> str:

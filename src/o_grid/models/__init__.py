@@ -29,7 +29,7 @@ from o_grid.models.control import (
     TapTransformerControl,
     TransferFunctionConstraint,
 )
-from o_grid.models.enums import ACBusTypes
+from o_grid.models.enums import ACBusTypes, CSCControlMode, SVCControlMode
 from o_grid.models.generators import (
     GeneratorDispatchData,
     ReactiveCompensator,
@@ -46,10 +46,9 @@ from o_grid.models.topology import (
     ACBus,
     Arc,
     Area,
+    AreaInterchange,
     Bus,
-    ControlArea,
     DCBus,
-    LoadZone,
     Topology,
     VoltageBaseGroup,
     VoltageLimitGroup,
@@ -63,7 +62,7 @@ BLOCK_BASE_CLASSES: dict[str, type[AnaredeComponent]] = {
     "DLIN": ACLine,
     "DGLT": VoltageLimitGroup,
     "DGBT": VoltageBaseGroup,
-    "DARE": ControlArea,
+    "DARE": AreaInterchange,
     "DBSH": BusShunt,
     "DBSH_BANK": LineShunt,
     "DCAI": CurrentInjectionLoad,
@@ -85,6 +84,7 @@ BLOCK_BASE_CLASSES: dict[str, type[AnaredeComponent]] = {
 
 __all__ = [
     "ACBusTypes",
+    "CSCControlMode",
     "ACBus",
     "ACBranch",
     "ACLine",
@@ -96,7 +96,7 @@ __all__ = [
     "Bus",
     "BusShunt",
     "CaseTitle",
-    "ControlArea",
+    "AreaInterchange",
     "ConverterControl",
     "ConverterStation",
     "CurrentInjectionLoad",
@@ -107,7 +107,6 @@ __all__ = [
     "FromToToFrom",
     "LineShunt",
     "Line",
-    "LoadZone",
     "MinMax",
     "OGridComponent",
     "PhaseShiftingTransformer",
@@ -115,6 +114,7 @@ __all__ = [
     "ProgramConstant",
     "ReactiveCompensator",
     "StaticVARCompensator",
+    "SVCControlMode",
     "SeriesCompensator",
     "ControllableSeriesCompensator",
     "ShuntBank",

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
 from infrasys import System
 
 from o_grid.models import (
@@ -10,6 +11,7 @@ from o_grid.models import (
     ACLine,
     Arc,
     Area,
+    AreaInterchange,
     BusShunt,
     LineShunt,
     MinMax,
@@ -20,7 +22,7 @@ from o_grid.models import (
     VoltageLimitGroup,
 )
 from o_grid.parser import AnaredeInfrasysParser, parse_anarede_system, parse_rows
-from o_grid.units import Voltage
+from o_grid.units import ActivePower, Angle, Percentage, PerUnit, ReactivePower, Voltage
 
 
 def test_parser_attach_bus_areas_and_build_arc() -> None:
@@ -64,6 +66,10 @@ def test_parse_anarede_d9nodes_to_infrasys(data_folder: Path) -> None:
     assert len(list(parsed.system.get_components(ac_line_type))) == 10
     assert len(list(parsed.system.get_components(Area))) == 1
     assert len(list(parsed.system.get_components(Arc))) == 10
+    arcs = list(parsed.system.get_components(Arc))
+    assert all(isinstance(arc.from_to, ACBus) for arc in arcs)
+    assert all(isinstance(arc.to_from, ACBus) for arc in arcs)
+    assert parsed.component_classes["DARE"].__name__ == "AreaInterchange"
 
     assert len(list(parsed.system.get_components(parsed.component_classes["DGBT"]))) == 0
     assert len(list(parsed.system.get_components(parsed.component_classes["DGLT"]))) == 0
@@ -76,16 +82,42 @@ def test_parse_anarede_d9nodes_to_infrasys(data_folder: Path) -> None:
     assert buses[0].bustype == ACBusTypes.REF
     assert buses[2].bustype == ACBusTypes.PQ
     assert all(getattr(component, "uuid", None) is not None for component in buses)
-    assert all(bus.voltage_base_group_data is not None for bus in buses)
-    assert all(bus.voltage_limit_group_data is not None for bus in buses)
-    assert all(isinstance(bus.voltage_base_group_data, VoltageBaseGroup) for bus in buses)
-    assert all(isinstance(bus.voltage_limit_group_data, VoltageLimitGroup) for bus in buses)
+    assert all(isinstance(bus.voltage_base_group, VoltageBaseGroup) for bus in buses)
+    assert all(isinstance(bus.voltage_limit_group, VoltageLimitGroup) for bus in buses)
     assert all(isinstance(bus.base_voltage, Voltage) for bus in buses)
+    assert all(repr(bus.base_voltage).endswith("'kV')>") for bus in buses)
+    assert all(isinstance(bus.initial_voltage, PerUnit) for bus in buses)
+    assert all(isinstance(bus.angle, Angle) for bus in buses)
     assert all(isinstance(bus.voltage_limits, MinMax) for bus in buses)
+
+    area = buses[0].area
+    assert isinstance(area, Area)
+    expected_peak_active_power = sum(
+        float(bus.active_generation.magnitude) if bus.active_generation is not None else 0.0
+        for bus in buses
+    )
+    expected_peak_reactive_power = sum(
+        float(bus.reactive_generation.magnitude) if bus.reactive_generation is not None else 0.0
+        for bus in buses
+    )
+    assert isinstance(area.peak_active_power, ActivePower)
+    assert isinstance(area.peak_reactive_power, ReactivePower)
+    assert area.peak_active_power.to("MW").magnitude == pytest.approx(expected_peak_active_power)
+    assert area.peak_reactive_power.to("MVAr").magnitude == pytest.approx(
+        expected_peak_reactive_power
+    )
+
+    interchange = parsed.components_by_block["DARE"][0]
+    assert isinstance(interchange, AreaInterchange)
+    assert isinstance(interchange.net_interchange, ActivePower)
+    assert isinstance(interchange.minimum_net_interchange, ActivePower)
+    assert isinstance(interchange.maximum_net_interchange, ActivePower)
 
     line = parsed.components_by_block["DLIN"][0]
     assert not line.name.startswith("ACLine_")
     assert getattr(line, "uuid", None) is not None
+    assert isinstance(line.from_bus, ACBus)
+    assert isinstance(line.to_bus, ACBus)
 
     assert "TITU" not in parsed.components_by_block
     assert parsed.system.description == "Sistema-Teste de 9 Barras - Caso Inicial"
@@ -99,6 +131,21 @@ def test_parse_anarede_dcer_dcsc_blocks(data_folder: Path) -> None:
     assert parsed.component_classes["DCER"].__name__ == "StaticVARCompensator"
     assert parsed.component_classes["DCSC"].__name__ == "ControllableSeriesCompensator"
     assert issubclass(parsed.component_classes["DCTR"], TapTransformerControl)
+
+    csc = parsed.components_by_block["DCSC"][0]
+    assert hasattr(csc, "available")
+    assert isinstance(csc.available, bool)
+    assert not hasattr(csc, "operation")
+    assert not hasattr(csc, "state")
+    assert isinstance(csc.owner, Area)
+    assert isinstance(csc.from_bus, ACBus)
+    assert isinstance(csc.to_bus, ACBus)
+    assert csc.to_bus.number == 848
+    assert isinstance(csc.specified_value, Percentage)
+    assert csc.specified_value.magnitude == -0.876
+    to_bus_area = getattr(csc.to_bus, "area", None)
+    assert isinstance(to_bus_area, Area)
+    assert csc.owner == to_bus_area
 
 
 def test_parse_anarede_derives_tap_changers_from_dlin(data_folder: Path) -> None:
@@ -199,17 +246,12 @@ def test_parser_helper_methods_cover_core_branches() -> None:
     assert parser._model_field_name("name") == "anarede_name"
     assert parser._model_field_name("voltage") == "voltage"
 
-    load_zone = __import__("o_grid.models", fromlist=["LoadZone"]).LoadZone(
-        name="Zone_3", load_zone_number=3
-    )
-
     class DummyGroup:
         def __init__(self, group: str) -> None:
             self.group = group
 
     assert parser._normalize_group_key(2.0) == "2"
     assert parser._normalize_group_key(Area(name="Area_7", area_number=7)) == "7"
-    assert parser._normalize_group_key(load_zone) == "3"
     assert parser._normalize_group_key(DummyGroup("ignored")) == "IGNORED"
 
     name = parser._component_name("DBAR", 3, {"number": 11})

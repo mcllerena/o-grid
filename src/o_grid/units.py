@@ -5,6 +5,22 @@ from __future__ import annotations
 from infrasys.base_quantity import BaseQuantity, ureg
 from pint import Quantity
 
+ureg.formatter.default_format = "~"
+
+
+def _define_unit(definition: str, unit_name: str) -> None:
+    units = getattr(ureg, "_units", {})
+    if unit_name not in units:
+        ureg.define(definition)
+
+
+_define_unit("VAr = volt_ampere = volt_ampere_reactive", "VAr")
+_define_unit(
+    "MVAr = 1e6 * VAr = megavolt_ampere_reactive",
+    "MVAr",
+)
+_define_unit("pu = [] = per_unit", "pu")
+
 
 class Distance(BaseQuantity):
     __base_unit__ = "meter"
@@ -12,6 +28,9 @@ class Distance(BaseQuantity):
 
 class Voltage(BaseQuantity):
     __base_unit__ = "kilovolt"
+
+    def __repr__(self) -> str:
+        return f"<Quantity({self.magnitude!r}, 'kV')>"
 
 
 class Current(BaseQuantity):
@@ -25,9 +44,16 @@ class Angle(BaseQuantity):
 class ActivePower(BaseQuantity):
     __base_unit__ = "megawatt"
 
+    def __repr__(self) -> str:
+        return f"<Quantity({self.magnitude!r}, 'MW')>"
+
 
 class ApparentPower(BaseQuantity):
-    __base_unit__ = "volt_ampere"
+    __base_unit__ = "MVA"
+
+
+class ReactivePower(BaseQuantity):
+    __base_unit__ = "MVAr"
 
 
 class Time(BaseQuantity):
@@ -57,9 +83,19 @@ class Energy(BaseQuantity):
 class Percentage(BaseQuantity):
     __base_unit__ = "percent"
 
+    def __repr__(self) -> str:
+        return f"<Quantity({self.magnitude!r}, '%')>"
+
 
 class EmissionRate(BaseQuantity):
     __base_unit__ = "kg/MWh"
+
+
+class PerUnit(BaseQuantity):
+    __base_unit__ = "pu"
+
+    def __repr__(self) -> str:
+        return f"<Quantity({self.magnitude!r}, 'pu')>"
 
 
 class PowerRate(BaseQuantity):
