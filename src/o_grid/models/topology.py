@@ -4,10 +4,10 @@ from __future__ import annotations
 
 from typing import Annotated
 
-from pydantic import Field, field_validator
+from pydantic import Field, field_validator, model_validator
 
 from o_grid.models.base import AnaredeComponent
-from o_grid.models.enums import ACBusTypes
+from o_grid.models.enums import ACBusTypes, DCBusPolarity, DCBusType
 from o_grid.models.named_tuples import MinMax
 from o_grid.units import ActivePower, Angle, PerUnit, ReactivePower, Voltage
 
@@ -274,7 +274,7 @@ class ACBus(Bus):
         )
 
 
-class DCBus(Bus):
+class DCBus(Topology):
     """DC bus model."""
 
     dc_link_number: Annotated[
@@ -297,35 +297,23 @@ class DCBus(Bus):
             json_schema_extra={"units": "ohm"},
         ),
     ] = 1.0
-    anarede_name: Annotated[
-        int | float | str | None,
-        Field(
-            description="Alphanumeric identification of the DC bus.",
-        ),
-    ] = None
     number: Annotated[
         int | float | str | None,
         Field(
             description="DC bus identification number.",
         ),
     ] = None
-    operation: Annotated[
-        int | float | str | None,
-        Field(
-            description="A or 0 - DC bus data addition. M or 2 - DC bus data modification.",
-        ),
-    ] = "A"
     polarity: Annotated[
-        int | float | str | None,
+        DCBusPolarity | None,
         Field(
             description=(
                 "+ indicates that the bus belongs to the positive pole. - indicates that "
                 "the bus belongs to the negative pole. 0 indicates a neutral bus."
             ),
         ),
-    ] = "0"
+    ] = DCBusPolarity.NEUTRAL
     type: Annotated[
-        int | float | str | None,
+        DCBusType | None,
         Field(
             description=(
                 "0 - bus without specified voltage. 1 - bus with specified voltage, used "
@@ -333,9 +321,9 @@ class DCBus(Bus):
                 "each DC link."
             ),
         ),
-    ] = 0
+    ] = DCBusType.NO_VOLTAGE
     voltage: Annotated[
-        int | float | str | None,
+        Voltage | None,
         Field(
             description=(
                 "Initial voltage magnitude of the DC bus, in kV. For type-1 buses this "
@@ -344,16 +332,55 @@ class DCBus(Bus):
             json_schema_extra={"units": "kV"},
         ),
     ] = None
-    voltage_limit_group: Annotated[
-        int | float | str | None,
-        Field(
-            description="Voltage limit group identifier associated with the DC bus.",
-        ),
-    ] = 0
+
+    @field_validator("polarity", mode="before")
+    @classmethod
+    def _coerce_polarity(cls, value: object) -> DCBusPolarity | None:
+        if value is None:
+            return DCBusPolarity.NEUTRAL
+        if isinstance(value, DCBusPolarity):
+            return value
+        if isinstance(value, (int, float)):
+            if int(value) == 0:
+                return DCBusPolarity.NEUTRAL
+        text = str(value).strip()
+        if not text:
+            return DCBusPolarity.NEUTRAL
+        return {
+            "+": DCBusPolarity.POSITIVE_POLE,
+            "-": DCBusPolarity.NEGATIVE_POLE,
+            "0": DCBusPolarity.NEUTRAL,
+        }.get(text, DCBusPolarity.NEUTRAL)
+
+    @field_validator("type", mode="before")
+    @classmethod
+    def _coerce_dc_bus_type(cls, value: object) -> DCBusType | None:
+        if value is None:
+            return DCBusType.NO_VOLTAGE
+        if isinstance(value, DCBusType):
+            return value
+        if isinstance(value, (int, float)):
+            if int(value) == 1:
+                return DCBusType.REFERENCE
+            return DCBusType.NO_VOLTAGE
+        text = str(value).strip()
+        if not text:
+            return DCBusType.NO_VOLTAGE
+        return {
+            "0": DCBusType.NO_VOLTAGE,
+            "1": DCBusType.REFERENCE,
+        }.get(text, DCBusType.NO_VOLTAGE)
+
+    @model_validator(mode="after")
+    def _normalize_ground_electrode_resistance(self) -> DCBus:
+        # Ground electrode resistance is only applicable to neutral-polarity DC buses.
+        if self.polarity != DCBusPolarity.NEUTRAL:
+            object.__setattr__(self, "ground_electrode_resistance", None)
+        return self
 
     @classmethod
     def example(cls) -> DCBus:
-        return DCBus(number=1, name="ExampleDCBus", area=Area.example(), bustype=ACBusTypes.PV)
+        return DCBus(number=1, name="ExampleDCBus", polarity=DCBusPolarity.POSITIVE_POLE)
 
 
 class VoltageLimitGroup(AnaredeComponent):
@@ -428,10 +455,12 @@ class VoltageBaseGroup(AnaredeComponent):
 class AreaInterchange(AnaredeComponent):
     """Area interchange limits and target model."""
 
-    area_number: Annotated[
-        int | float | str | None,
+    area: Annotated[
+        Area | None,
         Field(
-            description="Area number, as defined in the Area field of the DBAR execution code.",
+            description=(
+                "Area that owns the interchange, resolved from the DBAR area during parsing."
+            ),
         ),
     ] = None
     maximum_net_interchange: Annotated[
@@ -454,12 +483,6 @@ class AreaInterchange(AnaredeComponent):
             json_schema_extra={"units": "MW"},
         ),
     ] = ActivePower(0.0, "MW")
-    anarede_name: Annotated[
-        int | float | str | None,
-        Field(
-            description="Alphanumeric identification of the area.",
-        ),
-    ] = None
     net_interchange: Annotated[
         ActivePower | None,
         Field(

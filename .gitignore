@@ -27,3 +27,9 @@ dist/
 
 # Temporary build directory.
 build/
+
+# Brazilian file cases (CEII)
+tests/data/anarede/CASO_FINAL_EQV2020.pwf
+tests/data/anarede/20240820_C_00-00.pwf
+tests/data/anarede/LENA_BD0320R0_2Q2020_R1_CASO_12.pwf
+tests/data/anarede/NEXPSE19M_19.PWF

@@ -4,16 +4,18 @@ from __future__ import annotations
 
 from typing import Annotated
 
-from pydantic import Field
+from pydantic import Field, field_validator
 
 from o_grid.models.base import AnaredeComponent
+from o_grid.models.enums import BankControllerControlType, ShuntControlMode
+from o_grid.units import ActivePower, Percentage, PerUnit, ReactivePower
 
 
-class CurrentInjectionLoad(AnaredeComponent):
-    """Current-injection load model."""
+class IndividualizedLoad(AnaredeComponent):
+    """Individualized load group data model (DCAI)."""
 
     active_power: Annotated[
-        int | float | str | None,
+        ActivePower | None,
         Field(
             description=(
                 "Active power value of the individualized load group, in MW. If the load "
@@ -22,7 +24,7 @@ class CurrentInjectionLoad(AnaredeComponent):
             ),
             json_schema_extra={"units": "MW"},
         ),
-    ] = 0.0
+    ] = ActivePower(0.0, "MW")
     bus: Annotated[
         int | float | str | None,
         Field(
@@ -43,18 +45,8 @@ class CurrentInjectionLoad(AnaredeComponent):
             ),
         ),
     ] = 1
-    operation: Annotated[
-        int | float | str | None,
-        Field(
-            description=(
-                "A or 0 - addition of individualized load group data.\\nE or 1 - "
-                "elimination of individualized load group data.\\nM or 2 - modification of "
-                "individualized load group data."
-            ),
-        ),
-    ] = "A"
     parameter_a: Annotated[
-        int | float | str | None,
+        Percentage | None,
         Field(
             description=(
                 "Portion of individualized active load that varies linearly with voltage "
@@ -62,9 +54,9 @@ class CurrentInjectionLoad(AnaredeComponent):
             ),
             json_schema_extra={"units": "%"},
         ),
-    ] = 0.0
+    ] = Percentage(0.0, "percent")
     parameter_b: Annotated[
-        int | float | str | None,
+        Percentage | None,
         Field(
             description=(
                 "Portion of individualized active load that varies with the square of "
@@ -72,9 +64,9 @@ class CurrentInjectionLoad(AnaredeComponent):
             ),
             json_schema_extra={"units": "%"},
         ),
-    ] = 0.0
+    ] = Percentage(0.0, "percent")
     parameter_c: Annotated[
-        int | float | str | None,
+        Percentage | None,
         Field(
             description=(
                 "Portion of individualized reactive load that varies linearly with "
@@ -82,9 +74,9 @@ class CurrentInjectionLoad(AnaredeComponent):
             ),
             json_schema_extra={"units": "%"},
         ),
-    ] = 0.0
+    ] = Percentage(0.0, "percent")
     parameter_d: Annotated[
-        int | float | str | None,
+        Percentage | None,
         Field(
             description=(
                 "Portion of individualized reactive load that varies with the square of "
@@ -92,26 +84,18 @@ class CurrentInjectionLoad(AnaredeComponent):
             ),
             json_schema_extra={"units": "%"},
         ),
-    ] = 0.0
+    ] = Percentage(0.0, "percent")
     reactive_power: Annotated[
-        int | float | str | None,
+        ReactivePower | None,
         Field(
             description=(
                 "Reactive power value of the individualized load group, in MVAr. If the "
                 "load varies with bus voltage magnitude, enter the load value for the "
                 "voltage specified in the Voltage for Load Definition field."
             ),
+            json_schema_extra={"units": "MVAr"},
         ),
-    ] = 0.0
-    state: Annotated[
-        int | float | str | None,
-        Field(
-            description=(
-                "L if the load group is in operation (connected).\\nD if the load group is "
-                "out of operation (disconnected)."
-            ),
-        ),
-    ] = "L"
+    ] = ReactivePower(0.0, "MVAr")
     total_units: Annotated[
         int | float | str | None,
         Field(
@@ -132,7 +116,7 @@ class CurrentInjectionLoad(AnaredeComponent):
         ),
     ] = 1
     voltage_for_load_definition: Annotated[
-        int | float | str | None,
+        PerUnit | None,
         Field(
             description=(
                 "Voltage value in p.u. for which the active and reactive load portions "
@@ -141,9 +125,9 @@ class CurrentInjectionLoad(AnaredeComponent):
             ),
             json_schema_extra={"units": "p.u."},
         ),
-    ] = 1.0
+    ] = PerUnit(1.0, "pu")
     voltage_limit: Annotated[
-        int | float | str | None,
+        Percentage | None,
         Field(
             description=(
                 "Voltage value below which the constant power portion of functional "
@@ -151,11 +135,11 @@ class CurrentInjectionLoad(AnaredeComponent):
             ),
             json_schema_extra={"units": "%"},
         ),
-    ] = 0.0
+    ] = Percentage(0.0, "percent")
 
 
-class BusShunt(AnaredeComponent):
-    """Bus shunt model."""
+class BankController(AnaredeComponent):
+    """DBSH bus/line-bank switching controller model."""
 
     clear_dbar_data: Annotated[
         int | float | str | None,
@@ -167,16 +151,16 @@ class BusShunt(AnaredeComponent):
         ),
     ] = "N"
     control_mode: Annotated[
-        int | float | str | None,
+        ShuntControlMode | None,
         Field(
             description=(
                 "Automatic bank switching control mode: C for continuous control, D for "
                 "discrete control, or F for fixed control."
             ),
         ),
-    ] = "C"
+    ] = ShuntControlMode.CONTINUOUS
     control_type: Annotated[
-        int | float | str | None,
+        BankControllerControlType | None,
         Field(
             description=(
                 "Voltage control type: C if control is performed by the center of the "
@@ -184,7 +168,7 @@ class BusShunt(AnaredeComponent):
                 "voltage range."
             ),
         ),
-    ] = "C"
+    ] = BankControllerControlType.VOLTAGE_CONTROL_RANGE
     controlled_bus: Annotated[
         int | float | str | None,
         Field(
@@ -225,7 +209,7 @@ class BusShunt(AnaredeComponent):
         ),
     ] = None
     initial_reactive_injection: Annotated[
-        int | float | str | None,
+        ReactivePower | None,
         Field(
             description=(
                 "Initial total reactive power injection at the terminal bus, in MVAr, due "
@@ -233,10 +217,11 @@ class BusShunt(AnaredeComponent):
                 "Control Mode is F, this value represents the effective fixed injection "
                 "at the bus."
             ),
+            json_schema_extra={"units": "MVAr"},
         ),
-    ] = 0.0
+    ] = ReactivePower(0.0, "MVAr")
     maximum_voltage: Annotated[
-        int | float | str | None,
+        PerUnit | None,
         Field(
             description=(
                 "Maximum voltage limit of the control range that determines automatic "
@@ -244,10 +229,11 @@ class BusShunt(AnaredeComponent):
                 "taken from the voltage limit group to which the bus belongs. Implicit "
                 "decimal point between columns 25 and 26."
             ),
+            json_schema_extra={"units": "pu"},
         ),
-    ] = "DGLT maximum voltage limit"
+    ] = None
     minimum_voltage: Annotated[
-        int | float | str | None,
+        PerUnit | None,
         Field(
             description=(
                 "Minimum voltage limit of the control range that determines automatic "
@@ -255,17 +241,9 @@ class BusShunt(AnaredeComponent):
                 "taken from the voltage limit group to which the bus belongs. Implicit "
                 "decimal point between columns 20 and 21."
             ),
+            json_schema_extra={"units": "pu"},
         ),
-    ] = "DGLT minimum voltage limit"
-    operation: Annotated[
-        int | float | str | None,
-        Field(
-            description=(
-                "A or 0 - terminal bus data addition. E or 1 - terminal bus data "
-                "elimination. M or 2 - terminal bus data modification."
-            ),
-        ),
-    ] = "A"
+    ] = None
     to_bus: Annotated[
         int | float | str | None,
         Field(
@@ -276,10 +254,68 @@ class BusShunt(AnaredeComponent):
         ),
     ] = None
 
+    @field_validator("control_mode", mode="before")
+    @classmethod
+    def _coerce_control_mode(cls, value: object) -> ShuntControlMode | None:
+        if value is None:
+            return ShuntControlMode.CONTINUOUS
+        if isinstance(value, ShuntControlMode):
+            return value
+        text = str(value).strip().upper()
+        if not text:
+            return ShuntControlMode.CONTINUOUS
+        if text in ShuntControlMode.__members__:
+            return ShuntControlMode[text]
+        return {
+            "C": ShuntControlMode.CONTINUOUS,
+            "D": ShuntControlMode.DISCRETE,
+            "F": ShuntControlMode.FIXED,
+        }.get(text, ShuntControlMode.CONTINUOUS)
 
-class LineShunt(AnaredeComponent):
-    """Shunt bank/segment model linked to a bus shunt."""
+    @field_validator("control_type", mode="before")
+    @classmethod
+    def _coerce_control_type(cls, value: object) -> BankControllerControlType | None:
+        if value is None:
+            return BankControllerControlType.VOLTAGE_CONTROL_RANGE
+        if isinstance(value, BankControllerControlType):
+            return value
+        text = str(value).strip().upper()
+        if not text:
+            return BankControllerControlType.VOLTAGE_CONTROL_RANGE
+        if text in BankControllerControlType.__members__:
+            return BankControllerControlType[text]
+        return {
+            "C": BankControllerControlType.VOLTAGE_CONTROL_RANGE,
+            "L": BankControllerControlType.VOLTAGE_LIMIT_VIOLATION_RANGE,
+        }.get(text, BankControllerControlType.VOLTAGE_CONTROL_RANGE)
 
+    @field_validator("maximum_voltage", "minimum_voltage", mode="before")
+    @classmethod
+    def _coerce_control_voltage(cls, value: object) -> float | PerUnit | None:
+        if value is None or isinstance(value, PerUnit):
+            return value
+        if isinstance(value, (int, float)):
+            return float(value)
+        text = str(value).strip()
+        if not text:
+            return None
+        try:
+            return float(text)
+        except ValueError:
+            return None
+
+
+class ShuntBank(AnaredeComponent):
+    """Base capacitor/reactor shunt bank model (DBSH bank record)."""
+
+    bank_controller: Annotated[
+        BankController | None,
+        Field(
+            description=(
+                "Switching controller (DBSH terminal record) associated with this shunt bank."
+            ),
+        ),
+    ] = None
     bank_number: Annotated[
         int | float | str | None,
         Field(
@@ -290,34 +326,23 @@ class LineShunt(AnaredeComponent):
             ),
         ),
     ] = None
-    operation: Annotated[
-        int | float | str | None,
+    parent_record_index: Annotated[
+        int | None,
         Field(
-            description=(
-                "A or 0 - group or bank data addition. E or 1 - group or bank data "
-                "elimination. M or 2 - group or bank data modification."
-            ),
+            description="Parent DBSH record index for this bank row.",
         ),
-    ] = "A"
+    ] = None
     reactive_power_per_unit: Annotated[
-        int | float | str | None,
+        ReactivePower | None,
         Field(
             description=(
                 "Total reactive power injected at the bus by one unit or stage of the "
                 "capacitor/reactor group, in MVAr at nominal voltage (1.0 p.u.). Positive "
                 "values represent capacitors and negative values represent reactors."
             ),
+            json_schema_extra={"units": "MVAr"},
         ),
     ] = None
-    state: Annotated[
-        int | float | str | None,
-        Field(
-            description=(
-                "L if the group or bank is in operation. D if the group or bank is out of "
-                "operation."
-            ),
-        ),
-    ] = "L"
     total_units: Annotated[
         int | float | str | None,
         Field(
@@ -336,21 +361,11 @@ class LineShunt(AnaredeComponent):
             ),
         ),
     ] = "Capacitor/Reactor units"
-    parent_record_index: Annotated[
-        int | None,
-        Field(
-            description="Parent DBSH record index for this bank row.",
-        ),
-    ] = None
 
 
-class ShuntCompensator(BusShunt):
-    """Backwards-compatible name for bus shunt components."""
-
-    pass
+class BusShuntBank(ShuntBank):
+    """Bus-connected capacitor/reactor shunt bank (controller has no To Bus)."""
 
 
-class ShuntBank(LineShunt):
-    """Backwards-compatible name for line shunt/bank components."""
-
-    pass
+class LineShuntBank(ShuntBank):
+    """Line-connected capacitor/reactor shunt bank (controller has a To Bus)."""

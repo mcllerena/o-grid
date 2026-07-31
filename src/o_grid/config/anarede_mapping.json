@@ -794,7 +794,7 @@
           "end": 64,
           "start": 61
         },
-        "default": 0.0,
+        "default": 9999,
         "description": "DC line loading capacity, in MW, for flow monitoring purposes."
       },
       "dcli_circuit": {
@@ -1362,7 +1362,7 @@
           "end": 18,
           "start": 14
         },
-        "default": "DASE constant base",
+        "default": "",
         "description": "DC link power base, in MW."
       },
       "state": {
@@ -1715,6 +1715,139 @@
       }
     },
     "function": "Reading of AC circuits (lines & transformers)."
+  },
+  "DMFL_CIRC": {
+    "fields": {
+      "circuit_1": {
+        "column": {
+          "end": 14,
+          "start": 13
+        },
+        "default": "",
+        "description": "Identification number of the first selected parallel AC circuit."
+      },
+      "circuit_2": {
+        "column": {
+          "end": 29,
+          "start": 28
+        },
+        "default": "",
+        "description": "Identification number of the second selected parallel AC circuit."
+      },
+      "circuit_3": {
+        "column": {
+          "end": 44,
+          "start": 43
+        },
+        "default": "",
+        "description": "Identification number of the third selected parallel AC circuit."
+      },
+      "circuit_4": {
+        "column": {
+          "end": 59,
+          "start": 58
+        },
+        "default": "",
+        "description": "Identification number of the fourth selected parallel AC circuit."
+      },
+      "circuit_5": {
+        "column": {
+          "end": 74,
+          "start": 73
+        },
+        "default": "",
+        "description": "Identification number of the fifth selected parallel AC circuit."
+      },
+      "from_bus_1": {
+        "column": {
+          "end": 5,
+          "start": 1
+        },
+        "default": "",
+        "description": "From bus of the first selected circuit."
+      },
+      "from_bus_2": {
+        "column": {
+          "end": 20,
+          "start": 16
+        },
+        "default": "",
+        "description": "From bus of the second selected circuit."
+      },
+      "from_bus_3": {
+        "column": {
+          "end": 35,
+          "start": 31
+        },
+        "default": "",
+        "description": "From bus of the third selected circuit."
+      },
+      "from_bus_4": {
+        "column": {
+          "end": 50,
+          "start": 46
+        },
+        "default": "",
+        "description": "From bus of the fourth selected circuit."
+      },
+      "from_bus_5": {
+        "column": {
+          "end": 65,
+          "start": 61
+        },
+        "default": "",
+        "description": "From bus of the fifth selected circuit."
+      },
+      "operation": {
+        "column": {
+          "end": 76,
+          "start": 76
+        },
+        "default": "A",
+        "description": "A - addition of AC circuit flow monitoring data. E - elimination of AC circuit flow monitoring data."
+      },
+      "to_bus_1": {
+        "column": {
+          "end": 11,
+          "start": 7
+        },
+        "default": "",
+        "description": "To bus of the first selected circuit."
+      },
+      "to_bus_2": {
+        "column": {
+          "end": 26,
+          "start": 22
+        },
+        "default": "",
+        "description": "To bus of the second selected circuit."
+      },
+      "to_bus_3": {
+        "column": {
+          "end": 41,
+          "start": 37
+        },
+        "default": "",
+        "description": "To bus of the third selected circuit."
+      },
+      "to_bus_4": {
+        "column": {
+          "end": 56,
+          "start": 52
+        },
+        "default": "",
+        "description": "To bus of the fourth selected circuit."
+      },
+      "to_bus_5": {
+        "column": {
+          "end": 71,
+          "start": 67
+        },
+        "default": "",
+        "description": "To bus of the fifth selected circuit."
+      }
+    },
+    "function": "Reading of AC circuit flow monitoring data by explicitly selected circuits when DMFL CIRC is active."
   },
   "DOPC": {
     "fields": {
@@ -2488,6 +2621,24 @@
         "emergency_capacity",
         "number_of_taps",
         "equipment_capacity"
+      ],
+      "DMFL_CIRC": [
+        "from_bus_1",
+        "to_bus_1",
+        "circuit_1",
+        "from_bus_2",
+        "to_bus_2",
+        "circuit_2",
+        "from_bus_3",
+        "to_bus_3",
+        "circuit_3",
+        "from_bus_4",
+        "to_bus_4",
+        "circuit_4",
+        "from_bus_5",
+        "to_bus_5",
+        "circuit_5",
+        "operation"
       ],
       "DOPC": [
         "option",

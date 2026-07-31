@@ -15,6 +15,49 @@ class ACBusTypes(StrEnum):
     ISOLATED = "ISOLATED"
 
 
+class DCBusPolarity(StrEnum):
+    """Enum defining DC bus polarity."""
+
+    POSITIVE_POLE = "+"
+    NEGATIVE_POLE = "-"
+    NEUTRAL = "0"
+
+
+class DCBusType(StrEnum):
+    """Enum defining DC bus type."""
+
+    NO_VOLTAGE = "0"
+    REFERENCE = "1"
+
+
+class ConverterControlType(StrEnum):
+    """Enum defining DCCV converter control type."""
+
+    CURRENT = "C"
+    POWER = "P"
+
+
+class ConverterControlSlack(StrEnum):
+    """Enum defining DCCV slack-converter flag."""
+
+    SLACK = "F"
+    NORMAL = "N"
+
+
+class InverterControlMode(StrEnum):
+    """Enum defining DCCV inverter control mode for CCC inverters."""
+
+    GAMMA_CONTROLLED = "G"
+    ACBUS_CONTROLLED = "T"
+
+
+class ConverterMode(StrEnum):
+    """Enum defining DCNV converter operating mode."""
+
+    RECTIFIER = "R"
+    INVERTER = "I"
+
+
 class SVCControlMode(StrEnum):
     """Enum defining SVC control modes."""
 
@@ -30,11 +73,33 @@ class CSCControlMode(StrEnum):
     REACTANCE = "X"
 
 
+class ShuntControlMode(StrEnum):
+    """Enum defining DBSH automatic switching control modes."""
+
+    CONTINUOUS = "C"
+    DISCRETE = "D"
+    FIXED = "F"
+
+
+class BankControllerControlType(StrEnum):
+    """Enum defining DBSH bank controller voltage control types."""
+
+    VOLTAGE_CONTROL_RANGE = "C"
+    VOLTAGE_LIMIT_VIOLATION_RANGE = "L"
+
+
 class CircuitState(StrEnum):
     """Enum defining circuit connected/disconnected states."""
 
     CLOSED = "L"
     OPEN = "D"
+
+
+class HighVArMode(StrEnum):
+    """Enum defining the DC link High MVAr operating mode."""
+
+    NORMAL_MODE = "N"
+    HIGH_VAR_MODE = "H"
 
 
 class OptionState(StrEnum):

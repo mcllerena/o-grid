@@ -7,16 +7,35 @@ from typing import Annotated
 from pydantic import Field, model_validator
 
 from o_grid.models.base import AnaredeComponent
+from o_grid.models.control import DCLineData
 from o_grid.models.enums import CircuitState, CSCControlMode
 from o_grid.models.named_tuples import FromToToFrom, MinMax
-from o_grid.models.topology import ACBus, Arc, Area
+from o_grid.models.topology import ACBus, Arc, Area, DCBus
 from o_grid.units import (
     ActivePower,
     ApparentPower,
+    Inductance,
     Percentage,
     PerUnit,
+    ReactivePower,
+    Resistance,
     get_magnitude,
 )
+
+CtapOption = Annotated[
+    bool,
+    Field(
+        description=(
+            "Fixation in the voltage control application using automatic tap changing (CTAP)."
+        ),
+    ),
+]
+FlowMonitoring = Annotated[
+    bool,
+    Field(
+        description="Reading of AC circuit flow monitoring data (DMFL CIRC).",
+    ),
+]
 
 
 class Branch(AnaredeComponent):
@@ -65,6 +84,8 @@ class Line(ACBranch):
 class ACLine(Line):
     """AC transmission line model."""
 
+    ctap_option: CtapOption = False
+    flow_monitoring: FlowMonitoring = False
     controlled_bus: Annotated[
         ACBus | None,
         Field(
@@ -154,6 +175,8 @@ class ACLine(Line):
 class ControllableSeriesCompensator(AnaredeComponent):
     """Series compensation element model."""
 
+    ctap_option: CtapOption = False
+    flow_monitoring: FlowMonitoring = False
     bypass: Annotated[
         int | float | str | None,
         Field(
@@ -298,6 +321,8 @@ SeriesCompensator = ControllableSeriesCompensator
 class LTCTransformer(AnaredeComponent):
     """Load Tap Changer Transformer derived from line tap values."""
 
+    ctap_option: CtapOption = False
+    flow_monitoring: FlowMonitoring = False
     controlled_bus: Annotated[
         ACBus | None,
         Field(
@@ -367,15 +392,6 @@ class LTCTransformer(AnaredeComponent):
             ),
         ),
     ] = None
-    state: Annotated[
-        int | float | str | None,
-        Field(
-            description=(
-                "L if the circuit is in operation (connected).\\nD if the circuit is out "
-                "of operation (disconnected)."
-            ),
-        ),
-    ] = "L"
     r: Annotated[
         Percentage | None,
         Field(description="Resistance of the branch, in %."),
@@ -444,6 +460,8 @@ TapChangingTransformer = LTCTransformer
 class PhaseShiftingTransformer(AnaredeComponent):
     """Phase-shifting transformer derived from line phase-shift angle."""
 
+    ctap_option: CtapOption = False
+    flow_monitoring: FlowMonitoring = False
     controlled_bus: Annotated[
         ACBus | None,
         Field(
@@ -504,15 +522,6 @@ class PhaseShiftingTransformer(AnaredeComponent):
             ),
         ),
     ] = 33
-    operation: Annotated[
-        int | float | str | None,
-        Field(
-            description=(
-                "A or 0 - Circuit data addition.\\nE or 1 - Circuit data elimination.\\nM "
-                "or 2 - Circuit data modification."
-            ),
-        ),
-    ] = "A"
     owner: Annotated[
         Area | None,
         Field(
@@ -522,15 +531,6 @@ class PhaseShiftingTransformer(AnaredeComponent):
             ),
         ),
     ] = None
-    state: Annotated[
-        int | float | str | None,
-        Field(
-            description=(
-                "L if the circuit is in operation (connected).\\nD if the circuit is out "
-                "of operation (disconnected)."
-            ),
-        ),
-    ] = "L"
     r: Annotated[
         Percentage | None,
         Field(description="Resistance of the branch, in %."),
@@ -593,9 +593,11 @@ class PhaseShiftingTransformer(AnaredeComponent):
     ] = CircuitState.CLOSED
 
 
-class ShuntLine(AnaredeComponent):
-    """Shunt line model."""
+class LineShunt(AnaredeComponent):
+    """DSHL AC-circuit terminal shunt model."""
 
+    ctap_option: CtapOption = False
+    flow_monitoring: FlowMonitoring = False
     dshl_circuit: Annotated[
         int | float | str | None,
         Field(
@@ -611,52 +613,44 @@ class ShuntLine(AnaredeComponent):
             ),
         ),
     ] = None
-    operation: Annotated[
-        int | float | str | None,
-        Field(
-            description=(
-                "A or 0 - addition of AC circuit shunt device data.\\nE or 1 - elimination "
-                "of AC circuit shunt device data.\\nM or 2 - modification of AC circuit "
-                "shunt device data."
-            ),
-        ),
-    ] = "A"
     shunt_from: Annotated[
-        int | float | str | None,
+        ReactivePower | None,
         Field(
             description=(
                 "Reactive power of shunts at the end defined in the From Bus field for "
                 "nominal voltage (1.0 p.u.), in MVAr."
             ),
+            json_schema_extra={"units": "MVAr"},
         ),
-    ] = 0.0
+    ] = ReactivePower(0.0, "MVAr")
     shunt_to: Annotated[
-        int | float | str | None,
+        ReactivePower | None,
         Field(
             description=(
                 "Reactive power of shunts at the end defined in the To Bus field for "
                 "nominal voltage (1.0 p.u.), in MVAr."
             ),
+            json_schema_extra={"units": "MVAr"},
         ),
-    ] = 0.0
+    ] = ReactivePower(0.0, "MVAr")
     state_from: Annotated[
-        int | float | str | None,
+        CircuitState | None,
         Field(
             description=(
                 "L if the line shunt at this end is in operation (connected).\\nD if the "
                 "line shunt at this end is out of operation (disconnected)."
             ),
         ),
-    ] = "L"
+    ] = CircuitState.CLOSED
     state_to: Annotated[
-        int | float | str | None,
+        CircuitState | None,
         Field(
             description=(
                 "L if the line shunt at this end is in operation (connected).\\nD if the "
                 "line shunt at this end is out of operation (disconnected)."
             ),
         ),
-    ] = "L"
+    ] = CircuitState.CLOSED
     to_bus: Annotated[
         int | float | str | None,
         Field(
@@ -668,24 +662,27 @@ class ShuntLine(AnaredeComponent):
     ] = None
 
 
-class DCLink(AnaredeComponent):
-    """DC link model."""
+class DCLine(AnaredeComponent):
+    """DC line model."""
 
     capacity: Annotated[
-        int | float | str | None,
+        ActivePower | None,
         Field(
-            description="DC line loading capacity, in MW, for flow monitoring purposes.",
-            json_schema_extra={"units": "MW"},
+            description=(
+                "DC line loading capacity, in MW, for flow monitoring purposes. "
+                "Defaults to 9999 (unlimited) when not specified."
+            ),
         ),
-    ] = 0.0
+    ] = ActivePower(9999, "MW")
     dcli_circuit: Annotated[
         int | float | str | None,
         Field(
             description="Identification number of the parallel DC line.",
         ),
     ] = None
+
     from_bus: Annotated[
-        int | float | str | None,
+        DCBus | int | float | str | None,
         Field(
             description=(
                 "Number of the DC bus at one end of the DC line, as defined in the Number "
@@ -694,18 +691,17 @@ class DCLink(AnaredeComponent):
         ),
     ] = None
     inductance: Annotated[
-        int | float | str | None,
+        Inductance | None,
         Field(
             description="DC line inductance, in mH.",
-            json_schema_extra={"units": "mH"},
         ),
-    ] = 0.0
-    operation: Annotated[
-        int | float | str | None,
+    ] = Inductance(0.0, "millihenry")
+    line_data: Annotated[
+        DCLineData | None,
         Field(
-            description="A or 0 - DC line data addition. M or 2 - DC line data modification.",
+            description="DC link data (DELO record) associated with this DC line.",
         ),
-    ] = "A"
+    ] = None
     owner: Annotated[
         int | float | str | None,
         Field(
@@ -713,14 +709,13 @@ class DCLink(AnaredeComponent):
         ),
     ] = None
     resistance: Annotated[
-        int | float | str | None,
+        Resistance | None,
         Field(
             description="DC line resistance, in ohms.",
-            json_schema_extra={"units": "ohm"},
         ),
     ] = None
     to_bus: Annotated[
-        int | float | str | None,
+        DCBus | int | float | str | None,
         Field(
             description=(
                 "Number of the DC bus at the other end of the DC line, as defined in the "
@@ -832,3 +827,7 @@ class TransferFunctionCircuit(AnaredeComponent):
             description="To bus of the fifth selected circuit.",
         ),
     ] = None
+
+
+class FlowMonitoringCircuit(TransferFunctionCircuit):
+    """Circuit selector row for AC circuit flow monitoring (DMFL CIRC)."""

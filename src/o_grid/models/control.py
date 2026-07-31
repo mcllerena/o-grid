@@ -2,14 +2,38 @@
 
 from __future__ import annotations
 
+import math
 from typing import Annotated
 
 from infrasys import Component
-from pydantic import Field, model_validator
+from pydantic import Field, field_validator, model_validator
 
 from o_grid.models.base import AnaredeComponent
-from o_grid.models.enums import OptionState
-from o_grid.units import ActivePower, Angle, ApparentPower, Percentage, ReactivePower, get_magnitude
+from o_grid.models.enums import (
+    CircuitState,
+    ConverterControlSlack,
+    ConverterControlType,
+    ConverterMode,
+    HighVArMode,
+    InverterControlMode,
+    OptionState,
+)
+from o_grid.models.topology import ACBus, DCBus
+from o_grid.units import (
+    ActivePower,
+    Angle,
+    ApparentPower,
+    Capacitance,
+    Current,
+    Frequency,
+    Inductance,
+    Percentage,
+    PerUnit,
+    ReactivePower,
+    Resistance,
+    Voltage,
+    get_magnitude,
+)
 
 PROGRAM_CONSTANT_DEFAULTS: dict[str, int | float] = {
     "TEPA": 0.1,
@@ -331,7 +355,7 @@ class ConverterControl(AnaredeComponent):
     """Converter control settings model."""
 
     converter_angle: Annotated[
-        int | float | str | None,
+        Angle | None,
         Field(
             description=(
                 "Desired firing angle for a rectifier, extinction angle for a "
@@ -340,9 +364,9 @@ class ConverterControl(AnaredeComponent):
             ),
             json_schema_extra={"units": "degrees"},
         ),
-    ] = 0.0
+    ] = Angle(0.0, "degree")
     converter_control_type: Annotated[
-        int | float | str | None,
+        ConverterControlType | None,
         Field(
             description=(
                 "Converter control type: C for constant-current control, or P for "
@@ -351,7 +375,7 @@ class ConverterControl(AnaredeComponent):
         ),
     ] = None
     current_margin: Annotated[
-        int | float | str | None,
+        Percentage | None,
         Field(
             description=(
                 "Inverter current margin, in percent of the nominal current defined in "
@@ -359,9 +383,9 @@ class ConverterControl(AnaredeComponent):
             ),
             json_schema_extra={"units": "%"},
         ),
-    ] = 10.0
+    ] = Percentage(10.0, "%")
     dc_voltage_minimum_for_power_control: Annotated[
-        int | float | str | None,
+        PerUnit | None,
         Field(
             description=(
                 "Minimum DC voltage, in p.u., below which a converter in power control "
@@ -370,18 +394,18 @@ class ConverterControl(AnaredeComponent):
             ),
             json_schema_extra={"units": "p.u."},
         ),
-    ] = 0.0
+    ] = PerUnit(0.0, "pu")
     inverter_control_mode: Annotated[
-        int | float | str | None,
+        InverterControlMode | None,
         Field(
             description=(
                 "Inverter control mode for CCC inverters: G for gamma control, or T for "
                 "AC interface bus voltage control."
             ),
         ),
-    ] = None
+    ] = InverterControlMode.GAMMA_CONTROLLED
     maximum_converter_angle: Annotated[
-        int | float | str | None,
+        Angle | None,
         Field(
             description=(
                 "Maximum firing angle for a rectifier, extinction angle for a "
@@ -390,9 +414,9 @@ class ConverterControl(AnaredeComponent):
             ),
             json_schema_extra={"units": "degrees"},
         ),
-    ] = 0.0
+    ] = Angle(0.0, "degree")
     maximum_overcurrent: Annotated[
-        int | float | str | None,
+        Percentage | None,
         Field(
             description=(
                 "Maximum overcurrent allowed for the converter, in percent of the nominal "
@@ -401,15 +425,15 @@ class ConverterControl(AnaredeComponent):
             ),
             json_schema_extra={"units": "%"},
         ),
-    ] = 9999.0
+    ] = Percentage(9999.0, "%")
     maximum_transformer_tap: Annotated[
-        int | float | str | None,
+        PerUnit | None,
         Field(
             description="Maximum tap value of the converter transformer.",
         ),
     ] = None
     minimum_converter_angle: Annotated[
-        int | float | str | None,
+        Angle | None,
         Field(
             description=(
                 "Minimum firing angle for a rectifier, extinction angle for a "
@@ -418,9 +442,9 @@ class ConverterControl(AnaredeComponent):
             ),
             json_schema_extra={"units": "degrees"},
         ),
-    ] = 0.0
+    ] = Angle(0.0, "degree")
     minimum_transformer_tap: Annotated[
-        int | float | str | None,
+        PerUnit | None,
         Field(
             description="Minimum tap value of the converter transformer.",
         ),
@@ -434,36 +458,27 @@ class ConverterControl(AnaredeComponent):
             ),
         ),
     ] = None
-    operation: Annotated[
-        int | float | str | None,
-        Field(
-            description=(
-                "A or 0 - converter control data addition. E or 1 - converter control "
-                "data elimination. M or 2 - converter control data modification."
-            ),
-        ),
-    ] = "A"
     slack: Annotated[
-        int | float | str | None,
+        ConverterControlSlack | None,
         Field(
             description=(
                 "F for a slack converter, or N for a normal converter. One slack "
                 "converter must be specified for each pole of the DC link."
             ),
         ),
-    ] = "N"
+    ] = ConverterControlSlack.NORMAL
     specified_value: Annotated[
-        int | float | str | None,
+        ActivePower | Current | float | None,
         Field(
             description=(
                 "Specified converter control value, in A for current control or MW for "
                 "power control."
             ),
-            json_schema_extra={"units": "A"},
+            json_schema_extra={"units": "A|MW"},
         ),
     ] = None
     tap_himvar_mode: Annotated[
-        int | float | str | None,
+        PerUnit | None,
         Field(
             description=(
                 "Converter transformer tap used when the DC link operates in HiMVAr "
@@ -472,15 +487,15 @@ class ConverterControl(AnaredeComponent):
         ),
     ] = None
     tap_reduced_voltage_mode: Annotated[
-        int | float | str | None,
+        PerUnit | None,
         Field(
             description=(
                 "Converter transformer tap used when the DC link operates in reduced-voltage mode."
             ),
         ),
-    ] = "Maximum transformer tap minus one step, or 1.0 when the tap step is not available"
+    ] = PerUnit(1.0, "pu")
     transformer_tap_steps: Annotated[
-        int | float | str | None,
+        int | float | None,
         Field(
             description=(
                 "Number of converter transformer tap steps. The tap step is calculated by "
@@ -488,72 +503,179 @@ class ConverterControl(AnaredeComponent):
                 "this number of steps."
             ),
         ),
-    ] = "Infinity"
+    ] = math.inf
+
+    @field_validator("converter_control_type", mode="before")
+    @classmethod
+    def _coerce_converter_control_type(cls, value: object) -> ConverterControlType | None:
+        if value is None:
+            return None
+        if isinstance(value, ConverterControlType):
+            return value
+        text = str(value).strip().upper()
+        if text == ConverterControlType.CURRENT.value:
+            return ConverterControlType.CURRENT
+        if text == ConverterControlType.POWER.value:
+            return ConverterControlType.POWER
+        return None
+
+    @field_validator("slack", mode="before")
+    @classmethod
+    def _coerce_slack(cls, value: object) -> ConverterControlSlack | None:
+        if value is None:
+            return ConverterControlSlack.NORMAL
+        if isinstance(value, ConverterControlSlack):
+            return value
+        text = str(value).strip().upper()
+        if text == ConverterControlSlack.SLACK.value:
+            return ConverterControlSlack.SLACK
+        if text == ConverterControlSlack.NORMAL.value:
+            return ConverterControlSlack.NORMAL
+        return ConverterControlSlack.NORMAL
+
+    @field_validator("inverter_control_mode", mode="before")
+    @classmethod
+    def _coerce_inverter_control_mode(cls, value: object) -> InverterControlMode | None:
+        if value is None:
+            return None
+        if isinstance(value, InverterControlMode):
+            return value
+        text = str(value).strip().upper()
+        if text == InverterControlMode.GAMMA_CONTROLLED.value:
+            return InverterControlMode.GAMMA_CONTROLLED
+        if text == InverterControlMode.ACBUS_CONTROLLED.value:
+            return InverterControlMode.ACBUS_CONTROLLED
+        return None
+
+    @staticmethod
+    def _numeric_or_none(value: object) -> float | None:
+        if value is None:
+            return None
+        magnitude = get_magnitude(value)
+        if isinstance(magnitude, (int, float)):
+            return float(magnitude)
+        text = str(magnitude).strip()
+        if not text:
+            return None
+        if text.lower() in {"inf", "infinity", "∞"}:
+            return math.inf
+        try:
+            return float(text)
+        except ValueError:
+            return None
+
+    @model_validator(mode="after")
+    def _coerce_enums_and_units(self) -> ConverterControl:
+        control_type = self.converter_control_type
+
+        for field_name in ("converter_angle", "minimum_converter_angle", "maximum_converter_angle"):
+            value = self._numeric_or_none(getattr(self, field_name))
+            if value is not None and not math.isinf(value):
+                object.__setattr__(self, field_name, Angle(value, "degree"))
+
+        for field_name in ("current_margin", "maximum_overcurrent"):
+            value = self._numeric_or_none(getattr(self, field_name))
+            if value is not None and not math.isinf(value):
+                object.__setattr__(self, field_name, Percentage(value, "%"))
+
+        for field_name in (
+            "dc_voltage_minimum_for_power_control",
+            "minimum_transformer_tap",
+            "maximum_transformer_tap",
+            "tap_himvar_mode",
+            "tap_reduced_voltage_mode",
+        ):
+            value = self._numeric_or_none(getattr(self, field_name))
+            if value is not None and not math.isinf(value):
+                object.__setattr__(self, field_name, PerUnit(value, "pu"))
+
+        specified = self._numeric_or_none(self.specified_value)
+        if specified is not None and not math.isinf(specified):
+            if control_type == ConverterControlType.POWER:
+                object.__setattr__(self, "specified_value", ActivePower(specified, "MW"))
+            elif control_type == ConverterControlType.CURRENT:
+                object.__setattr__(self, "specified_value", Current(specified, "A"))
+            else:
+                object.__setattr__(self, "specified_value", specified)
+
+        tap_steps = self.transformer_tap_steps
+        if tap_steps is None:
+            object.__setattr__(self, "transformer_tap_steps", math.inf)
+        else:
+            tap_steps_value = self._numeric_or_none(tap_steps)
+            if tap_steps_value is None or math.isinf(tap_steps_value):
+                object.__setattr__(self, "transformer_tap_steps", math.inf)
+            else:
+                object.__setattr__(
+                    self,
+                    "transformer_tap_steps",
+                    int(tap_steps_value)
+                    if float(tap_steps_value).is_integer()
+                    else tap_steps_value,
+                )
+
+        return self
 
 
 class ConverterStation(AnaredeComponent):
     """Converter station model."""
 
     ac_bus: Annotated[
-        int | float | str | None,
+        ACBus | int | float | str | None,
         Field(
             description=(
-                "AC bus number to which the converter is connected, as defined in the "
+                "AC bus to which the converter is connected, as defined in the "
                 "Number field of the DBAR execution code."
             ),
         ),
     ] = None
     ccc_capacitance: Annotated[
-        int | float | str | None,
+        Capacitance | None,
         Field(
             description="CCC capacitance, in microfarads.",
-            json_schema_extra={"units": "microfarad"},
         ),
-    ] = 0.0
+    ] = Capacitance(0.0, "microfarad")
     commutation_reactance: Annotated[
-        int | float | str | None,
+        Percentage | None,
         Field(
             description=(
                 "Commutation reactance per six-pulse bridge, in percent on the converter "
                 "transformer power base."
             ),
-            json_schema_extra={"units": "%"},
         ),
     ] = None
     current: Annotated[
-        int | float | str | None,
+        Current | None,
         Field(
             description="Nominal converter current, in A.",
-            json_schema_extra={"units": "A"},
         ),
     ] = None
     dc_bus: Annotated[
-        int | float | str | None,
+        DCBus | int | float | str | None,
         Field(
             description=(
-                "DC bus number to which the converter is connected, as defined in the "
+                "DC bus to which the converter is connected, as defined in the "
                 "Number field of the DCBA execution code."
             ),
         ),
     ] = None
     frequency: Annotated[
-        int | float | str | None,
+        Frequency | None,
         Field(
             description="Frequency, in Hz, of the AC system to which the CCC is connected.",
-            json_schema_extra={"units": "Hz"},
         ),
-    ] = 60
+    ] = Frequency(60, "hertz")
     mode: Annotated[
-        int | float | str | None,
+        ConverterMode | None,
         Field(
             description="Converter operating mode: R for rectifier, or I for inverter.",
         ),
     ] = None
     neutral_bus: Annotated[
-        int | float | str | None,
+        DCBus | int | float | str | None,
         Field(
             description=(
-                "Neutral DC bus number to which the converter is connected, as defined in "
+                "Neutral DC bus to which the converter is connected, as defined in "
                 "the Number field of the DCBA execution code."
             ),
         ),
@@ -564,34 +686,25 @@ class ConverterStation(AnaredeComponent):
             description="Converter identification number.",
         ),
     ] = None
-    operation: Annotated[
-        int | float | str | None,
-        Field(
-            description="A or 0 - converter data addition. M or 2 - converter data modification.",
-        ),
-    ] = "A"
     reactor_inductance: Annotated[
-        int | float | str | None,
+        Inductance | None,
         Field(
             description="Smoothing reactor inductance, in mH.",
-            json_schema_extra={"units": "mH"},
         ),
-    ] = 0.0
+    ] = Inductance(0.0, "millihenry")
     reactor_resistance: Annotated[
-        int | float | str | None,
+        Resistance | None,
         Field(
             description="Smoothing reactor resistance, in ohms.",
-            json_schema_extra={"units": "ohm"},
         ),
     ] = None
     secondary_voltage: Annotated[
-        int | float | str | None,
+        Voltage | None,
         Field(
             description=(
                 "Line-to-line base voltage of the secondary side of the six-pulse bridge "
                 "converter transformer, in kV."
             ),
-            json_schema_extra={"units": "kV"},
         ),
     ] = None
     six_pulse_bridges: Annotated[
@@ -601,12 +714,25 @@ class ConverterStation(AnaredeComponent):
         ),
     ] = None
     transformer_power: Annotated[
-        int | float | str | None,
+        ApparentPower | None,
         Field(
             description="Power base of the six-pulse bridge converter transformer, in MVA.",
-            json_schema_extra={"units": "MVA"},
         ),
     ] = None
+
+    @field_validator("mode", mode="before")
+    @classmethod
+    def _coerce_mode(cls, value: object) -> ConverterMode | None:
+        if value is None:
+            return None
+        if isinstance(value, ConverterMode):
+            return value
+        text = str(value).strip().upper()
+        if text == ConverterMode.RECTIFIER.value:
+            return ConverterMode.RECTIFIER
+        if text == ConverterMode.INVERTER.value:
+            return ConverterMode.INVERTER
+        return None
 
 
 class TransferFunctionConstraint(AnaredeComponent):
@@ -731,18 +857,18 @@ class TransferFunctionConstraint(AnaredeComponent):
     ] = "A"
 
 
-class DCLinkOwner(AnaredeComponent):
-    """DC link owner model."""
+class DCLineData(AnaredeComponent):
+    """DC link data model."""
 
     himvar_mode: Annotated[
-        int | float | str | None,
+        HighVArMode | None,
         Field(
             description=(
                 "DC link operating mode selector: N for normal operation, or H for HiMVAr "
                 "Consumption mode."
             ),
         ),
-    ] = "N"
+    ] = HighVArMode.NORMAL_MODE
     anarede_name: Annotated[
         int | float | str | None,
         Field(
@@ -755,27 +881,21 @@ class DCLinkOwner(AnaredeComponent):
             description="DC link identification number.",
         ),
     ] = None
-    operation: Annotated[
-        int | float | str | None,
-        Field(
-            description="A or 0 - DC link data addition. M or 2 - DC link data modification.",
-        ),
-    ] = "A"
     power_base: Annotated[
-        int | float | str | None,
+        ActivePower | None,
         Field(
-            description="DC link power base, in MW.",
+            description="DC link power base, in MW. Defaults to the DASE program constant.",
             json_schema_extra={"units": "MW"},
         ),
-    ] = "DASE constant base"
+    ] = None
     state: Annotated[
-        int | float | str | None,
+        CircuitState | None,
         Field(
             description="L if the DC link is in operation. D if the DC link is out of operation.",
         ),
-    ] = "L"
+    ] = CircuitState.CLOSED
     voltage: Annotated[
-        int | float | str | None,
+        Voltage | None,
         Field(
             description="Nominal DC link operating voltage, in kV.",
             json_schema_extra={"units": "kV"},

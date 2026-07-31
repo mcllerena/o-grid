@@ -12,14 +12,30 @@ from o_grid.models import (
     Arc,
     Area,
     AreaInterchange,
-    BusShunt,
+    BankController,
+    BankControllerControlType,
+    BusShuntBank,
+    CircuitState,
+    ConverterControl,
+    ConverterMode,
+    ConverterStation,
+    DCBus,
+    DCBusType,
+    DCLine,
+    DCLineData,
+    FlowMonitoringCircuit,
+    Generator,
+    HighVArMode,
+    IndividualizedLoad,
     LineShunt,
     MinMax,
     OptionState,
     PhaseShiftingTransformer,
     ProgramConstant,
+    ShuntBank,
     TapChangingTransformer,
     TapTransformerControl,
+    TransferFunctionCircuit,
     VoltageBaseGroup,
     VoltageLimitGroup,
 )
@@ -28,11 +44,15 @@ from o_grid.units import (
     ActivePower,
     Angle,
     ApparentPower,
+    Current,
+    Inductance,
     Percentage,
     PerUnit,
     ReactivePower,
+    Resistance,
     Voltage,
 )
+from o_grid.utils.utils_parser import has_non_default_tap
 
 
 def test_parser_attach_bus_areas_and_build_arc() -> None:
@@ -122,6 +142,10 @@ def test_parse_anarede_d9nodes_to_infrasys(data_folder: Path) -> None:
     assert isinstance(interchange.net_interchange, ActivePower)
     assert isinstance(interchange.minimum_net_interchange, ActivePower)
     assert isinstance(interchange.maximum_net_interchange, ActivePower)
+    assert isinstance(interchange.area, Area)
+    assert not hasattr(interchange, "area_number")
+    assert not hasattr(interchange, "anarede_name")
+    assert "area_token" not in interchange.ext
 
     line = parsed.components_by_block["DLIN"][0]
     assert line.name == f"{line.from_bus.name}_{line.to_bus.name}_{line.line_circuit}"
@@ -229,9 +253,7 @@ def test_parse_anarede_derives_tap_changers_from_dlin(data_folder: Path) -> None
     expected_tap_count = sum(
         1
         for rec in dlin_records
-        if AnaredeInfrasysParser._has_non_default_tap(
-            getattr(rec, "ext", {}).get("pwf_values", {}).get("tap")
-        )
+        if has_non_default_tap(getattr(rec, "ext", {}).get("pwf_values", {}).get("tap"))
     )
 
     assert expected_tap_count > 0
@@ -309,13 +331,88 @@ def test_rename_dlin_components_applies_to_derived_transformers() -> None:
     assert phase.name == "FROM_TO_8"
 
 
-def test_dlin_helper_parsers_handle_quantity_and_text_inputs() -> None:
-    assert AnaredeInfrasysParser._has_non_default_tap(PerUnit(0.98, "pu"))
-    assert not AnaredeInfrasysParser._has_non_default_tap("   ")
-    assert AnaredeInfrasysParser._has_non_default_tap("X")
+def test_derived_transformers_use_availability_and_drop_operation() -> None:
+    tap = TapChangingTransformer(name="tap", from_bus=1, to_bus=2, available=True)
+    phase = PhaseShiftingTransformer(name="phase", from_bus=1, to_bus=2, available=False)
 
-    assert AnaredeInfrasysParser._has_non_zero_angle(Angle(1.5, "degree"))
-    assert not AnaredeInfrasysParser._has_non_zero_angle("X")
+    assert tap.available is True
+    assert phase.available is False
+    assert not hasattr(tap, "state")
+    assert not hasattr(phase, "state")
+    assert not hasattr(tap, "operation")
+    assert not hasattr(phase, "operation")
+
+
+def test_attach_ctap_options_flags_selected_circuits() -> None:
+    parser = AnaredeInfrasysParser()
+    circuit = TransferFunctionCircuit(
+        name="dtpf",
+        from_bus_1=776,
+        to_bus_1=2971,
+        circuit_1=2,
+        from_bus_2=1320,
+        to_bus_2=1368,
+        circuit_2=1,
+    )
+
+    from_bus = ACBus(number=776, name="A")
+    to_bus = ACBus(number=2971, name="B")
+    matched_line = ACLine(name="line", line_circuit=2)
+    object.__setattr__(matched_line, "from_bus", from_bus)
+    object.__setattr__(matched_line, "to_bus", to_bus)
+
+    # Reversed orientation using unresolved raw bus numbers.
+    reversed_tap = TapChangingTransformer(name="tap", from_bus=1368, to_bus=1320, line_circuit=1)
+    unmatched = PhaseShiftingTransformer(name="phase", from_bus=1, to_bus=2, line_circuit=9)
+
+    parser._attach_ctap_options(
+        {
+            "DTPF_CIRC": [circuit],
+            "DLIN": [matched_line],
+            "DLIN_TAP": [reversed_tap],
+            "DLIN_PHASE_SHIFT": [unmatched],
+        }
+    )
+
+    assert matched_line.ctap_option is True
+    assert reversed_tap.ctap_option is True
+    assert unmatched.ctap_option is False
+
+
+def test_attach_flow_monitoring_flags_selected_circuits() -> None:
+    parser = AnaredeInfrasysParser()
+    circuit = FlowMonitoringCircuit(
+        name="dmfl",
+        from_bus_1=776,
+        to_bus_1=2971,
+        circuit_1=2,
+        from_bus_2=1320,
+        to_bus_2=1368,
+        circuit_2=1,
+    )
+
+    from_bus = ACBus(number=776, name="A")
+    to_bus = ACBus(number=2971, name="B")
+    matched_line = ACLine(name="line", line_circuit=2)
+    object.__setattr__(matched_line, "from_bus", from_bus)
+    object.__setattr__(matched_line, "to_bus", to_bus)
+
+    # Reversed orientation using unresolved raw bus numbers.
+    reversed_tap = TapChangingTransformer(name="tap", from_bus=1368, to_bus=1320, line_circuit=1)
+    unmatched = PhaseShiftingTransformer(name="phase", from_bus=1, to_bus=2, line_circuit=9)
+
+    parser._attach_flow_monitoring(
+        {
+            "DMFL_CIRC": [circuit],
+            "DLIN": [matched_line],
+            "DLIN_TAP": [reversed_tap],
+            "DLIN_PHASE_SHIFT": [unmatched],
+        }
+    )
+
+    assert matched_line.flow_monitoring is True
+    assert reversed_tap.flow_monitoring is True
+    assert unmatched.flow_monitoring is False
 
 
 def test_components_store_pwf_values(data_folder: Path) -> None:
@@ -397,33 +494,28 @@ def test_parse_anarede_handles_dbsh_bank_section(tmp_path: Path) -> None:
     assert "DBSH" in parsed.components_by_block
     assert "DBSH_BANK" in parsed.components_by_block
     assert "TITU" not in parsed.components_by_block
-    assert issubclass(parsed.component_classes["DBSH"], BusShunt)
-    assert issubclass(parsed.component_classes["DBSH_BANK"], LineShunt)
+    assert issubclass(parsed.component_classes["DBSH"], BankController)
+    assert issubclass(parsed.component_classes["DBSH_BANK"], ShuntBank)
+
+    # The controller is embedded in the bank, not registered as a top-level component.
+    assert not list(parsed.system.get_components(BankController))
+    banks = list(parsed.system.get_components(ShuntBank))
+    assert len(banks) == 1
+    bank = banks[0]
+    assert isinstance(bank, BusShuntBank)
+    assert isinstance(bank.bank_controller, BankController)
+    assert bank.bank_controller.control_type is BankControllerControlType.VOLTAGE_CONTROL_RANGE
+    assert not hasattr(bank, "operation")
+    assert not hasattr(bank, "state")
+    assert bank.available is True
+    assert isinstance(bank.reactive_power_per_unit, ReactivePower)
+    assert bank.reactive_power_per_unit.to("MVAr").magnitude == 10.0
 
 
 def test_parse_pair_records_ignores_short_line() -> None:
     parser = AnaredeInfrasysParser()
     empty = parser._parse_pair_records("DOPC", "ONLYONE", {"DOPC": []})
     assert empty == []
-
-
-def test_parser_helper_methods_cover_core_branches() -> None:
-    parser = AnaredeInfrasysParser()
-
-    assert parser._model_field_name("type") == "bustype"
-    assert parser._model_field_name("name") == "anarede_name"
-    assert parser._model_field_name("voltage") == "voltage"
-
-    class DummyGroup:
-        def __init__(self, group: str) -> None:
-            self.group = group
-
-    assert parser._normalize_group_key(2.0) == "2"
-    assert parser._normalize_group_key(Area(name="Area_7", area_number=7)) == "7"
-    assert parser._normalize_group_key(DummyGroup("ignored")) == "IGNORED"
-
-    name = parser._component_name("DBAR", 3, {"number": 11})
-    assert name == "11_3"
 
 
 def test_parse_pair_records_handles_numeric_conversion() -> None:
@@ -455,19 +547,250 @@ def test_section_header_recognizes_dtpf_circ() -> None:
     assert parser._section_header_name("DTPF CIRC") == "DTPF_CIRC"
 
 
-def test_repair_dbar_values_from_compact_voltage_angle() -> None:
+def test_section_header_recognizes_dmfl_circ() -> None:
     parser = AnaredeInfrasysParser()
-    field_specs = {
-        "voltage_limit_group": {"default": "A"},
-    }
-    values = {"voltage": "bad", "angle": 0.0}
-    line = " " * 22 + "1000+1.2" + " " * 20
+    assert parser._section_header_name("DMFL CIRC") == "DMFL_CIRC"
 
-    repaired = parser._repair_dbar_values(line, field_specs, values)
 
-    assert repaired["voltage"] == 1.0
-    assert repaired["angle"] == 1.2
-    assert repaired["voltage_limit_group"] == "A"
+def test_delo_resolves_power_base_from_dase_and_units(tmp_path: Path) -> None:
+    def delo_line(number: int, power_base_text: str) -> str:
+        chars = [" "] * 80
+        chars[0:4] = list(f"{number:>4}")
+        chars[7:12] = list("  600")
+        chars[13:18] = list(power_base_text.rjust(5))
+        chars[19:39] = list("ELO TESTE".ljust(20))
+        chars[40] = "N"
+        chars[42] = "L"
+        return "".join(chars)
+
+    pwf = tmp_path / "delo_case.pwf"
+    pwf.write_text(
+        "\n".join(
+            [
+                "TITU",
+                "DELO Test",
+                "99999",
+                "DCTE",
+                "DASE 1500.",
+                "99999",
+                "DELO",
+                delo_line(1, ""),
+                delo_line(2, "800"),
+                "99999",
+                "FIM",
+                "",
+            ]
+        ),
+        encoding="cp1252",
+    )
+
+    parsed = parse_anarede_system(pwf, system_name="delo-demo")
+    links = parsed.components_by_block["DELO"]
+    assert len(links) == 2
+
+    first, second = links
+    assert isinstance(first, DCLineData)
+    assert first.himvar_mode is HighVArMode.NORMAL_MODE
+    assert first.state is CircuitState.CLOSED
+    assert isinstance(first.voltage, Voltage)
+    assert first.voltage.to("kV").magnitude == 600.0
+    assert not hasattr(first, "operation")
+
+    # Blank power base falls back to the DASE program constant.
+    assert isinstance(first.power_base, ActivePower)
+    assert first.power_base.to("MW").magnitude == 1500.0
+
+    # Explicit power base is preserved.
+    assert isinstance(second.power_base, ActivePower)
+    assert second.power_base.to("MW").magnitude == 800.0
+
+
+def test_delo_power_base_defaults_to_dase_constant(tmp_path: Path) -> None:
+    def delo_line(number: int) -> str:
+        chars = [" "] * 80
+        chars[0:4] = list(f"{number:>4}")
+        chars[7:12] = list("  500")
+        chars[19:39] = list("ELO SEM DASE".ljust(20))
+        chars[40] = "N"
+        chars[42] = "L"
+        return "".join(chars)
+
+    pwf = tmp_path / "delo_no_dase.pwf"
+    pwf.write_text(
+        "\n".join(
+            [
+                "DELO",
+                delo_line(1),
+                "99999",
+                "FIM",
+                "",
+            ]
+        ),
+        encoding="cp1252",
+    )
+
+    parsed = parse_anarede_system(pwf, system_name="delo-default")
+    link = parsed.components_by_block["DELO"][0]
+
+    # ANAREDE default DC system power base when DASE is not declared.
+    assert isinstance(link.power_base, ActivePower)
+    assert link.power_base.to("MW").magnitude == 100.0
+
+
+def test_embed_dc_line_data_matches_link_by_number() -> None:
+    parser = AnaredeInfrasysParser()
+    from_bus = DCBus(number=1, name="DC-1", dc_link_number=2)
+    to_bus = DCBus(number=2, name="DC-2", dc_link_number=2)
+    line = DCLine(name="DC-1_DC-2", from_bus=from_bus, to_bus=to_bus)
+    link = DCLineData(name="link-2", number=2)
+    other = DCLineData(name="link-9", number=9)
+
+    parser._embed_dc_line_data({"DCLI": [line], "DELO": [link, other]})
+
+    assert isinstance(line.line_data, DCLineData)
+    assert line.line_data is link
+
+
+def test_dshl_shunt_units_and_circuit_state(tmp_path: Path) -> None:
+    def dshl_line(
+        from_bus: int,
+        to_bus: int,
+        shunt_from: str,
+        shunt_to: str,
+        state_from: str,
+        state_to: str,
+    ) -> str:
+        chars = [" "] * 80
+        chars[0:5] = list(f"{from_bus:>5}")
+        chars[9:14] = list(f"{to_bus:>5}")
+        chars[14:16] = list(" 1")
+        chars[17:23] = list(shunt_from.rjust(6))
+        chars[23:29] = list(shunt_to.rjust(6))
+        chars[30:32] = list(state_from.rjust(2))
+        chars[33:35] = list(state_to.rjust(2))
+        return "".join(chars)
+
+    pwf = tmp_path / "dshl_case.pwf"
+    pwf.write_text(
+        "\n".join(
+            [
+                "DSHL",
+                dshl_line(101, 102, "-73.0", "0.0", "L", "D"),
+                "99999",
+                "FIM",
+                "",
+            ]
+        ),
+        encoding="cp1252",
+    )
+
+    parsed = parse_anarede_system(pwf, system_name="dshl-demo")
+    shunts = parsed.components_by_block["DSHL"]
+    assert len(shunts) == 1
+
+    shunt = shunts[0]
+    assert isinstance(shunt, LineShunt)
+    assert not hasattr(shunt, "operation")
+
+    assert isinstance(shunt.shunt_from, ReactivePower)
+    assert shunt.shunt_from.to("MVAr").magnitude == -73.0
+    assert isinstance(shunt.shunt_to, ReactivePower)
+    assert shunt.shunt_to.to("MVAr").magnitude == 0.0
+    assert shunt.state_from is CircuitState.CLOSED
+    assert shunt.state_to is CircuitState.OPEN
+
+
+def test_attach_generator_active_power_from_dbar() -> None:
+    parser = AnaredeInfrasysParser()
+    generator = Generator(name="G1", number=11)
+    other = Generator(name="G2", number=99)
+    bus = ACBus(number=11, name="Bus-11", active_generation=ActivePower(1350.0, "MW"))
+
+    parser._attach_generator_active_power({"DGER": [generator, other], "DBAR": [bus]})
+
+    assert isinstance(generator.active_generation, ActivePower)
+    assert generator.active_generation.to("MW").magnitude == 1350.0
+    # Generators without a matching bus keep their default.
+    assert other.active_generation is None
+    assert not hasattr(generator, "operation")
+
+
+def test_dcai_individualized_load_units_and_availability(tmp_path: Path) -> None:
+    def dcai_line(bus: int, state: str, active: str, reactive: str) -> str:
+        chars = [" "] * 80
+        chars[0:5] = list(f"{bus:>5}")
+        chars[9:11] = list(" 9")
+        chars[12] = state
+        chars[14:17] = list("  1")
+        chars[18:21] = list("  1")
+        chars[22:27] = list(active.rjust(5))
+        chars[28:33] = list(reactive.rjust(5))
+        chars[50:55] = list(" 80.0")
+        chars[56:60] = list("1015")
+        return "".join(chars)
+
+    pwf = tmp_path / "dcai_case.pwf"
+    pwf.write_text(
+        "\n".join(
+            [
+                "DCAI",
+                dcai_line(87, "L", "132.5", "73.29"),
+                dcai_line(88, "D", "10.0", "5.0"),
+                "99999",
+                "FIM",
+                "",
+            ]
+        ),
+        encoding="cp1252",
+    )
+
+    parsed = parse_anarede_system(pwf, system_name="dcai-demo")
+    loads = parsed.components_by_block["DCAI"]
+    assert len(loads) == 2
+
+    first, second = loads
+    assert isinstance(first, IndividualizedLoad)
+
+    # operation and state are folded into the availability flag.
+    assert not hasattr(first, "operation")
+    assert not hasattr(first, "state")
+    assert first.available is True
+    assert second.available is False
+
+    assert isinstance(first.active_power, ActivePower)
+    assert first.active_power.to("MW").magnitude == 132.5
+    assert isinstance(first.reactive_power, ReactivePower)
+    assert first.reactive_power.to("MVAr").magnitude == 73.29
+    assert isinstance(first.parameter_a, Percentage)
+    assert isinstance(first.voltage_limit, Percentage)
+    assert first.voltage_limit.to("percent").magnitude == 80.0
+    assert isinstance(first.voltage_for_load_definition, PerUnit)
+    assert first.voltage_for_load_definition.to("pu").magnitude == 1.015
+
+
+def test_attach_individualized_load_bus_reference() -> None:
+    parser = AnaredeInfrasysParser()
+    load = IndividualizedLoad(name="87_9", bus=87)
+    other = IndividualizedLoad(name="99_1", bus=99)
+    bus = ACBus(number=87, name="Bus-87")
+
+    parser._attach_component_bus_references({"DCAI": [load, other], "DBAR": [bus]})
+
+    assert isinstance(load.bus, ACBus)
+    assert load.bus is bus
+    # Loads without a matching bus keep the raw number.
+    assert other.bus == 99
+
+
+def test_attach_bank_controller_extremity_bus_reference() -> None:
+    parser = AnaredeInfrasysParser()
+    controller = BankController(name="100_74", from_bus=100, to_bus=4598, extremity_bus=100)
+    bus = ACBus(number=100, name="Bus-100")
+
+    parser._attach_component_bus_references({"DBSH": [controller], "DBAR": [bus]})
+
+    assert isinstance(controller.extremity_bus, ACBus)
+    assert controller.extremity_bus is bus
 
 
 def test_parse_breaks_when_fim_inside_active_section(tmp_path: Path) -> None:
@@ -488,3 +811,274 @@ def test_parse_breaks_when_fim_inside_active_section(tmp_path: Path) -> None:
 
     parsed = parse_anarede_system(pwf)
     assert len(parsed.components_by_block["DOPC"]) == 1
+
+
+def test_parse_dcba_type_stays_on_dc_bus(tmp_path: Path) -> None:
+    pwf = tmp_path / "mini_dcba.pwf"
+
+    line = [" "] * 80
+    line[0:4] = list("   1")
+    line[5] = "A"
+    line[7] = "1"
+    line[8] = "+"
+    line[9:21] = list("DCBUS-1     ")
+    line[21:23] = list("01")
+    line[23:28] = list("50000")
+    line[71:75] = list("   1")
+    dcba_line = "".join(line)
+
+    pwf.write_text(
+        "\n".join(
+            [
+                "TITU",
+                "DC Case",
+                "99999",
+                "DCBA",
+                dcba_line,
+                "99999",
+                "FIM",
+                "",
+            ]
+        ),
+        encoding="cp1252",
+    )
+
+    parsed = parse_anarede_system(pwf, system_name="dc-demo")
+
+    assert "DCBA" in parsed.components_by_block
+    assert len(parsed.components_by_block["DCBA"]) == 1
+    dc_bus = parsed.components_by_block["DCBA"][0]
+    assert isinstance(dc_bus, DCBus)
+    assert dc_bus.type == DCBusType.REFERENCE
+    assert isinstance(dc_bus.voltage, Voltage)
+    assert dc_bus.voltage.to("kV").magnitude == pytest.approx(50000.0)
+    assert dc_bus.ground_electrode_resistance is None
+    assert not hasattr(dc_bus, "anarede_name")
+    assert not hasattr(dc_bus, "operation")
+    assert not hasattr(dc_bus, "bustype")
+    assert not hasattr(dc_bus, "area")
+    assert not hasattr(dc_bus, "voltage_limits")
+    assert not hasattr(dc_bus, "base_voltage")
+    assert not hasattr(dc_bus, "voltage_limit_group")
+
+
+def test_parse_dccv_drops_operation_field(tmp_path: Path) -> None:
+    pwf = tmp_path / "mini_dccv.pwf"
+
+    line = [" "] * 80
+    line[0:4] = list("   2")
+    line[5] = "A"
+    line[7] = "F"
+    line[9] = "P"
+    line[11:16] = list("10180")
+    dccv_line = "".join(line)
+
+    pwf.write_text(
+        "\n".join(
+            [
+                "TITU",
+                "DCCV Case",
+                "99999",
+                "DCCV",
+                dccv_line,
+                "99999",
+                "FIM",
+                "",
+            ]
+        ),
+        encoding="cp1252",
+    )
+
+    parsed = parse_anarede_system(pwf, system_name="dccv-demo")
+
+    assert "DCCV" in parsed.components_by_block
+    assert len(parsed.components_by_block["DCCV"]) == 1
+    control = parsed.components_by_block["DCCV"][0]
+    assert isinstance(control, ConverterControl)
+    assert not hasattr(control, "operation")
+
+
+def test_parse_dcnv_drops_operation_and_applies_units(tmp_path: Path) -> None:
+    pwf = tmp_path / "mini_dcnv.pwf"
+
+    line = [" "] * 80
+    line[0:4] = list("   2")
+    line[5] = "A"
+    line[7:12] = list("   86")
+    line[13:17] = list("  20")
+    line[18:22] = list("  40")
+    line[23] = "I"
+    line[25] = "4"
+    line[27:32] = list(" 2610")
+    line[33:38] = list(" 17.2")
+    line[39:44] = list("  122")
+    line[45:50] = list("  450")
+    line[57:62] = list("  0.0")
+    line[63:68] = list("  0.0")
+    line[69:71] = list("60")
+    dcnv_line = "".join(line)
+
+    pwf.write_text(
+        "\n".join(
+            [
+                "TITU",
+                "DCNV Case",
+                "99999",
+                "DCNV",
+                dcnv_line,
+                "99999",
+                "FIM",
+                "",
+            ]
+        ),
+        encoding="cp1252",
+    )
+
+    parsed = parse_anarede_system(pwf, system_name="dcnv-demo")
+
+    assert "DCNV" in parsed.components_by_block
+    assert len(parsed.components_by_block["DCNV"]) == 1
+    converter = parsed.components_by_block["DCNV"][0]
+    assert isinstance(converter, ConverterStation)
+    assert not hasattr(converter, "operation")
+    assert converter.mode == ConverterMode.INVERTER
+    assert isinstance(converter.current, Current)
+    assert converter.current.to("A").magnitude == 2610.0
+
+
+def test_parser_resolves_converter_station_bus_instances() -> None:
+    parser = AnaredeInfrasysParser()
+    ac_bus = ACBus(number=86, name="AC_86", bustype=ACBusTypes.PQ)
+    dc_bus = DCBus(number=20, name="DC_20")
+    neutral_bus = DCBus(number=40, name="DC_40")
+    converter = ConverterStation(
+        name="conv-1",
+        ac_bus=86,
+        dc_bus=20,
+        neutral_bus=40,
+    )
+    components_by_block = {
+        "DBAR": [ac_bus],
+        "DCBA": [dc_bus, neutral_bus],
+        "DCNV": [converter],
+    }
+
+    parser._attach_component_bus_references(components_by_block)
+    parser._attach_dc_bus_references(components_by_block)
+
+    assert converter.ac_bus is ac_bus
+    assert converter.dc_bus is dc_bus
+    assert converter.neutral_bus is neutral_bus
+
+
+def test_parse_dcli_resolves_dc_buses_and_names_by_pole(tmp_path: Path) -> None:
+    pwf = tmp_path / "mini_dcli.pwf"
+
+    def dcba(number: str, name: str, polarity: str) -> str:
+        row = [" "] * 80
+        row[0:4] = list(number.rjust(4))
+        row[5] = "A"
+        row[7] = "1"
+        row[8] = polarity
+        row[9:21] = list(name.ljust(12))
+        return "".join(row)
+
+    dcli = [" "] * 80
+    dcli[0:4] = list("  10")
+    dcli[5] = "A"
+    dcli[8:12] = list("  20")
+    dcli[17:23] = list(" 10.47")
+    dcli[60:64] = list("9999")
+    dcli_line = "".join(dcli)
+
+    pwf.write_text(
+        "\n".join(
+            [
+                "TITU",
+                "DC Case",
+                "99999",
+                "DCBA",
+                dcba("10", "DCFROM", "+"),
+                dcba("20", "DCTO", "+"),
+                "99999",
+                "DCLI",
+                dcli_line,
+                "99999",
+                "FIM",
+                "",
+            ]
+        ),
+        encoding="cp1252",
+    )
+
+    parsed = parse_anarede_system(pwf, system_name="dcli-demo")
+
+    link = parsed.components_by_block["DCLI"][0]
+    assert isinstance(link, DCLine)
+    assert isinstance(link.from_bus, DCBus)
+    assert isinstance(link.to_bus, DCBus)
+    assert link.from_bus.number == 10
+    assert link.to_bus.number == 20
+    assert link.name == "DCFROM_DCTO_+"
+    assert link.dcli_circuit == 1
+    assert not hasattr(link, "operation")
+    assert isinstance(link.resistance, Resistance)
+    assert link.resistance.to("ohm").magnitude == 10.47
+    assert repr(link.resistance) == "<Quantity(10.47, 'Ω')>"
+    assert isinstance(link.inductance, Inductance)
+    assert isinstance(link.capacity, ActivePower)
+    assert link.capacity.to("MW").magnitude == 9999.0
+
+
+def test_parser_assigns_dcli_circuit_defaults_by_operation() -> None:
+    parser = AnaredeInfrasysParser()
+
+    def make_link(from_bus: int, to_bus: int, circuit: int | None, operation: str) -> DCLine:
+        link = DCLine(
+            name=f"{from_bus}_{to_bus}",
+            from_bus=from_bus,
+            to_bus=to_bus,
+            dcli_circuit=circuit,
+        )
+        link.ext["pwf_values"] = {
+            "from_bus": from_bus,
+            "to_bus": to_bus,
+            "dcli_circuit": circuit,
+            "operation": operation,
+        }
+        return link
+
+    add1 = make_link(10, 20, None, "A")
+    add2 = make_link(10, 20, None, "A")
+    explicit = make_link(10, 20, 5, "A")
+    add3 = make_link(10, 20, None, "A")
+    modify = make_link(10, 20, None, "M")
+    other = make_link(30, 40, None, "A")
+
+    parser._assign_dcli_circuit_defaults({"DCLI": [add1, add2, explicit, add3, modify, other]})
+
+    assert add1.dcli_circuit == 1
+    assert add2.dcli_circuit == 2
+    assert explicit.dcli_circuit == 5
+    assert add3.dcli_circuit == 6
+    assert modify.dcli_circuit == 1
+    assert other.dcli_circuit == 1
+
+
+def test_parser_dcli_bus_fields_prefer_dc_buses_over_ac_buses() -> None:
+    parser = AnaredeInfrasysParser()
+    ac_bus = ACBus(number=10, name="AC_10", bustype=ACBusTypes.PQ)
+    dc_from = DCBus(number=10, name="DCFROM")
+    dc_to = DCBus(number=20, name="DCTO")
+    link = DCLine(name="link-1", from_bus=10, to_bus=20)
+    components_by_block = {
+        "DBAR": [ac_bus],
+        "DCBA": [dc_from, dc_to],
+        "DCLI": [link],
+    }
+
+    parser._attach_component_bus_references(components_by_block)
+    parser._attach_dc_bus_references(components_by_block)
+
+    assert link.from_bus is dc_from
+    assert link.to_bus is dc_to

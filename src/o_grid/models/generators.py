@@ -8,49 +8,56 @@ from pydantic import Field
 
 from o_grid.models.base import AnaredeComponent
 from o_grid.models.enums import SVCControlMode
-from o_grid.units import Percentage, ReactivePower
+from o_grid.units import ActivePower, Angle, ApparentPower, Percentage, ReactivePower
 
 
-class GeneratorDispatchData(AnaredeComponent):
-    """Generator dispatch and participation data."""
+class Generator(AnaredeComponent):
+    """Generator dispatch and participation data (DGER)."""
 
+    active_generation: Annotated[
+        ActivePower | None,
+        Field(
+            description="Active power generation value from the corresponding DBAR bus, in MW.",
+            json_schema_extra={"units": "MW"},
+        ),
+    ] = None
     armature_service_factor: Annotated[
-        int | float | str | None,
+        Percentage | None,
         Field(
             description="Armature current service factor, in %",
             json_schema_extra={"units": "%"},
         ),
     ] = None
     load_angle: Annotated[
-        int | float | str | None,
+        Angle | None,
         Field(
             description="Maximum load angle (0.0 - 85.0), in degrees.",
             json_schema_extra={"units": "degrees"},
         ),
     ] = None
     machine_reactance: Annotated[
-        int | float | str | None,
+        Percentage | None,
         Field(
             description="Machine Reactance, in %.",
             json_schema_extra={"units": "%"},
         ),
     ] = None
     max_active_generation: Annotated[
-        int | float | str | None,
+        ActivePower | None,
         Field(
             description="Maximum active power generation limit value at the bus, in MW.",
             json_schema_extra={"units": "MW"},
         ),
-    ] = 99999.0
+    ] = ActivePower(99999.0, "MW")
     min_active_generation: Annotated[
-        int | float | str | None,
+        ActivePower | None,
         Field(
             description="Minimum active power generation limit value at the bus, in MW.",
             json_schema_extra={"units": "MW"},
         ),
-    ] = 0.0
+    ] = ActivePower(0.0, "MW")
     nominal_apparent_power: Annotated[
-        int | float | str | None,
+        ApparentPower | None,
         Field(
             description="Machine nominal apparent power, in MVA",
             json_schema_extra={"units": "MVA"},
@@ -68,18 +75,8 @@ class GeneratorDispatchData(AnaredeComponent):
             description="Bus number, as defined in the Number field of the DBAR Execution Code.",
         ),
     ] = None
-    operation: Annotated[
-        int | float | str | None,
-        Field(
-            description=(
-                "A or 0 - addition of active power generation limits and participation "
-                "factors data\\nM or 2 - modification of active power generation limits "
-                "and participation factors data"
-            ),
-        ),
-    ] = "A"
     participation_factor: Annotated[
-        int | float | str | None,
+        Percentage | None,
         Field(
             description=(
                 "Generation bus participation factor value, in %. The active power "
@@ -89,9 +86,9 @@ class GeneratorDispatchData(AnaredeComponent):
             ),
             json_schema_extra={"units": "%"},
         ),
-    ] = 0.0
+    ] = Percentage(0.0, "percent")
     remote_control_participation_factor: Annotated[
-        int | float | str | None,
+        Percentage | None,
         Field(
             description=(
                 "Generator participation factor in the amount of reactive power needed "
@@ -99,9 +96,9 @@ class GeneratorDispatchData(AnaredeComponent):
             ),
             json_schema_extra={"units": "%"},
         ),
-    ] = 100.0
+    ] = Percentage(100.0, "percent")
     rotor_service_factor: Annotated[
-        int | float | str | None,
+        Percentage | None,
         Field(
             description="Rotor current service factor, in %",
             json_schema_extra={"units": "%"},
@@ -195,3 +192,6 @@ class StaticVARCompensator(AnaredeComponent):
 
 
 ReactiveCompensator = StaticVARCompensator
+
+# Backward-compatible alias.
+GeneratorDispatchData = Generator

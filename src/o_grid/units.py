@@ -36,6 +36,9 @@ class Voltage(BaseQuantity):
 class Current(BaseQuantity):
     __base_unit__ = "ampere"
 
+    def __repr__(self) -> str:
+        return f"<Quantity({self.magnitude!r}, 'A')>"
+
 
 class Angle(BaseQuantity):
     __base_unit__ = "degree"
@@ -65,6 +68,30 @@ class Time(BaseQuantity):
 
 class Resistance(BaseQuantity):
     __base_unit__ = "ohm"
+
+    def __repr__(self) -> str:
+        return f"<Quantity({self.magnitude!r}, 'Ω')>"
+
+
+class Inductance(BaseQuantity):
+    __base_unit__ = "millihenry"
+
+    def __repr__(self) -> str:
+        return f"<Quantity({self.magnitude!r}, 'mH')>"
+
+
+class Capacitance(BaseQuantity):
+    __base_unit__ = "microfarad"
+
+    def __repr__(self) -> str:
+        return f"<Quantity({self.magnitude!r}, 'μF')>"
+
+
+class Frequency(BaseQuantity):
+    __base_unit__ = "hertz"
+
+    def __repr__(self) -> str:
+        return f"<Quantity({self.magnitude!r}, 'Hz')>"
 
 
 class HeatRate(BaseQuantity):
