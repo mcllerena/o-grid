@@ -1405,6 +1405,179 @@
     },
     "function": "Reading of AC bus voltage base group data."
   },
+  "DGEI": {
+    "fields": {
+      "active_generation": {
+        "column": {
+          "end": 27,
+          "start": 23
+        },
+        "default": 0.0,
+        "description": "Active power generation value for each unit of the group, in MW."
+      },
+      "automatic_mode": {
+        "column": {
+          "end": 8,
+          "start": 8
+        },
+        "default": "N",
+        "description": "S (Yes) makes the program automatically compute the number of dispatched units from the equivalent active power generation defined in the DBAR Execution Code, considering the reactive power capability curve and the active power generation limit of each individualized unit. N (No) makes the program redefine the equivalent dispatch of the generation bus as the product of the number of units in operation by the individualized dispatch."
+      },
+      "bus": {
+        "column": {
+          "end": 5,
+          "start": 1
+        },
+        "default": "",
+        "description": "Bus number, as defined in the Number field of the DBAR Execution Code, to which the individualized generator group is connected."
+      },
+      "direct_axis_reactance": {
+        "column": {
+          "end": 54,
+          "start": 50
+        },
+        "default": 0.0,
+        "description": "Direct-axis reactance of each unit of the group, in %, on the machine base. Optional data for computing the minimum and maximum reactive power generation limits from the capability curve. Implicit decimal point between columns 53 and 54."
+      },
+      "group": {
+        "column": {
+          "end": 11,
+          "start": 10
+        },
+        "default": "",
+        "description": "Identification number of the individualized generator group. A bus may have one or more groups connected, and a group may be made up of one or more individualized generators."
+      },
+      "leakage_reactance": {
+        "column": {
+          "end": 64,
+          "start": 60
+        },
+        "default": 0.0,
+        "description": "Leakage reactance of each unit of the group, in %, on the machine base. Optional data for computing the minimum and maximum reactive power generation limits from the capability curve. Implicit decimal point between columns 63 and 64."
+      },
+      "maximum_reactive_generation": {
+        "column": {
+          "end": 42,
+          "start": 38
+        },
+        "default": 99999.0,
+        "description": "Maximum reactive power generation limit value for each unit of the group, in Mvar. This value is adopted as the limit when the data required to compute the capability curve are not provided."
+      },
+      "mechanical_limit": {
+        "column": {
+          "end": 80,
+          "start": 75
+        },
+        "default": 99999.0,
+        "description": "Mechanical limit of each unit of the group, in MW. Implicit decimal point between columns 77 and 78."
+      },
+      "minimum_power": {
+        "column": {
+          "end": 86,
+          "start": 81
+        },
+        "default": 0.0,
+        "description": "Minimum power of each unit of the group, in MW."
+      },
+      "minimum_reactive_generation": {
+        "column": {
+          "end": 37,
+          "start": 33
+        },
+        "default": -9999.0,
+        "description": "Minimum reactive power generation limit value for each unit of the group, in Mvar. This value is adopted as the limit when the data required to compute the capability curve are not provided."
+      },
+      "minimum_units_in_operation": {
+        "column": {
+          "end": 22,
+          "start": 20
+        },
+        "default": 1,
+        "description": "Minimum number of units in operation that make up the individualized generator group."
+      },
+      "nominal_apparent_power": {
+        "column": {
+          "end": 74,
+          "start": 70
+        },
+        "default": 99999.0,
+        "description": "Nominal apparent power in MVA of each unit of the group. Optional data for computing the minimum and maximum reactive power generation limits from the capability curve. Implicit decimal point between columns 72 and 73."
+      },
+      "nominal_power_factor": {
+        "column": {
+          "end": 69,
+          "start": 66
+        },
+        "default": 1.0,
+        "description": "Nominal power factor of each unit of the group. Optional data for computing the minimum and maximum reactive power generation limits from the capability curve. Implicit decimal point between columns 67 and 68."
+      },
+      "operation": {
+        "column": {
+          "end": 7,
+          "start": 7
+        },
+        "default": "A",
+        "description": "A or 0 - addition of individualized generator group data.\nE or 1 - elimination of individualized generator group data.\nM or 2 - modification of individualized generator group data."
+      },
+      "quadrature_axis_reactance": {
+        "column": {
+          "end": 59,
+          "start": 55
+        },
+        "default": 0.0,
+        "description": "Quadrature-axis reactance of each unit of the group, in %, on the machine base. Optional data for computing the minimum and maximum reactive power generation limits from the capability curve. Implicit decimal point between columns 58 and 59."
+      },
+      "reactive_generation": {
+        "column": {
+          "end": 32,
+          "start": 28
+        },
+        "default": 0.0,
+        "description": "Reactive power generation value for each unit of the group, in Mvar."
+      },
+      "state": {
+        "column": {
+          "end": 13,
+          "start": 13
+        },
+        "default": "L",
+        "description": "L if the generator group is in operation (on). D if the generator group is out of operation (off)."
+      },
+      "step_up_transformer_reactance": {
+        "column": {
+          "end": 48,
+          "start": 43
+        },
+        "default": "",
+        "description": "Step-up transformer reactance value for each unit of the group, in %. This value must be positive. Implicit decimal point between columns 44 and 45."
+      },
+      "units": {
+        "column": {
+          "end": 16,
+          "start": 14
+        },
+        "default": 1,
+        "description": "Number of identical units that make up the individualized generator group."
+      },
+      "units_in_operation": {
+        "column": {
+          "end": 19,
+          "start": 17
+        },
+        "default": "",
+        "description": "Number of units in operation that make up the individualized generator group. Defaults to the number of units."
+      },
+      "voltage_droop": {
+        "column": {
+          "end": 91,
+          "start": 87
+        },
+        "default": 0.0,
+        "description": "Speed droop of each unit of the group, in % on the system base."
+      }
+    },
+    "function": "Reading of individualized generator group data."
+  },
   "DGER": {
     "fields": {
       "armature_service_factor": {
@@ -1600,6 +1773,14 @@
         },
         "default": "L",
         "description": "L - Connected.\nD - Disconnected"
+      },
+      "maneuverable": {
+        "column": {
+          "end": 20,
+          "start": 20
+        },
+        "default": "S",
+        "description": "Exclusive field for transformers, used during the power-flow solution when the AUTO option is used together with the CTAP option.\nS if the transformer is maneuverable.\nN if the transformer is not maneuverable."
       },
       "normal_capacity": {
         "column": {
@@ -1848,6 +2029,115 @@
       }
     },
     "function": "Reading of AC circuit flow monitoring data by explicitly selected circuits when DMFL CIRC is active."
+  },
+  "DMTE": {
+    "fields": {
+      "boundaries": {
+        "column": {
+          "end": 53,
+          "start": 53
+        },
+        "default": "T",
+        "description": "T monitors all buses of the selected set. F monitors only the boundary buses of the selected set."
+      },
+      "condition_1": {
+        "column": {
+          "end": 12,
+          "start": 12
+        },
+        "default": "",
+        "description": "First condition operator. A specifies an interval condition. E specifies a union condition."
+      },
+      "condition_2": {
+        "column": {
+          "end": 38,
+          "start": 38
+        },
+        "default": "",
+        "description": "Second condition operator. A specifies an interval condition. E specifies a union condition."
+      },
+      "element_id_1": {
+        "column": {
+          "end": 10,
+          "start": 6
+        },
+        "default": "",
+        "description": "Identifier of the first element: bus number, area number, voltage base, or aggregator identifier."
+      },
+      "element_id_2": {
+        "column": {
+          "end": 23,
+          "start": 19
+        },
+        "default": "",
+        "description": "Identifier of the second element: bus number, area number, voltage base, or aggregator identifier."
+      },
+      "element_id_3": {
+        "column": {
+          "end": 36,
+          "start": 32
+        },
+        "default": "",
+        "description": "Identifier of the third element: bus number, area number, voltage base, or aggregator identifier."
+      },
+      "element_id_4": {
+        "column": {
+          "end": 49,
+          "start": 45
+        },
+        "default": "",
+        "description": "Identifier of the fourth element: bus number, area number, voltage base, or aggregator identifier."
+      },
+      "element_type_1": {
+        "column": {
+          "end": 4,
+          "start": 1
+        },
+        "default": "",
+        "description": "First element type. BARR specifies a bus, AREA an area, TENS a voltage base, and AG01 through AG10 an aggregator."
+      },
+      "element_type_2": {
+        "column": {
+          "end": 17,
+          "start": 14
+        },
+        "default": "",
+        "description": "Second element type. BARR specifies a bus, AREA an area, TENS a voltage base, and AG01 through AG10 an aggregator."
+      },
+      "element_type_3": {
+        "column": {
+          "end": 30,
+          "start": 27
+        },
+        "default": "",
+        "description": "Third element type. BARR specifies a bus, AREA an area, TENS a voltage base, and AG01 through AG10 an aggregator."
+      },
+      "element_type_4": {
+        "column": {
+          "end": 43,
+          "start": 40
+        },
+        "default": "",
+        "description": "Fourth element type. BARR specifies a bus, AREA an area, TENS a voltage base, and AG01 through AG10 an aggregator."
+      },
+      "main_condition": {
+        "column": {
+          "end": 25,
+          "start": 25
+        },
+        "default": "",
+        "description": "Main condition between the sets defined by conditions 1 and 2. X means difference, E union, and S intersection."
+      },
+      "operation": {
+        "column": {
+          "end": 51,
+          "start": 51
+        },
+        "default": "A",
+        "description": "A - addition of AC bus voltage monitoring data. E - elimination of AC bus voltage monitoring data."
+      }
+    },
+    "function": "Reading of AC bus voltage monitoring data by selected element sets."
   },
   "DOPC": {
     "fields": {
@@ -2579,6 +2869,29 @@
         "group",
         "voltage"
       ],
+      "DGEI": [
+        "bus",
+        "operation",
+        "automatic_mode",
+        "group",
+        "state",
+        "units",
+        "units_in_operation",
+        "minimum_units_in_operation",
+        "active_generation",
+        "reactive_generation",
+        "minimum_reactive_generation",
+        "maximum_reactive_generation",
+        "step_up_transformer_reactance",
+        "direct_axis_reactance",
+        "quadrature_axis_reactance",
+        "leakage_reactance",
+        "nominal_power_factor",
+        "nominal_apparent_power",
+        "mechanical_limit",
+        "minimum_power",
+        "voltage_droop"
+      ],
       "DGER": [
         "number",
         "operation",
@@ -2609,6 +2922,7 @@
         "operation",
         "state",
         "owner",
+        "maneuverable",
         "resistance",
         "reactance",
         "susceptance",
@@ -2639,6 +2953,21 @@
         "to_bus_5",
         "circuit_5",
         "operation"
+      ],
+      "DMTE": [
+        "element_type_1",
+        "element_id_1",
+        "condition_1",
+        "element_type_2",
+        "element_id_2",
+        "main_condition",
+        "element_type_3",
+        "element_id_3",
+        "condition_2",
+        "element_type_4",
+        "element_id_4",
+        "operation",
+        "boundaries"
       ],
       "DOPC": [
         "option",

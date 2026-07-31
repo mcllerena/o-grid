@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import pytest
@@ -15,6 +16,7 @@ from o_grid.models import (
     BankController,
     BankControllerControlType,
     BusShuntBank,
+    BusVoltageMonitoring,
     CircuitState,
     ConverterControl,
     ConverterMode,
@@ -25,7 +27,9 @@ from o_grid.models import (
     DCLineData,
     FlowMonitoringCircuit,
     Generator,
+    GenType,
     HighVArMode,
+    IndividualizedGeneratorGroup,
     IndividualizedLoad,
     LineShunt,
     MinMax,
@@ -36,8 +40,11 @@ from o_grid.models import (
     TapChangingTransformer,
     TapTransformerControl,
     TransferFunctionCircuit,
+    TransformerManeuverable,
     VoltageBaseGroup,
     VoltageLimitGroup,
+    VoltageMonitoringCondition,
+    VoltageMonitoringSelection,
 )
 from o_grid.parser import AnaredeInfrasysParser, parse_anarede_system, parse_rows
 from o_grid.units import (
@@ -307,7 +314,41 @@ def test_parse_anarede_derives_phase_shifter_from_dlin_angle(tmp_path: Path) -> 
     assert issubclass(parsed.component_classes["DLIN_PHASE_SHIFT"], PhaseShiftingTransformer)
 
 
-def test_rename_dlin_components_applies_to_derived_transformers() -> None:
+def test_parse_anarede_derives_maneuverable_flag_on_transformer(tmp_path: Path) -> None:
+    pwf = tmp_path / "maneuverable_case.pwf"
+
+    line = [" "] * 80
+    line[0:5] = list("    1")
+    line[10:15] = list("    2")
+    line[19] = "N"
+    line[38:43] = list("01050")
+    dlin_line = "".join(line)
+
+    pwf.write_text(
+        "\n".join(
+            [
+                "TITU",
+                "Maneuverable Test",
+                "99999",
+                "DLIN",
+                dlin_line,
+                "99999",
+                "FIM",
+                "",
+            ]
+        ),
+        encoding="cp1252",
+    )
+
+    parsed = parse_anarede_system(pwf, system_name="maneuverable-demo")
+
+    assert "DLIN_TAP" in parsed.components_by_block
+    tap_transformer = parsed.components_by_block["DLIN_TAP"][0]
+    assert tap_transformer.maneuverable is TransformerManeuverable.NON_MANEUVERABLE
+
+    base_line = parsed.components_by_block["DLIN"][0]
+    assert not hasattr(base_line, "maneuverable")
+
     parser = AnaredeInfrasysParser()
     from_bus = ACBus(number=1, name="FROM")
     to_bus = ACBus(number=2, name="TO")
@@ -413,6 +454,67 @@ def test_attach_flow_monitoring_flags_selected_circuits() -> None:
     assert matched_line.flow_monitoring is True
     assert reversed_tap.flow_monitoring is True
     assert unmatched.flow_monitoring is False
+
+
+def test_attach_bus_voltage_monitoring_builds_sets() -> None:
+    parser = AnaredeInfrasysParser()
+    system = System(name="dmte")
+
+    area = Area(name="Area_2", area_number=2)
+    bus_with_area = ACBus(number=813, name="B813")
+    object.__setattr__(bus_with_area, "area", area)
+    other_bus = ACBus(number=822, name="B822")
+    existing_group = VoltageBaseGroup(name="DGBT_1", voltage=Voltage(345, "kV"))
+
+    selection = VoltageMonitoringSelection(
+        name="dmte1",
+        element_type_1="BARR",
+        element_id_1=813,
+        condition_1="A",
+        element_type_2="AREA",
+        element_id_2=2,
+        main_condition="E",
+        element_type_3="TENS",
+        element_id_3=345,
+        condition_2="A",
+        element_type_4="TENS",
+        element_id_4=500,
+    )
+    unresolved = VoltageMonitoringSelection(
+        name="dmte2",
+        element_type_1="AG01",
+        element_id_1=1,
+    )
+
+    parser._attach_bus_voltage_monitoring(
+        system,
+        {
+            "DMTE": [selection, unresolved],
+            "DBAR": [bus_with_area, other_bus],
+            "DGBT": [existing_group],
+        },
+    )
+
+    monitorings = list(system.get_components(BusVoltageMonitoring))
+    assert len(monitorings) == 1
+
+    monitoring = monitorings[0]
+    assert [type(element).__name__ for element in monitoring.type] == [
+        "ACBus",
+        "Area",
+        "VoltageBaseGroup",
+        "VoltageBaseGroup",
+    ]
+    assert monitoring.type[0].number == 813
+    assert monitoring.type[1].area_number == 2
+    assert monitoring.type[2] is existing_group
+    assert monitoring.type[3].voltage == Voltage(500, "kV")
+    assert monitoring.condition == [
+        VoltageMonitoringCondition.INTERVAL,
+        VoltageMonitoringCondition.UNION,
+        VoltageMonitoringCondition.INTERVAL,
+        None,
+    ]
 
 
 def test_components_store_pwf_values(data_folder: Path) -> None:
@@ -550,6 +652,11 @@ def test_section_header_recognizes_dtpf_circ() -> None:
 def test_section_header_recognizes_dmfl_circ() -> None:
     parser = AnaredeInfrasysParser()
     assert parser._section_header_name("DMFL CIRC") == "DMFL_CIRC"
+
+
+def test_section_header_recognizes_dmte() -> None:
+    parser = AnaredeInfrasysParser()
+    assert parser._section_header_name("DMTE") == "DMTE"
 
 
 def test_delo_resolves_power_base_from_dase_and_units(tmp_path: Path) -> None:
@@ -715,6 +822,61 @@ def test_attach_generator_active_power_from_dbar() -> None:
     assert not hasattr(generator, "operation")
 
 
+def test_attach_generator_types_by_bus_number() -> None:
+    parser = AnaredeInfrasysParser()
+    parser._gen_type_by_bus = {"10": GenType.NUCLEAR, "12": GenType.HYDRO}
+    nuclear = Generator(name="G1", number=10)
+    hydro = Generator(name="G2", number=12)
+    unmatched = Generator(name="G3", number=99)
+
+    parser._attach_generator_types({"DGER": [nuclear, hydro, unmatched]})
+
+    assert nuclear.gen_type is GenType.NUCLEAR
+    assert hydro.gen_type is GenType.HYDRO
+    assert unmatched.gen_type is None
+
+
+def test_load_gen_type_mapping_indexes_by_bus_number(tmp_path: Path) -> None:
+    mapping_file = tmp_path / "gen_type_mapping.json"
+    mapping_file.write_text(
+        json.dumps(
+            {
+                "10ANGRA1UNE001": {
+                    "number": 10,
+                    "bus_name": "ANGRA1UNE001",
+                    "area": 44,
+                    "type": "Nuclear",
+                },
+                "12LCBARRUHE005": {
+                    "number": 12,
+                    "bus_name": "LCBARRUHE005",
+                    "area": 1,
+                    "type": "Hydro",
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    index = AnaredeInfrasysParser._load_gen_type_mapping(mapping_file)
+
+    assert index == {"10": GenType.NUCLEAR, "12": GenType.HYDRO}
+    assert AnaredeInfrasysParser._load_gen_type_mapping(tmp_path / "missing.json") == {}
+
+
+def test_attach_generator_number_resolves_to_bus() -> None:
+    parser = AnaredeInfrasysParser()
+    generator = Generator(name="G1", number=11)
+    other = Generator(name="G2", number=99)
+    bus = ACBus(number=11, name="Bus-11")
+
+    parser._attach_component_bus_references({"DGER": [generator, other], "DBAR": [bus]})
+
+    assert generator.number is bus
+    # Generators without a matching bus keep their raw number.
+    assert other.number == 99
+
+
 def test_dcai_individualized_load_units_and_availability(tmp_path: Path) -> None:
     def dcai_line(bus: int, state: str, active: str, reactive: str) -> str:
         chars = [" "] * 80
@@ -780,6 +942,20 @@ def test_attach_individualized_load_bus_reference() -> None:
     assert load.bus is bus
     # Loads without a matching bus keep the raw number.
     assert other.bus == 99
+
+
+def test_attach_individualized_generator_group_bus_reference() -> None:
+    parser = AnaredeInfrasysParser()
+    group = IndividualizedGeneratorGroup(name="5103_20", bus=5103)
+    other = IndividualizedGeneratorGroup(name="9999_1", bus=9999)
+    bus = ACBus(number=5103, name="Bus-5103")
+
+    parser._attach_component_bus_references({"DGEI": [group, other], "DBAR": [bus]})
+
+    assert isinstance(group.bus, ACBus)
+    assert group.bus is bus
+    # Groups without a matching bus keep the raw number.
+    assert other.bus == 9999
 
 
 def test_attach_bank_controller_extremity_bus_reference() -> None:

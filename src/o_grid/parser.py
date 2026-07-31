@@ -18,11 +18,16 @@ from o_grid.models import (
     Arc,
     Area,
     BusShuntBank,
+    BusVoltageMonitoring,
     DCBus,
     DCLine,
     FromToToFrom,
+    Generator,
+    GenType,
     LineShuntBank,
     MinMax,
+    VoltageBaseGroup,
+    VoltageMonitoringCondition,
 )
 from o_grid.system import AnaredeSystem
 from o_grid.units import (
@@ -64,6 +69,7 @@ from o_grid.utils.utils_parser import (
 )
 
 MAPPING_PATH = Path(__file__).resolve().parent / "config" / "anarede_mapping.json"
+GEN_TYPE_MAPPING_PATH = Path(__file__).resolve().parent / "config" / "gen_type_mapping.json"
 
 DLIN_DERIVED_BLOCKS: tuple[str, ...] = ("DLIN_TAP", "DLIN_PHASE_SHIFT")
 BUS_INTERNAL_GROUP_BLOCKS: tuple[str, ...] = ("DGBT", "DGLT")
@@ -83,10 +89,15 @@ class AnaredeInfrasysParser:
     """Parse ANAREDE `.pwf` files and populate an infrasys `System`."""
 
     def __init__(
-        self, mapping_path: Path | str = MAPPING_PATH, system_name: str = "ANAREDE"
+        self,
+        mapping_path: Path | str = MAPPING_PATH,
+        system_name: str = "ANAREDE",
+        gen_type_mapping_path: Path | str = GEN_TYPE_MAPPING_PATH,
     ) -> None:
         self.mapping_path = Path(mapping_path)
         self.system_name = system_name
+        self.gen_type_mapping_path = Path(gen_type_mapping_path)
+        self._gen_type_by_bus = self._load_gen_type_mapping(self.gen_type_mapping_path)
         self._raw_mapping = load_mapping(self.mapping_path)
         self.mapping = {
             section: spec
@@ -186,6 +197,8 @@ class AnaredeInfrasysParser:
             if upper.startswith("99999"):
                 if active_block == "DBAR":
                     self._attach_bus_areas(system, components_by_block)
+                if active_block is not None:
+                    self._log_block_progress(active_block, components_by_block)
                 active_block = None
                 current_dbsh_parent_index = None
                 continue
@@ -241,6 +254,7 @@ class AnaredeInfrasysParser:
                 "DBSH",
                 "DELO",
                 "DMFL_CIRC",
+                "DMTE",
                 "DTPF_CIRC",
             ):
                 if active_block != "DLIN" or not self._is_transformer_dlin_record(record):
@@ -267,15 +281,18 @@ class AnaredeInfrasysParser:
         self._assign_dcli_circuit_defaults(components_by_block)
         self._attach_delo_power_base_defaults(components_by_block)
         self._attach_generator_active_power(components_by_block)
+        self._attach_generator_types(components_by_block)
         self._attach_component_bus_references(components_by_block)
         self._attach_dc_bus_references(components_by_block)
         self._embed_dc_line_data(components_by_block)
         self._attach_ctap_options(components_by_block)
         self._attach_flow_monitoring(components_by_block)
+        self._attach_bus_voltage_monitoring(system, components_by_block)
         self._rename_dcli_components(components_by_block)
         self._attach_dlin_branch_electrical_values(components_by_block)
         self._rename_dlin_components(components_by_block)
-        self._log_component_summary(system)
+        total = sum(1 for _ in system._component_mgr.iter_all())
+        logger.success("Successfully parsed {} component(s).", total)
 
         return ParsedAnaredeSystem(
             source=source,
@@ -287,14 +304,12 @@ class AnaredeInfrasysParser:
     def _add_component(self, system: System, component: Component) -> None:
         system.add_component(component)
 
-    def _log_component_summary(self, system: System) -> None:
-        counts: dict[str, int] = {}
-        for component in system._component_mgr.iter_all():
-            component_name = type(component).__name__
-            counts[component_name] = counts.get(component_name, 0) + 1
-
-        for component_name, count in counts.items():
-            logger.info("Parsed {} component(s): {}", component_name, count)
+    def _log_block_progress(
+        self, block: str, components_by_block: dict[str, list[Component]]
+    ) -> None:
+        count = len(components_by_block.get(block, []))
+        if count:
+            logger.info("Parsed {} section: {} record(s)", block, count)
 
     def _attach_bus_areas(
         self, system: System, components_by_block: dict[str, list[Component]]
@@ -514,6 +529,121 @@ class AnaredeInfrasysParser:
                 if (from_key, to_key, circuit_key) in selected:
                     object.__setattr__(branch, "flow_monitoring", True)
 
+    @staticmethod
+    def _voltage_kv_key(value: object) -> str:
+        magnitude = get_magnitude(value) if hasattr(value, "magnitude") else value
+        return normalize_group_key(cast("ParsedScalar", magnitude))
+
+    @staticmethod
+    def _monitoring_condition(token: object) -> VoltageMonitoringCondition | None:
+        if token is None:
+            return None
+        key = str(token).strip().upper()
+        try:
+            return VoltageMonitoringCondition(key)
+        except ValueError:
+            return None
+
+    def _resolve_voltage_base_group(
+        self,
+        element_id: object,
+        voltage_groups_by_kv: dict[str, VoltageBaseGroup],
+    ) -> VoltageBaseGroup | None:
+        kv_key = self._voltage_kv_key(element_id)
+        if not looks_numeric(kv_key):
+            return None
+        group = voltage_groups_by_kv.get(kv_key)
+        if group is None:
+            group = VoltageBaseGroup(
+                name=f"VoltageBase_{kv_key}",
+                voltage=Voltage(float(kv_key), "kV"),
+            )
+            voltage_groups_by_kv[kv_key] = group
+        return group
+
+    def _resolve_monitoring_element(
+        self,
+        element_type: object,
+        element_id: object,
+        buses_by_number: dict[str, ACBus],
+        areas_by_key: dict[str, Area],
+        voltage_groups_by_kv: dict[str, VoltageBaseGroup],
+    ) -> ACBus | Area | VoltageBaseGroup | None:
+        if element_type is None:
+            return None
+        type_key = str(element_type).strip().upper()
+        if not type_key:
+            return None
+        if type_key == "BARR":
+            return buses_by_number.get(normalize_group_key(cast("ParsedScalar", element_id)))
+        if type_key == "AREA":
+            return areas_by_key.get(normalize_group_key(cast("ParsedScalar", element_id)))
+        if type_key == "TENS":
+            return self._resolve_voltage_base_group(element_id, voltage_groups_by_kv)
+        return None
+
+    def _attach_bus_voltage_monitoring(
+        self,
+        system: System,
+        components_by_block: dict[str, list[Component]],
+    ) -> None:
+        records = components_by_block.get("DMTE")
+        if not records:
+            return
+
+        buses = components_by_block.get("DBAR", [])
+        buses_by_number: dict[str, ACBus] = {
+            normalize_group_key(getattr(bus, "number", None)): cast(ACBus, bus) for bus in buses
+        }
+        areas_by_key: dict[str, Area] = {}
+        for bus in buses:
+            area = getattr(bus, "area", None)
+            if isinstance(area, Area):
+                areas_by_key.setdefault(normalize_group_key(area), area)
+
+        # Reuse voltage base groups already declared by DGBT, keyed by their kV value,
+        # and lazily create any monitored base voltage that is not yet defined.
+        voltage_groups_by_kv: dict[str, VoltageBaseGroup] = {}
+        for group in components_by_block.get("DGBT", []):
+            kv_key = self._voltage_kv_key(getattr(group, "voltage", None))
+            if looks_numeric(kv_key):
+                voltage_groups_by_kv.setdefault(kv_key, cast(VoltageBaseGroup, group))
+
+        operator_slots: tuple[tuple[int, str | None], ...] = (
+            (1, "condition_1"),
+            (2, "main_condition"),
+            (3, "condition_2"),
+            (4, None),
+        )
+
+        for record in records:
+            monitored: list[ACBus | Area | VoltageBaseGroup] = []
+            conditions: list[VoltageMonitoringCondition | None] = []
+            for index, operator_field in operator_slots:
+                element = self._resolve_monitoring_element(
+                    getattr(record, f"element_type_{index}", None),
+                    getattr(record, f"element_id_{index}", None),
+                    buses_by_number,
+                    areas_by_key,
+                    voltage_groups_by_kv,
+                )
+                if element is None:
+                    continue
+                monitored.append(element)
+                operator_token = getattr(record, operator_field, None) if operator_field else None
+                conditions.append(self._monitoring_condition(operator_token))
+
+            if not monitored:
+                continue
+
+            # Add the monitoring set with empty references first, then attach the
+            # resolved elements via object.__setattr__ so infrasys does not recurse
+            # into the bus graph (buses hold internal, unattached voltage groups).
+            monitoring = BusVoltageMonitoring(name=getattr(record, "name", "BusVoltageMonitoring"))
+            self._add_component(system, monitoring)
+            object.__setattr__(monitoring, "type", monitored)
+            object.__setattr__(monitoring, "condition", conditions)
+
     def _attach_component_bus_references(
         self,
         components_by_block: dict[str, list[Component]],
@@ -544,6 +674,13 @@ class AnaredeInfrasysParser:
                     bus_component = buses_by_number.get(bus_key)
                     if bus_component is not None:
                         object.__setattr__(component, bus_field, bus_component)
+
+                if isinstance(component, Generator):
+                    number_value = getattr(component, "number", None)
+                    if number_value is not None and not isinstance(number_value, ACBus):
+                        bus_component = buses_by_number.get(normalize_group_key(number_value))
+                        if isinstance(bus_component, ACBus):
+                            object.__setattr__(component, "number", bus_component)
 
                 component_ext = getattr(component, "ext", None)
                 if not isinstance(component_ext, dict):
@@ -715,6 +852,37 @@ class AnaredeInfrasysParser:
             if active_generation is not None:
                 object.__setattr__(generator, "active_generation", active_generation)
 
+    @staticmethod
+    def _load_gen_type_mapping(path: Path) -> dict[str, GenType]:
+        if not path.exists():
+            return {}
+        index: dict[str, GenType] = {}
+        for entry in load_mapping(path).values():
+            number = entry.get("number")
+            type_value = entry.get("type")
+            if number is None or type_value is None:
+                continue
+            try:
+                index[normalize_group_key(number)] = GenType(str(type_value))
+            except ValueError:
+                logger.warning("Unknown generator type '{}' for bus {}", type_value, number)
+        return index
+
+    def _attach_generator_types(
+        self,
+        components_by_block: dict[str, list[Component]],
+    ) -> None:
+        generators = components_by_block.get("DGER")
+        if not generators or not self._gen_type_by_bus:
+            return
+
+        for generator in generators:
+            gen_type = self._gen_type_by_bus.get(
+                normalize_group_key(getattr(generator, "number", None))
+            )
+            if gen_type is not None:
+                object.__setattr__(generator, "gen_type", gen_type)
+
     def _resolve_controlled_bus(
         self,
         token: ParsedScalar,
@@ -871,7 +1039,7 @@ class AnaredeInfrasysParser:
             controlled_bus_token = values.get("controlled_bus")
             values["controlled_bus"] = None
             values = normalize_dlin_values(values)
-        if block in {"DCAI", "DCER", "DCSC"}:
+        if block in {"DCAI", "DCER", "DCSC", "DGEI"}:
             values = map_anarede_state_to_available(values)
         if block == "DCSC":
             owner_token = values.get("owner")

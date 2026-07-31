@@ -7,7 +7,7 @@ from typing import Annotated
 from pydantic import Field, field_validator, model_validator
 
 from o_grid.models.base import AnaredeComponent
-from o_grid.models.enums import ACBusTypes, DCBusPolarity, DCBusType
+from o_grid.models.enums import ACBusTypes, DCBusPolarity, DCBusType, VoltageMonitoringCondition
 from o_grid.models.named_tuples import MinMax
 from o_grid.units import ActivePower, Angle, PerUnit, ReactivePower, Voltage
 
@@ -493,3 +493,130 @@ class AreaInterchange(AnaredeComponent):
             json_schema_extra={"units": "MW"},
         ),
     ] = ActivePower(0.0, "MW")
+
+
+class VoltageMonitoringSelection(AnaredeComponent):
+    """Raw DMTE selection-language record used to build voltage monitoring sets."""
+
+    boundaries: Annotated[
+        int | float | str | None,
+        Field(
+            description=(
+                "T monitors all buses of the selected set. F monitors only the boundary "
+                "buses of the selected set."
+            ),
+        ),
+    ] = "T"
+    condition_1: Annotated[
+        int | float | str | None,
+        Field(
+            description=(
+                "First condition operator. A specifies an interval condition. E specifies "
+                "a union condition."
+            ),
+        ),
+    ] = None
+    condition_2: Annotated[
+        int | float | str | None,
+        Field(
+            description=(
+                "Second condition operator. A specifies an interval condition. E "
+                "specifies a union condition."
+            ),
+        ),
+    ] = None
+    element_id_1: Annotated[
+        int | float | str | None,
+        Field(description="Identifier of the first element."),
+    ] = None
+    element_id_2: Annotated[
+        int | float | str | None,
+        Field(description="Identifier of the second element."),
+    ] = None
+    element_id_3: Annotated[
+        int | float | str | None,
+        Field(description="Identifier of the third element."),
+    ] = None
+    element_id_4: Annotated[
+        int | float | str | None,
+        Field(description="Identifier of the fourth element."),
+    ] = None
+    element_type_1: Annotated[
+        int | float | str | None,
+        Field(
+            description=(
+                "First element type. BARR specifies a bus, AREA an area, TENS a voltage "
+                "base, and AG01 through AG10 an aggregator."
+            ),
+        ),
+    ] = None
+    element_type_2: Annotated[
+        int | float | str | None,
+        Field(
+            description=(
+                "Second element type. BARR specifies a bus, AREA an area, TENS a voltage "
+                "base, and AG01 through AG10 an aggregator."
+            ),
+        ),
+    ] = None
+    element_type_3: Annotated[
+        int | float | str | None,
+        Field(
+            description=(
+                "Third element type. BARR specifies a bus, AREA an area, TENS a voltage "
+                "base, and AG01 through AG10 an aggregator."
+            ),
+        ),
+    ] = None
+    element_type_4: Annotated[
+        int | float | str | None,
+        Field(
+            description=(
+                "Fourth element type. BARR specifies a bus, AREA an area, TENS a voltage "
+                "base, and AG01 through AG10 an aggregator."
+            ),
+        ),
+    ] = None
+    main_condition: Annotated[
+        int | float | str | None,
+        Field(
+            description=(
+                "Main condition between the sets defined by conditions 1 and 2. X means "
+                "difference, E union, and S intersection."
+            ),
+        ),
+    ] = None
+    operation: Annotated[
+        int | float | str | None,
+        Field(
+            description=(
+                "A - addition of AC bus voltage monitoring data. E - elimination of AC "
+                "bus voltage monitoring data."
+            ),
+        ),
+    ] = "A"
+
+
+class BusVoltageMonitoring(AnaredeComponent):
+    """AC bus voltage monitoring set resolved from a DMTE record."""
+
+    type: Annotated[
+        list[ACBus | Area | VoltageBaseGroup],
+        Field(
+            description=(
+                "Resolved monitored elements: bus (BARR), area (AREA), or voltage base "
+                "group (TENS) instances selected by the DMTE record."
+            ),
+            default_factory=list,
+        ),
+    ]
+    condition: Annotated[
+        list[VoltageMonitoringCondition | None],
+        Field(
+            description=(
+                "Selection-set operator following each monitored element, aligned with "
+                "the type list. The last element has no trailing operator."
+            ),
+            default_factory=list,
+        ),
+    ]

@@ -195,6 +195,7 @@ def normalize_dlin_values(values: dict[str, ParsedScalar]) -> dict[str, ParsedSc
     normalized = dict(values)
     for field_name in (
         "equipment_capacity",
+        "maneuverable",
         "operation",
         "state",
         "phase_shift",

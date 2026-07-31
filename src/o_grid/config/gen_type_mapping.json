@@ -1,0 +1,7766 @@
+{
+  "10011HERMENEOL034": {
+    "area": 39,
+    "bus_name": "HERMENEOL034",
+    "number": 10011,
+    "type": "Wind"
+  },
+  "10012COLCHUEOL034": {
+    "area": 39,
+    "bus_name": "COLCHUEOL034",
+    "number": 10012,
+    "type": "Wind"
+  },
+  "10016CEGERO-SC138": {
+    "area": 25,
+    "bus_name": "CEGERO-SC138",
+    "number": 10016,
+    "type": "Unknown"
+  },
+  "10017MARM2AEOL012": {
+    "area": 39,
+    "bus_name": "MARM2AEOL012",
+    "number": 10017,
+    "type": "Wind"
+  },
+  "10018MARM2BEOL012": {
+    "area": 39,
+    "bus_name": "MARM2BEOL012",
+    "number": 10018,
+    "type": "Wind"
+  },
+  "10019MARM2CEOL012": {
+    "area": 39,
+    "bus_name": "MARM2CEOL012",
+    "number": 10019,
+    "type": "Wind"
+  },
+  "10023COOLUZ-RS023": {
+    "area": 124,
+    "bus_name": "COOLUZ-RS023",
+    "number": 10023,
+    "type": "Unknown"
+  },
+  "1008JLAC-A-SC069": {
+    "area": 20,
+    "bus_name": "JLAC-A-SC069",
+    "number": 1008,
+    "type": "Unknown"
+  },
+  "10108SANG23EOL034": {
+    "area": 39,
+    "bus_name": "SANG23EOL034",
+    "number": 10108,
+    "type": "Wind"
+  },
+  "10109OSOR23EOL034": {
+    "area": 39,
+    "bus_name": "OSOR23EOL034",
+    "number": 10109,
+    "type": "Wind"
+  },
+  "10110INDI23EOL034": {
+    "area": 39,
+    "bus_name": "INDI23EOL034",
+    "number": 10110,
+    "type": "Wind"
+  },
+  "10112GERIB1EOL034": {
+    "area": 39,
+    "bus_name": "GERIB1EOL034",
+    "number": 10112,
+    "type": "Wind"
+  },
+  "10113GERIB2EOL034": {
+    "area": 39,
+    "bus_name": "GERIB2EOL034",
+    "number": 10113,
+    "type": "Wind"
+  },
+  "10114REBCASEOL034": {
+    "area": 39,
+    "bus_name": "REBCASEOL034",
+    "number": 10114,
+    "type": "Wind"
+  },
+  "10118CC45CTEOL034": {
+    "area": 20,
+    "bus_name": "CC45CTEOL034",
+    "number": 10118,
+    "type": "Wind"
+  },
+  "10119ATLANTEOL012": {
+    "area": 39,
+    "bus_name": "ATLANTEOL012",
+    "number": 10119,
+    "type": "Wind"
+  },
+  "10120ADOCE-EOL034": {
+    "area": 38,
+    "bus_name": "ADOCE-EOL034",
+    "number": 10120,
+    "type": "Wind"
+  },
+  "10121SENANDEOL034": {
+    "area": 39,
+    "bus_name": "SENANDEOL034",
+    "number": 10121,
+    "type": "Wind"
+  },
+  "10122PALMAREOL034": {
+    "area": 39,
+    "bus_name": "PALMAREOL034",
+    "number": 10122,
+    "type": "Wind"
+  },
+  "10124BOMJAREOL034": {
+    "area": 38,
+    "bus_name": "BOMJAREOL034",
+    "number": 10124,
+    "type": "Wind"
+  },
+  "10144CAARA3BIO013": {
+    "area": 126,
+    "bus_name": "CAARA3BIO013",
+    "number": 10144,
+    "type": "Steam"
+  },
+  "10149VERD4APCH013": {
+    "area": 126,
+    "bus_name": "VERD4APCH013",
+    "number": 10149,
+    "type": "PCH"
+  },
+  "1014B.JARD-RJ069": {
+    "area": 10,
+    "bus_name": "B.JARD-RJ069",
+    "number": 1014,
+    "type": "Unknown"
+  },
+  "10152SCAVA1PCH006": {
+    "area": 39,
+    "bus_name": "SCAVA1PCH006",
+    "number": 10152,
+    "type": "PCH"
+  },
+  "10155LAJEADPCH034": {
+    "area": 126,
+    "bus_name": "LAJEADPCH034",
+    "number": 10155,
+    "type": "PCH"
+  },
+  "10157VERDE4PCH013": {
+    "area": 126,
+    "bus_name": "VERDE4PCH013",
+    "number": 10157,
+    "type": "PCH"
+  },
+  "10161FOZESTPCH138": {
+    "area": 22,
+    "bus_name": "FOZESTPCH138",
+    "number": 10161,
+    "type": "PCH"
+  },
+  "10166SBRANCUHE138": {
+    "area": 22,
+    "bus_name": "SBRANCUHE138",
+    "number": 10166,
+    "type": "Hydro"
+  },
+  "10170FORMIG-RS069": {
+    "area": 31,
+    "bus_name": "FORMIG-RS069",
+    "number": 10170,
+    "type": "Unknown"
+  },
+  "10179CAPINZ-SC069": {
+    "area": 25,
+    "bus_name": "CAPINZ-SC069",
+    "number": 10179,
+    "type": "Unknown"
+  },
+  "10180PTEALT-SC069": {
+    "area": 25,
+    "bus_name": "PTEALT-SC069",
+    "number": 10180,
+    "type": "Unknown"
+  },
+  "10181SCRIST-SC069": {
+    "area": 25,
+    "bus_name": "SCRIST-SC069",
+    "number": 10181,
+    "type": "Unknown"
+  },
+  "10182SCECIL-SC069": {
+    "area": 25,
+    "bus_name": "SCECIL-SC069",
+    "number": 10182,
+    "type": "Unknown"
+  },
+  "10205AREADOPCH013": {
+    "area": 126,
+    "bus_name": "AREADOPCH013",
+    "number": 10205,
+    "type": "PCH"
+  },
+  "1021PPET-GUTE001": {
+    "area": 66,
+    "bus_name": "PPET-GUTE001",
+    "number": 1021,
+    "type": "Steam"
+  },
+  "1022PPET-VUTE001": {
+    "area": 66,
+    "bus_name": "PPET-VUTE001",
+    "number": 1022,
+    "type": "Steam"
+  },
+  "10232CORREGPCH034": {
+    "area": 126,
+    "bus_name": "CORREGPCH034",
+    "number": 10232,
+    "type": "PCH"
+  },
+  "10248CANHADPCH034": {
+    "area": 22,
+    "bus_name": "CANHADPCH034",
+    "number": 10248,
+    "type": "PCH"
+  },
+  "10250INVERNPCH034": {
+    "area": 22,
+    "bus_name": "INVERNPCH034",
+    "number": 10250,
+    "type": "PCH"
+  },
+  "10251FORQUIPCH034": {
+    "area": 22,
+    "bus_name": "FORQUIPCH034",
+    "number": 10251,
+    "type": "PCH"
+  },
+  "1040RINCON-RS500": {
+    "area": 33,
+    "bus_name": "RINCON-RS500",
+    "number": 1040,
+    "type": "Unknown"
+  },
+  "1053TIBAGIUHE138": {
+    "area": 22,
+    "bus_name": "TIBAGIUHE138",
+    "number": 1053,
+    "type": "Hydro"
+  },
+  "1070FCHAPEUHE003": {
+    "area": 39,
+    "bus_name": "FCHAPEUHE003",
+    "number": 1070,
+    "type": "Hydro"
+  },
+  "1073FCHAPESIN000": {
+    "area": 39,
+    "bus_name": "FCHAPESIN000",
+    "number": 1073,
+    "type": "Synch.Comp."
+  },
+  "10ANGRA1UNE001": {
+    "area": 44,
+    "bus_name": "ANGRA1UNE001",
+    "number": 10,
+    "type": "Nuclear"
+  },
+  "1100IPU-50UHE009": {
+    "area": 17,
+    "bus_name": "IPU-50UHE009",
+    "number": 1100,
+    "type": "Hydro"
+  },
+  "1107IPU-60UHE009": {
+    "area": 17,
+    "bus_name": "IPU-60UHE009",
+    "number": 1107,
+    "type": "Hydro"
+  },
+  "1123PASTEMBIO013": {
+    "area": 126,
+    "bus_name": "PASTEMBIO013",
+    "number": 1123,
+    "type": "Steam"
+  },
+  "1125MIMOS1UHE001": {
+    "area": 126,
+    "bus_name": "MIMOS1UHE001",
+    "number": 1125,
+    "type": "Hydro"
+  },
+  "1126MIMOS2UHE001": {
+    "area": 126,
+    "bus_name": "MIMOS2UHE001",
+    "number": 1126,
+    "type": "Hydro"
+  },
+  "1150BGRANDUHE002": {
+    "area": 64,
+    "bus_name": "BGRANDUHE002",
+    "number": 1150,
+    "type": "Hydro"
+  },
+  "1151BGRANDSIN000": {
+    "area": 64,
+    "bus_name": "BGRANDSIN000",
+    "number": 1151,
+    "type": "Synch.Comp."
+  },
+  "1152STIA-GUTE000": {
+    "area": 39,
+    "bus_name": "STIA-GUTE000",
+    "number": 1152,
+    "type": "Steam"
+  },
+  "1155ITAUBAUHE002": {
+    "area": 23,
+    "bus_name": "ITAUBAUHE002",
+    "number": 1155,
+    "type": "Hydro"
+  },
+  "1156ITAUBASIN000": {
+    "area": 23,
+    "bus_name": "ITAUBASIN000",
+    "number": 1156,
+    "type": "Synch.Comp."
+  },
+  "1157CNOVOSUHE002": {
+    "area": 64,
+    "bus_name": "CNOVOSUHE002",
+    "number": 1157,
+    "type": "Hydro"
+  },
+  "1158CNOVOSSIN000": {
+    "area": 64,
+    "bus_name": "CNOVOSSIN000",
+    "number": 1158,
+    "type": "Synch.Comp."
+  },
+  "1159MCLAROUHE001": {
+    "area": 64,
+    "bus_name": "MCLAROUHE001",
+    "number": 1159,
+    "type": "Hydro"
+  },
+  "1162JACUI-UHE003": {
+    "area": 23,
+    "bus_name": "JACUI-UHE003",
+    "number": 1162,
+    "type": "Hydro"
+  },
+  "1164URUG-GUTE000": {
+    "area": 34,
+    "bus_name": "URUG-GUTE000",
+    "number": 1164,
+    "type": "Steam"
+  },
+  "1165URUG-VUTE000": {
+    "area": 34,
+    "bus_name": "URUG-VUTE000",
+    "number": 1165,
+    "type": "Steam"
+  },
+  "1166CALVESUHE002": {
+    "area": 64,
+    "bus_name": "CALVESUHE002",
+    "number": 1166,
+    "type": "Hydro"
+  },
+  "116814JUL-UHE001": {
+    "area": 64,
+    "bus_name": "14JUL-UHE001",
+    "number": 1168,
+    "type": "Hydro"
+  },
+  "1169STIA-VUTE000": {
+    "area": 39,
+    "bus_name": "STIA-VUTE000",
+    "number": 1169,
+    "type": "Steam"
+  },
+  "1173CANDI3UTE000": {
+    "area": 70,
+    "bus_name": "CANDI3UTE000",
+    "number": 1173,
+    "type": "Steam"
+  },
+  "1175PREAL-UHE001": {
+    "area": 23,
+    "bus_name": "PREAL-UHE001",
+    "number": 1175,
+    "type": "Hydro"
+  },
+  "1176DFRANCUHE001": {
+    "area": 39,
+    "bus_name": "DFRANCUHE001",
+    "number": 1176,
+    "type": "Hydro"
+  },
+  "1177DFRANCSIN000": {
+    "area": 39,
+    "bus_name": "DFRANCSIN000",
+    "number": 1177,
+    "type": "Synch.Comp."
+  },
+  "11842IRMAO-RS138": {
+    "area": 31,
+    "bus_name": "2IRMAO-RS138",
+    "number": 1184,
+    "type": "Unknown"
+  },
+  "1185ALEGR2-RS069": {
+    "area": 31,
+    "bus_name": "ALEGR2-RS069",
+    "number": 1185,
+    "type": "Unknown"
+  },
+  "1195CAMAQU-RS069": {
+    "area": 24,
+    "bus_name": "CAMAQU-RS069",
+    "number": 1195,
+    "type": "Unknown"
+  },
+  "11ANGRA2UNE001": {
+    "area": 44,
+    "bus_name": "ANGRA2UNE001",
+    "number": 11,
+    "type": "Nuclear"
+  },
+  "1203CHARQU-RS069": {
+    "area": 24,
+    "bus_name": "CHARQU-RS069",
+    "number": 1203,
+    "type": "Unknown"
+  },
+  "1214GUARIT-RS069": {
+    "area": 32,
+    "bus_name": "GUARIT-RS069",
+    "number": 1214,
+    "type": "Unknown"
+  },
+  "1235MACAMB-RS069": {
+    "area": 31,
+    "bus_name": "MACAMB-RS069",
+    "number": 1235,
+    "type": "Unknown"
+  },
+  "1253SBORJ2-RS069": {
+    "area": 31,
+    "bus_name": "SBORJ2-RS069",
+    "number": 1253,
+    "type": "Unknown"
+  },
+  "1284SMARTA-RS046": {
+    "area": 32,
+    "bus_name": "SMARTA-RS046",
+    "number": 1284,
+    "type": "Unknown"
+  },
+  "1288PASMEIPCH013": {
+    "area": 39,
+    "bus_name": "PASMEIPCH013",
+    "number": 1288,
+    "type": "PCH"
+  },
+  "1289SVICEN-RS069": {
+    "area": 31,
+    "bus_name": "SVICEN-RS069",
+    "number": 1289,
+    "type": "Unknown"
+  },
+  "12LCBARRUHE005": {
+    "area": 1,
+    "bus_name": "LCBARRUHE005",
+    "number": 12,
+    "type": "Hydro"
+  },
+  "1310EREXI2-RS138": {
+    "area": 32,
+    "bus_name": "EREXI2-RS138",
+    "number": 1310,
+    "type": "Unknown"
+  },
+  "1311SANGE1-RS069": {
+    "area": 32,
+    "bus_name": "SANGE1-RS069",
+    "number": 1311,
+    "type": "Unknown"
+  },
+  "1316NPR2P2PCH069": {
+    "area": 32,
+    "bus_name": "NPR2P2PCH069",
+    "number": 1316,
+    "type": "PCH"
+  },
+  "1317NPR2P1PCH069": {
+    "area": 32,
+    "bus_name": "NPR2P1PCH069",
+    "number": 1317,
+    "type": "PCH"
+  },
+  "1319CGONZAPCH069": {
+    "area": 32,
+    "bus_name": "CGONZAPCH069",
+    "number": 1319,
+    "type": "PCH"
+  },
+  "1328VACARI-RS138": {
+    "area": 32,
+    "bus_name": "VACARI-RS138",
+    "number": 1328,
+    "type": "Unknown"
+  },
+  "1332PETROB-RS069": {
+    "area": 31,
+    "bus_name": "PETROB-RS069",
+    "number": 1332,
+    "type": "Unknown"
+  },
+  "1347CIDREIEOL034": {
+    "area": 39,
+    "bus_name": "CIDREIEOL034",
+    "number": 1347,
+    "type": "Wind"
+  },
+  "1369OSORIOEOL034": {
+    "area": 39,
+    "bus_name": "OSORIOEOL034",
+    "number": 1369,
+    "type": "Wind"
+  },
+  "1370SANGRAEOL034": {
+    "area": 39,
+    "bus_name": "SANGRAEOL034",
+    "number": 1370,
+    "type": "Wind"
+  },
+  "1371INDIOSEOL034": {
+    "area": 39,
+    "bus_name": "INDIOSEOL034",
+    "number": 1371,
+    "type": "Wind"
+  },
+  "13LCBARRSIN000": {
+    "area": 1,
+    "bus_name": "LCBARRSIN000",
+    "number": 13,
+    "type": "Synch.Comp."
+  },
+  "1483BEVAP-BIO138": {
+    "area": 3,
+    "bus_name": "BEVAP-BIO138",
+    "number": 1483,
+    "type": "Steam"
+  },
+  "1487JANUA3-MG138": {
+    "area": 3,
+    "bus_name": "JANUA3-MG138",
+    "number": 1487,
+    "type": "Unknown"
+  },
+  "1488MANGA3-MG138": {
+    "area": 3,
+    "bus_name": "MANGA3-MG138",
+    "number": 1488,
+    "type": "Unknown"
+  },
+  "1496BAGUARUHE004": {
+    "area": 72,
+    "bus_name": "BAGUARUHE004",
+    "number": 1496,
+    "type": "Hydro"
+  },
+  "14FUNIL-UHE003": {
+    "area": 1,
+    "bus_name": "FUNIL-UHE003",
+    "number": 14,
+    "type": "Hydro"
+  },
+  "1500IGARAPUTE000": {
+    "area": 2,
+    "bus_name": "IGARAPUTE000",
+    "number": 1500,
+    "type": "Steam"
+  },
+  "1501ITU+CAUHE007": {
+    "area": 3,
+    "bus_name": "ITU+CAUHE007",
+    "number": 1501,
+    "type": "Hydro"
+  },
+  "1502SGRANDUHE004": {
+    "area": 3,
+    "bus_name": "SGRANDUHE004",
+    "number": 1502,
+    "type": "Hydro"
+  },
+  "1504ITAJU3PCH138": {
+    "area": 3,
+    "bus_name": "ITAJU3PCH138",
+    "number": 1504,
+    "type": "PCH"
+  },
+  "1506ARAGUAPCH138": {
+    "area": 3,
+    "bus_name": "ARAGUAPCH138",
+    "number": 1506,
+    "type": "PCH"
+  },
+  "1511S.CLARUHE003": {
+    "area": 3,
+    "bus_name": "S.CLARUHE003",
+    "number": 1511,
+    "type": "Hydro"
+  },
+  "1519COROMA-MG138": {
+    "area": 3,
+    "bus_name": "COROMA-MG138",
+    "number": 1519,
+    "type": "Unknown"
+  },
+  "1524GAFANHPCH138": {
+    "area": 3,
+    "bus_name": "GAFANHPCH138",
+    "number": 1524,
+    "type": "PCH"
+  },
+  "1526IGARA-PCH138": {
+    "area": 3,
+    "bus_name": "IGARA-PCH138",
+    "number": 1526,
+    "type": "PCH"
+  },
+  "1527DIVI1-PCH138": {
+    "area": 3,
+    "bus_name": "DIVI1-PCH138",
+    "number": 1527,
+    "type": "PCH"
+  },
+  "1528IGUAT-BIO138": {
+    "area": 3,
+    "bus_name": "IGUAT-BIO138",
+    "number": 1528,
+    "type": "Steam"
+  },
+  "1532IPATD-PCH161": {
+    "area": 3,
+    "bus_name": "IPATD-PCH161",
+    "number": 1532,
+    "type": "PCH"
+  },
+  "1537ITABI2-MG069": {
+    "area": 3,
+    "bus_name": "ITABI2-MG069",
+    "number": 1537,
+    "type": "Unknown"
+  },
+  "1542MCLAR1PCH138": {
+    "area": 3,
+    "bus_name": "MCLAR1PCH138",
+    "number": 1542,
+    "type": "PCH"
+  },
+  "1548OPRETOPCH138": {
+    "area": 3,
+    "bus_name": "OPRETOPCH138",
+    "number": 1548,
+    "type": "PCH"
+  },
+  "1552PMINA-PCH138": {
+    "area": 3,
+    "bus_name": "PMINA-PCH138",
+    "number": 1552,
+    "type": "PCH"
+  },
+  "1554PIAU--PCH138": {
+    "area": 3,
+    "bus_name": "PIAU--PCH138",
+    "number": 1554,
+    "type": "PCH"
+  },
+  "1557TOTONIPCH138": {
+    "area": 3,
+    "bus_name": "TOTONIPCH138",
+    "number": 1557,
+    "type": "PCH"
+  },
+  "1559CANDONUHE000": {
+    "area": 3,
+    "bus_name": "CANDONUHE000",
+    "number": 1559,
+    "type": "Hydro"
+  },
+  "1561NANUQ-PCH138": {
+    "area": 3,
+    "bus_name": "NANUQ-PCH138",
+    "number": 1561,
+    "type": "PCH"
+  },
+  "1564SACRA-PCH138": {
+    "area": 3,
+    "bus_name": "SACRA-PCH138",
+    "number": 1564,
+    "type": "PCH"
+  },
+  "1566SARAME-MG138": {
+    "area": 3,
+    "bus_name": "SARAME-MG138",
+    "number": 1566,
+    "type": "Unknown"
+  },
+  "1570SGRAN-PCH161": {
+    "area": 3,
+    "bus_name": "SGRAN-PCH161",
+    "number": 1570,
+    "type": "PCH"
+  },
+  "1572SJDELRPCH138": {
+    "area": 3,
+    "bus_name": "SJDELRPCH138",
+    "number": 1572,
+    "type": "PCH"
+  },
+  "1578UBER1-PCH138": {
+    "area": 3,
+    "bus_name": "UBER1-PCH138",
+    "number": 1578,
+    "type": "PCH"
+  },
+  "1580UBERL2-MG138": {
+    "area": 3,
+    "bus_name": "UBERL2-MG138",
+    "number": 1580,
+    "type": "Unknown"
+  },
+  "1581UBERA5-MG138": {
+    "area": 3,
+    "bus_name": "UBERA5-MG138",
+    "number": 1581,
+    "type": "Unknown"
+  },
+  "1585IBIR-GUTE001": {
+    "area": 72,
+    "bus_name": "IBIR-GUTE001",
+    "number": 1585,
+    "type": "Steam"
+  },
+  "1586IBIRITUTE001": {
+    "area": 72,
+    "bus_name": "IBIRITUTE001",
+    "number": 1586,
+    "type": "Steam"
+  },
+  "1594PESTREUHE002": {
+    "area": 2,
+    "bus_name": "PESTREUHE002",
+    "number": 1594,
+    "type": "Hydro"
+  },
+  "1599SACARVUHE004": {
+    "area": 3,
+    "bus_name": "SACARVUHE004",
+    "number": 1599,
+    "type": "Hydro"
+  },
+  "1645PDAGUA-RJ138": {
+    "area": 9,
+    "bus_name": "PDAGUA-RJ138",
+    "number": 1645,
+    "type": "Unknown"
+  },
+  "1654CENTE-PCH138": {
+    "area": 9,
+    "bus_name": "CENTE-PCH138",
+    "number": 1654,
+    "type": "PCH"
+  },
+  "16FURNASUHE007": {
+    "area": 1,
+    "bus_name": "FURNASUHE007",
+    "number": 16,
+    "type": "Hydro"
+  },
+  "1700AREAL-PCH013": {
+    "area": 10,
+    "bus_name": "AREAL-PCH013",
+    "number": 1700,
+    "type": "PCH"
+  },
+  "1701FAGUNDPCH013": {
+    "area": 10,
+    "bus_name": "FAGUNDPCH013",
+    "number": 1701,
+    "type": "PCH"
+  },
+  "1702PIABANPCH013": {
+    "area": 10,
+    "bus_name": "PIABANPCH013",
+    "number": 1702,
+    "type": "PCH"
+  },
+  "1703MACAB3PCH013": {
+    "area": 10,
+    "bus_name": "MACAB3PCH013",
+    "number": 1703,
+    "type": "PCH"
+  },
+  "1704MACAB6PCH013": {
+    "area": 10,
+    "bus_name": "MACAB6PCH013",
+    "number": 1704,
+    "type": "PCH"
+  },
+  "1705ITAPERPCH069": {
+    "area": 10,
+    "bus_name": "ITAPERPCH069",
+    "number": 1705,
+    "type": "PCH"
+  },
+  "1711CALHE-PCH013": {
+    "area": 10,
+    "bus_name": "CALHE-PCH013",
+    "number": 1711,
+    "type": "PCH"
+  },
+  "1718MAGE---RJ069": {
+    "area": 10,
+    "bus_name": "MAGE---RJ069",
+    "number": 1718,
+    "type": "Unknown"
+  },
+  "1749CANABRUTE000": {
+    "area": 10,
+    "bus_name": "CANABRUTE000",
+    "number": 1749,
+    "type": "Steam"
+  },
+  "1750MACABUPCH069": {
+    "area": 10,
+    "bus_name": "MACABUPCH069",
+    "number": 1750,
+    "type": "PCH"
+  },
+  "1754TERESO-RJ138": {
+    "area": 10,
+    "bus_name": "TERESO-RJ138",
+    "number": 1754,
+    "type": "Unknown"
+  },
+  "1767S.ROSAPCH013": {
+    "area": 10,
+    "bus_name": "S.ROSAPCH013",
+    "number": 1767,
+    "type": "PCH"
+  },
+  "1774VPALMAPCH069": {
+    "area": 10,
+    "bus_name": "VPALMAPCH069",
+    "number": 1774,
+    "type": "PCH"
+  },
+  "1789CRUZA-PCH069": {
+    "area": 10,
+    "bus_name": "CRUZA-PCH069",
+    "number": 1789,
+    "type": "PCH"
+  },
+  "1791PIRAP-PCH069": {
+    "area": 10,
+    "bus_name": "PIRAP-PCH069",
+    "number": 1791,
+    "type": "PCH"
+  },
+  "1798COLET-PCH069": {
+    "area": 10,
+    "bus_name": "COLET-PCH069",
+    "number": 1798,
+    "type": "PCH"
+  },
+  "17FURNASSIN000": {
+    "area": 1,
+    "bus_name": "FURNASSIN000",
+    "number": 17,
+    "type": "Synch.Comp."
+  },
+  "1859PARAISPCH138": {
+    "area": 126,
+    "bus_name": "PARAISPCH138",
+    "number": 1859,
+    "type": "PCH"
+  },
+  "1863BURIT1PCH138": {
+    "area": 126,
+    "bus_name": "BURIT1PCH138",
+    "number": 1863,
+    "type": "PCH"
+  },
+  "1865RVELHOPCH138": {
+    "area": 126,
+    "bus_name": "RVELHOPCH138",
+    "number": 1865,
+    "type": "PCH"
+  },
+  "1866SDOMINUHE002": {
+    "area": 126,
+    "bus_name": "SDOMINUHE002",
+    "number": 1866,
+    "type": "Hydro"
+  },
+  "1867ASUCURPCH138": {
+    "area": 126,
+    "bus_name": "ASUCURPCH138",
+    "number": 1867,
+    "type": "PCH"
+  },
+  "1869ANGELIBIO013": {
+    "area": 126,
+    "bus_name": "ANGELIBIO013",
+    "number": 1869,
+    "type": "Steam"
+  },
+  "1870PTOPEDPCH138": {
+    "area": 126,
+    "bus_name": "PTOPEDPCH138",
+    "number": 1870,
+    "type": "PCH"
+  },
+  "1871PLANALPCH138": {
+    "area": 126,
+    "bus_name": "PLANALPCH138",
+    "number": 1871,
+    "type": "PCH"
+  },
+  "1873CAARAPBIO013": {
+    "area": 126,
+    "bus_name": "CAARAPBIO013",
+    "number": 1873,
+    "type": "Steam"
+  },
+  "1874VALEGRBIO013": {
+    "area": 126,
+    "bus_name": "VALEGRBIO013",
+    "number": 1874,
+    "type": "Steam"
+  },
+  "1875SFERNABIO013": {
+    "area": 126,
+    "bus_name": "SFERNABIO013",
+    "number": 1875,
+    "type": "Steam"
+  },
+  "1879MVERDEBIO013": {
+    "area": 126,
+    "bus_name": "MVERDEBIO013",
+    "number": 1879,
+    "type": "Steam"
+  },
+  "1888LDCBRIBIO013": {
+    "area": 126,
+    "bus_name": "LDCBRIBIO013",
+    "number": 1888,
+    "type": "Steam"
+  },
+  "1897PALTA-PCH034": {
+    "area": 126,
+    "bus_name": "PALTA-PCH034",
+    "number": 1897,
+    "type": "PCH"
+  },
+  "18ITUMBIUHE005": {
+    "area": 1,
+    "bus_name": "ITUMBIUHE005",
+    "number": 18,
+    "type": "Hydro"
+  },
+  "19ITUMBISIN000": {
+    "area": 1,
+    "bus_name": "ITUMBISIN000",
+    "number": 19,
+    "type": "Synch.Comp."
+  },
+  "201RSIL-1UTE000": {
+    "area": 1,
+    "bus_name": "RSIL-1UTE000",
+    "number": 201,
+    "type": "Steam"
+  },
+  "2031OURIN-UHE003": {
+    "area": 71,
+    "bus_name": "OURIN-UHE003",
+    "number": 2031,
+    "type": "Hydro"
+  },
+  "2050BUGRESPCH006": {
+    "area": 32,
+    "bus_name": "BUGRESPCH006",
+    "number": 2050,
+    "type": "PCH"
+  },
+  "2051CANASTPCH013": {
+    "area": 23,
+    "bus_name": "CANASTPCH013",
+    "number": 2051,
+    "type": "PCH"
+  },
+  "2085LIVRA3SIN002": {
+    "area": 39,
+    "bus_name": "LIVRA3SIN002",
+    "number": 2085,
+    "type": "Synch.Comp."
+  },
+  "20MARIMBUHE007": {
+    "area": 1,
+    "bus_name": "MARIMBUHE007",
+    "number": 20,
+    "type": "Hydro"
+  },
+  "2100BVIST-BIO138": {
+    "area": 7,
+    "bus_name": "BVIST-BIO138",
+    "number": 2100,
+    "type": "Steam"
+  },
+  "2101GAVIA-BIO069": {
+    "area": 7,
+    "bus_name": "GAVIA-BIO069",
+    "number": 2101,
+    "type": "Steam"
+  },
+  "2102AMERI-BIO069": {
+    "area": 7,
+    "bus_name": "AMERI-BIO069",
+    "number": 2102,
+    "type": "Steam"
+  },
+  "2103PINHA-BIO138": {
+    "area": 7,
+    "bus_name": "PINHA-BIO138",
+    "number": 2103,
+    "type": "Steam"
+  },
+  "2104SOUZA-BIO069": {
+    "area": 7,
+    "bus_name": "SOUZA-BIO069",
+    "number": 2104,
+    "type": "Steam"
+  },
+  "2105DOURA-BIO069": {
+    "area": 7,
+    "bus_name": "DOURA-BIO069",
+    "number": 2105,
+    "type": "Steam"
+  },
+  "2113BNOVA-BIO138": {
+    "area": 7,
+    "bus_name": "BNOVA-BIO138",
+    "number": 2113,
+    "type": "Steam"
+  },
+  "2137YSM+SDBIO138": {
+    "area": 7,
+    "bus_name": "YSM+SDBIO138",
+    "number": 2137,
+    "type": "Steam"
+  },
+  "2150BOTUC-BIO138": {
+    "area": 7,
+    "bus_name": "BOTUC-BIO138",
+    "number": 2150,
+    "type": "Steam"
+  },
+  "2165MACAT-BIO069": {
+    "area": 7,
+    "bus_name": "MACAT-BIO069",
+    "number": 2165,
+    "type": "Steam"
+  },
+  "2190CAPIV-BIO138": {
+    "area": 7,
+    "bus_name": "CAPIV-BIO138",
+    "number": 2190,
+    "type": "Steam"
+  },
+  "2198CO+YE-BIO138": {
+    "area": 7,
+    "bus_name": "CO+YE-BIO138",
+    "number": 2198,
+    "type": "Steam"
+  },
+  "21MANSO-UHE004": {
+    "area": 1,
+    "bus_name": "MANSO-UHE004",
+    "number": 21,
+    "type": "Hydro"
+  },
+  "2239SOCOR-BIO138": {
+    "area": 7,
+    "bus_name": "SOCOR-BIO138",
+    "number": 2239,
+    "type": "Steam"
+  },
+  "2254ALTIN-BIO069": {
+    "area": 7,
+    "bus_name": "ALTIN-BIO069",
+    "number": 2254,
+    "type": "Steam"
+  },
+  "2256BARRI-BIO138": {
+    "area": 7,
+    "bus_name": "BARRI-BIO138",
+    "number": 2256,
+    "type": "Steam"
+  },
+  "2272ITUVE-BIO069": {
+    "area": 7,
+    "bus_name": "ITUVE-BIO069",
+    "number": 2272,
+    "type": "Steam"
+  },
+  "2275JOAQU-BIO069": {
+    "area": 7,
+    "bus_name": "JOAQU-BIO069",
+    "number": 2275,
+    "type": "Steam"
+  },
+  "2276ELOYC-BIO138": {
+    "area": 7,
+    "bus_name": "ELOYC-BIO138",
+    "number": 2276,
+    "type": "Steam"
+  },
+  "2293V.ALB-BIO138": {
+    "area": 7,
+    "bus_name": "V.ALB-BIO138",
+    "number": 2293,
+    "type": "Steam"
+  },
+  "22M.MORAUHE005": {
+    "area": 1,
+    "bus_name": "M.MORAUHE005",
+    "number": 22,
+    "type": "Hydro"
+  },
+  "2303CANDI-BIO069": {
+    "area": 7,
+    "bus_name": "CANDI-BIO069",
+    "number": 2303,
+    "type": "Steam"
+  },
+  "2313CUTRA-BIO138": {
+    "area": 7,
+    "bus_name": "CUTRA-BIO138",
+    "number": 2313,
+    "type": "Steam"
+  },
+  "2325AMOGIABIO138": {
+    "area": 7,
+    "bus_name": "AMOGIABIO138",
+    "number": 2325,
+    "type": "Steam"
+  },
+  "2329PITAN-BIO138": {
+    "area": 7,
+    "bus_name": "PITAN-BIO138",
+    "number": 2329,
+    "type": "Steam"
+  },
+  "2335VIRAD-BIO138": {
+    "area": 7,
+    "bus_name": "VIRAD-BIO138",
+    "number": 2335,
+    "type": "Steam"
+  },
+  "2343IT+CJ-BIO138": {
+    "area": 7,
+    "bus_name": "IT+CJ-BIO138",
+    "number": 2343,
+    "type": "Steam"
+  },
+  "2350CHAMINPCH006": {
+    "area": 22,
+    "bus_name": "CHAMINPCH006",
+    "number": 2350,
+    "type": "PCH"
+  },
+  "2352GUARICPCH013": {
+    "area": 22,
+    "bus_name": "GUARICPCH013",
+    "number": 2352,
+    "type": "PCH"
+  },
+  "2418CASTRO-PR138": {
+    "area": 22,
+    "bus_name": "CASTRO-PR138",
+    "number": 2418,
+    "type": "Unknown"
+  },
+  "2433MORRET-PR138": {
+    "area": 22,
+    "bus_name": "MORRET-PR138",
+    "number": 2433,
+    "type": "Unknown"
+  },
+  "2435JAGUAR-PR034": {
+    "area": 22,
+    "bus_name": "JAGUAR-PR034",
+    "number": 2435,
+    "type": "Unknown"
+  },
+  "2442CLEVEL-PR138": {
+    "area": 22,
+    "bus_name": "CLEVEL-PR138",
+    "number": 2442,
+    "type": "Unknown"
+  },
+  "2443PALMAS-PR138": {
+    "area": 22,
+    "bus_name": "PALMAS-PR138",
+    "number": 2443,
+    "type": "Unknown"
+  },
+  "2448LARANJ-PR138": {
+    "area": 22,
+    "bus_name": "LARANJ-PR138",
+    "number": 2448,
+    "type": "Unknown"
+  },
+  "2449MSMARI-PR069": {
+    "area": 22,
+    "bus_name": "MSMARI-PR069",
+    "number": 2449,
+    "type": "Unknown"
+  },
+  "2454CSEGRE-PR138": {
+    "area": 22,
+    "bus_name": "CSEGRE-PR138",
+    "number": 2454,
+    "type": "Unknown"
+  },
+  "2461SALNAT-PR069": {
+    "area": 22,
+    "bus_name": "SALNAT-PR069",
+    "number": 2461,
+    "type": "Unknown"
+  },
+  "2468COLORA-PR138": {
+    "area": 22,
+    "bus_name": "COLORA-PR138",
+    "number": 2468,
+    "type": "Unknown"
+  },
+  "2471MOURAO-PR069": {
+    "area": 22,
+    "bus_name": "MOURAO-PR069",
+    "number": 2471,
+    "type": "Unknown"
+  },
+  "2475FUNDAOUHE002": {
+    "area": 75,
+    "bus_name": "FUNDAOUHE002",
+    "number": 2475,
+    "type": "Hydro"
+  },
+  "2481FIGUEIUTE002": {
+    "area": 22,
+    "bus_name": "FIGUEIUTE002",
+    "number": 2481,
+    "type": "Steam"
+  },
+  "2484ASTORG-PR138": {
+    "area": 22,
+    "bus_name": "ASTORG-PR138",
+    "number": 2484,
+    "type": "Unknown"
+  },
+  "24M.MORBUHE004": {
+    "area": 1,
+    "bus_name": "M.MORBUHE004",
+    "number": 24,
+    "type": "Hydro"
+  },
+  "250NPECANUHE005": {
+    "area": 40,
+    "bus_name": "NPECANUHE005",
+    "number": 250,
+    "type": "Hydro"
+  },
+  "253FONTESUHE003": {
+    "area": 40,
+    "bus_name": "FONTESUHE003",
+    "number": 253,
+    "type": "Hydro"
+  },
+  "255PPASSOUHE002": {
+    "area": 40,
+    "bus_name": "PPASSOUHE002",
+    "number": 255,
+    "type": "Hydro"
+  },
+  "257I.POMBUHE005": {
+    "area": 40,
+    "bus_name": "I.POMBUHE005",
+    "number": 257,
+    "type": "Hydro"
+  },
+  "2600MASCA-UHE004": {
+    "area": 11,
+    "bus_name": "MASCA-UHE004",
+    "number": 2600,
+    "type": "Hydro"
+  },
+  "2601SUICA-UHE002": {
+    "area": 11,
+    "bus_name": "SUICA-UHE002",
+    "number": 2601,
+    "type": "Hydro"
+  },
+  "2602R.BOT-UHE002": {
+    "area": 11,
+    "bus_name": "R.BOT-UHE002",
+    "number": 2602,
+    "type": "Hydro"
+  },
+  "260S.CEC-PCH138": {
+    "area": 40,
+    "bus_name": "S.CEC-PCH138",
+    "number": 260,
+    "type": "PCH"
+  },
+  "2616CACH---ES034": {
+    "area": 11,
+    "bus_name": "CACH---ES034",
+    "number": 2616,
+    "type": "Unknown"
+  },
+  "2622CEASA-PCH138": {
+    "area": 11,
+    "bus_name": "CEASA-PCH138",
+    "number": 2622,
+    "type": "PCH"
+  },
+  "2623CASTELPCH138": {
+    "area": 11,
+    "bus_name": "CASTELPCH138",
+    "number": 2623,
+    "type": "PCH"
+  },
+  "2631FRUTEIPCH138": {
+    "area": 11,
+    "bus_name": "FRUTEIPCH138",
+    "number": 2631,
+    "type": "PCH"
+  },
+  "2642ITARAN-ES069": {
+    "area": 11,
+    "bus_name": "ITARAN-ES069",
+    "number": 2642,
+    "type": "Unknown"
+  },
+  "2656ITAPER-ES138": {
+    "area": 11,
+    "bus_name": "ITAPER-ES138",
+    "number": 2656,
+    "type": "Unknown"
+  },
+  "2675S.ROQ-PCH069": {
+    "area": 69,
+    "bus_name": "S.ROQ-PCH069",
+    "number": 2675,
+    "type": "PCH"
+  },
+  "2676SGABRIPCH138": {
+    "area": 69,
+    "bus_name": "SGABRIPCH138",
+    "number": 2676,
+    "type": "PCH"
+  },
+  "2687ALEGREPCH069": {
+    "area": 11,
+    "bus_name": "ALEGREPCH069",
+    "number": 2687,
+    "type": "PCH"
+  },
+  "2696ROSAL-UHE002": {
+    "area": 11,
+    "bus_name": "ROSAL-UHE002",
+    "number": 2696,
+    "type": "Hydro"
+  },
+  "269CSN---UTE002": {
+    "area": 9,
+    "bus_name": "CSN---UTE002",
+    "number": 269,
+    "type": "Steam"
+  },
+  "2702PLANOA-SC069": {
+    "area": 25,
+    "bus_name": "PLANOA-SC069",
+    "number": 2702,
+    "type": "Unknown"
+  },
+  "2703STALAU-SC069": {
+    "area": 38,
+    "bus_name": "STALAU-SC069",
+    "number": 2703,
+    "type": "Unknown"
+  },
+  "2705FLORSE-SC069": {
+    "area": 38,
+    "bus_name": "FLORSE-SC069",
+    "number": 2705,
+    "type": "Unknown"
+  },
+  "2716ABENO1-SC138": {
+    "area": 38,
+    "bus_name": "ABENO1-SC138",
+    "number": 2716,
+    "type": "Unknown"
+  },
+  "2717BRUSRB-SC138": {
+    "area": 25,
+    "bus_name": "BRUSRB-SC138",
+    "number": 2717,
+    "type": "Unknown"
+  },
+  "2720CCASTE-SC138": {
+    "area": 25,
+    "bus_name": "CCASTE-SC138",
+    "number": 2720,
+    "type": "Unknown"
+  },
+  "2722CACADO-SC138": {
+    "area": 25,
+    "bus_name": "CACADO-SC138",
+    "number": 2722,
+    "type": "Unknown"
+  },
+  "2730CONSCR-SC138": {
+    "area": 25,
+    "bus_name": "CONSCR-SC138",
+    "number": 2730,
+    "type": "Unknown"
+  },
+  "2731CHAPE2-SC138": {
+    "area": 25,
+    "bus_name": "CHAPE2-SC138",
+    "number": 2731,
+    "type": "Unknown"
+  },
+  "2733CNOVOS-SC138": {
+    "area": 25,
+    "bus_name": "CNOVOS-SC138",
+    "number": 2733,
+    "type": "Unknown"
+  },
+  "2734CONCOR-SC069": {
+    "area": 25,
+    "bus_name": "CONCOR-SC069",
+    "number": 2734,
+    "type": "Unknown"
+  },
+  "274V.RED-PCH138": {
+    "area": 9,
+    "bus_name": "V.RED-PCH138",
+    "number": 274,
+    "type": "PCH"
+  },
+  "2754GUARMI-SC138": {
+    "area": 25,
+    "bus_name": "GUARMI-SC138",
+    "number": 2754,
+    "type": "Unknown"
+  },
+  "2765IBIRAM-SC069": {
+    "area": 25,
+    "bus_name": "IBIRAM-SC069",
+    "number": 2765,
+    "type": "Unknown"
+  },
+  "2780INDAIA-SC138": {
+    "area": 25,
+    "bus_name": "INDAIA-SC138",
+    "number": 2780,
+    "type": "Unknown"
+  },
+  "2803LAGEAI-SC138": {
+    "area": 25,
+    "bus_name": "LAGEAI-SC138",
+    "number": 2803,
+    "type": "Unknown"
+  },
+  "2808MAFRA--SC138": {
+    "area": 25,
+    "bus_name": "MAFRA--SC138",
+    "number": 2808,
+    "type": "Unknown"
+  },
+  "2818CURAIN-SC138": {
+    "area": 25,
+    "bus_name": "CURAIN-SC138",
+    "number": 2818,
+    "type": "Unknown"
+  },
+  "2832PINHAL-SC138": {
+    "area": 25,
+    "bus_name": "PINHAL-SC138",
+    "number": 2832,
+    "type": "Unknown"
+  },
+  "2834PIRABE-SC138": {
+    "area": 25,
+    "bus_name": "PIRABE-SC138",
+    "number": 2834,
+    "type": "Unknown"
+  },
+  "2836QQUEIXUHE002": {
+    "area": 38,
+    "bus_name": "QQUEIXUHE002",
+    "number": 2836,
+    "type": "Hydro"
+  },
+  "2839QUILOM-SC138": {
+    "area": 25,
+    "bus_name": "QUILOM-SC138",
+    "number": 2839,
+    "type": "Unknown"
+  },
+  "2842RIOSU2-SC069": {
+    "area": 25,
+    "bus_name": "RIOSU2-SC069",
+    "number": 2842,
+    "type": "Unknown"
+  },
+  "2851BLUSAL-SC069": {
+    "area": 25,
+    "bus_name": "BLUSAL-SC069",
+    "number": 2851,
+    "type": "Unknown"
+  },
+  "2853SBSBRA-SC138": {
+    "area": 25,
+    "bus_name": "SBSBRA-SC138",
+    "number": 2853,
+    "type": "Unknown"
+  },
+  "2854BNSBAS-SC138": {
+    "area": 25,
+    "bus_name": "BNSBAS-SC138",
+    "number": 2854,
+    "type": "Unknown"
+  },
+  "2855SEARA--SC069": {
+    "area": 25,
+    "bus_name": "SEARA--SC069",
+    "number": 2855,
+    "type": "Unknown"
+  },
+  "2859SJOAQU-SC138": {
+    "area": 25,
+    "bus_name": "SJOAQU-SC138",
+    "number": 2859,
+    "type": "Unknown"
+  },
+  "2860SLOURE-SC138": {
+    "area": 25,
+    "bus_name": "SLOURE-SC138",
+    "number": 2860,
+    "type": "Unknown"
+  },
+  "2861SMIGU2-SC138": {
+    "area": 25,
+    "bus_name": "SMIGU2-SC138",
+    "number": 2861,
+    "type": "Unknown"
+  },
+  "2862SMIGU2-SC069": {
+    "area": 25,
+    "bus_name": "SMIGU2-SC069",
+    "number": 2862,
+    "type": "Unknown"
+  },
+  "2863SPILAOUHE001": {
+    "area": 38,
+    "bus_name": "SPILAOUHE001",
+    "number": 2863,
+    "type": "Hydro"
+  },
+  "2866TIMBO--SC138": {
+    "area": 25,
+    "bus_name": "TIMBO--SC138",
+    "number": 2866,
+    "type": "Unknown"
+  },
+  "2870TIJUCA-SC138": {
+    "area": 25,
+    "bus_name": "TIJUCA-SC138",
+    "number": 2870,
+    "type": "Unknown"
+  },
+  "2872TRINDA-SC138": {
+    "area": 25,
+    "bus_name": "TRINDA-SC138",
+    "number": 2872,
+    "type": "Unknown"
+  },
+  "2875TUBARA-SC069": {
+    "area": 25,
+    "bus_name": "TUBARA-SC069",
+    "number": 2875,
+    "type": "Unknown"
+  },
+  "2882VIDRCE-SC138": {
+    "area": 25,
+    "bus_name": "VIDRCE-SC138",
+    "number": 2882,
+    "type": "Unknown"
+  },
+  "2884ANGUGA-SC069": {
+    "area": 25,
+    "bus_name": "ANGUGA-SC069",
+    "number": 2884,
+    "type": "Unknown"
+  },
+  "2885RCEUPA-SC069": {
+    "area": 25,
+    "bus_name": "RCEUPA-SC069",
+    "number": 2885,
+    "type": "Unknown"
+  },
+  "2892VIDEIR-SC138": {
+    "area": 25,
+    "bus_name": "VIDEIR-SC138",
+    "number": 2892,
+    "type": "Unknown"
+  },
+  "2896XANXER-SC138": {
+    "area": 25,
+    "bus_name": "XANXER-SC138",
+    "number": 2896,
+    "type": "Unknown"
+  },
+  "28PCOLOMUHE004": {
+    "area": 1,
+    "bus_name": "PCOLOMUHE004",
+    "number": 28,
+    "type": "Hydro"
+  },
+  "2901SPED--PCH013": {
+    "area": 11,
+    "bus_name": "SPED--PCH013",
+    "number": 2901,
+    "type": "PCH"
+  },
+  "2903SJOAO2PCH013": {
+    "area": 11,
+    "bus_name": "SJOAO2PCH013",
+    "number": 2903,
+    "type": "PCH"
+  },
+  "2905SSIM1-PCH013": {
+    "area": 11,
+    "bus_name": "SSIM1-PCH013",
+    "number": 2905,
+    "type": "PCH"
+  },
+  "2917PGARRAPCH013": {
+    "area": 11,
+    "bus_name": "PGARRAPCH013",
+    "number": 2917,
+    "type": "PCH"
+  },
+  "2918ST.FE-PCH013": {
+    "area": 11,
+    "bus_name": "ST.FE-PCH013",
+    "number": 2918,
+    "type": "PCH"
+  },
+  "2947IACIA-PCH138": {
+    "area": 12,
+    "bus_name": "IACIA-PCH138",
+    "number": 2947,
+    "type": "PCH"
+  },
+  "2948IACIA-PCH069": {
+    "area": 12,
+    "bus_name": "IACIA-PCH069",
+    "number": 2948,
+    "type": "PCH"
+  },
+  "2951PLANALBIO069": {
+    "area": 12,
+    "bus_name": "PLANALBIO069",
+    "number": 2951,
+    "type": "Steam"
+  },
+  "296S.BRANUHE002": {
+    "area": 40,
+    "bus_name": "S.BRANUHE002",
+    "number": 296,
+    "type": "Hydro"
+  },
+  "2977IPORA-PCH069": {
+    "area": 12,
+    "bus_name": "IPORA-PCH069",
+    "number": 2977,
+    "type": "PCH"
+  },
+  "2979XAVAN-UTE037": {
+    "area": 73,
+    "bus_name": "XAVAN-UTE037",
+    "number": 2979,
+    "type": "Steam"
+  },
+  "3004DAIA--UTE033": {
+    "area": 73,
+    "bus_name": "DAIA--UTE033",
+    "number": 3004,
+    "type": "Steam"
+  },
+  "300EMBORCUHE004": {
+    "area": 2,
+    "bus_name": "EMBORCUHE004",
+    "number": 300,
+    "type": "Hydro"
+  },
+  "3014SFACAOUHE002": {
+    "area": 73,
+    "bus_name": "SFACAOUHE002",
+    "number": 3014,
+    "type": "Hydro"
+  },
+  "3015HNCOU-PCH138": {
+    "area": 69,
+    "bus_name": "HNCOU-PCH138",
+    "number": 3015,
+    "type": "PCH"
+  },
+  "3017GOIAN-UTE088": {
+    "area": 73,
+    "bus_name": "GOIAN-UTE088",
+    "number": 3017,
+    "type": "Steam"
+  },
+  "301JAGUARUHE004": {
+    "area": 2,
+    "bus_name": "JAGUARUHE004",
+    "number": 301,
+    "type": "Hydro"
+  },
+  "302NPONTEUHE003": {
+    "area": 2,
+    "bus_name": "NPONTEUHE003",
+    "number": 302,
+    "type": "Hydro"
+  },
+  "303SSIMAOUHE005": {
+    "area": 2,
+    "bus_name": "SSIMAOUHE005",
+    "number": 303,
+    "type": "Hydro"
+  },
+  "304T.MAR-UHE006": {
+    "area": 2,
+    "bus_name": "T.MAR-UHE006",
+    "number": 304,
+    "type": "Hydro"
+  },
+  "305V.GRD-UHE004": {
+    "area": 2,
+    "bus_name": "V.GRD-UHE004",
+    "number": 305,
+    "type": "Hydro"
+  },
+  "306GUILMAUHE004": {
+    "area": 2,
+    "bus_name": "GUILMAUHE004",
+    "number": 306,
+    "type": "Hydro"
+  },
+  "307AVATI-PCH138": {
+    "area": 3,
+    "bus_name": "AVATI-PCH138",
+    "number": 307,
+    "type": "PCH"
+  },
+  "3093LASA--BIO138": {
+    "area": 41,
+    "bus_name": "LASA--BIO138",
+    "number": 3093,
+    "type": "Steam"
+  },
+  "3099ALCON-BIO138": {
+    "area": 41,
+    "bus_name": "ALCON-BIO138",
+    "number": 3099,
+    "type": "Steam"
+  },
+  "309BARBA-PCH138": {
+    "area": 3,
+    "bus_name": "BARBA-PCH138",
+    "number": 309,
+    "type": "PCH"
+  },
+  "30SCRU19UTE000": {
+    "area": 1,
+    "bus_name": "SCRU19UTE000",
+    "number": 30,
+    "type": "Steam"
+  },
+  "3100COLOMBBIO138": {
+    "area": 7,
+    "bus_name": "COLOMBBIO138",
+    "number": 3100,
+    "type": "Steam"
+  },
+  "3101RUETT-BIO138": {
+    "area": 7,
+    "bus_name": "RUETT-BIO138",
+    "number": 3101,
+    "type": "Steam"
+  },
+  "3102MANDU-BIO138": {
+    "area": 7,
+    "bus_name": "MANDU-BIO138",
+    "number": 3102,
+    "type": "Steam"
+  },
+  "3103NARDI-BIO138": {
+    "area": 7,
+    "bus_name": "NARDI-BIO138",
+    "number": 3103,
+    "type": "Steam"
+  },
+  "3104PEDRA-BIO069": {
+    "area": 7,
+    "bus_name": "PEDRA-BIO069",
+    "number": 3104,
+    "type": "Steam"
+  },
+  "3105DELTA-BIO069": {
+    "area": 7,
+    "bus_name": "DELTA-BIO069",
+    "number": 3105,
+    "type": "Steam"
+  },
+  "3125ITAP2-BIO138": {
+    "area": 36,
+    "bus_name": "ITAP2-BIO138",
+    "number": 3125,
+    "type": "Steam"
+  },
+  "312MIRANDUHE003": {
+    "area": 3,
+    "bus_name": "MIRANDUHE003",
+    "number": 312,
+    "type": "Hydro"
+  },
+  "3130MOCOC-BIO138": {
+    "area": 36,
+    "bus_name": "MOCOC-BIO138",
+    "number": 3130,
+    "type": "Steam"
+  },
+  "3133SJRPA-BIO138": {
+    "area": 36,
+    "bus_name": "SJRPA-BIO138",
+    "number": 3133,
+    "type": "Steam"
+  },
+  "3135PEDRE-BIO138": {
+    "area": 36,
+    "bus_name": "PEDRE-BIO138",
+    "number": 3135,
+    "type": "Steam"
+  },
+  "3141OURIN2BIO013": {
+    "area": 37,
+    "bus_name": "OURIN2BIO013",
+    "number": 3141,
+    "type": "Steam"
+  },
+  "3145PIRAJ-BIO013": {
+    "area": 37,
+    "bus_name": "PIRAJ-BIO013",
+    "number": 3145,
+    "type": "Steam"
+  },
+  "3151B.PER-BIO138": {
+    "area": 35,
+    "bus_name": "B.PER-BIO138",
+    "number": 3151,
+    "type": "Steam"
+  },
+  "3158BRAGA-PCH138": {
+    "area": 35,
+    "bus_name": "BRAGA-PCH138",
+    "number": 3158,
+    "type": "PCH"
+  },
+  "315BARRE-SIN000": {
+    "area": 2,
+    "bus_name": "BARRE-SIN000",
+    "number": 315,
+    "type": "Synch.Comp."
+  },
+  "3171PRUDE1PCH088": {
+    "area": 35,
+    "bus_name": "PRUDE1PCH088",
+    "number": 3171,
+    "type": "PCH"
+  },
+  "3174O.CRU-BIO138": {
+    "area": 35,
+    "bus_name": "O.CRU-BIO138",
+    "number": 3174,
+    "type": "Steam"
+  },
+  "317SOBRAGUHE003": {
+    "area": 3,
+    "bus_name": "SOBRAGUHE003",
+    "number": 317,
+    "type": "Hydro"
+  },
+  "3197C.MOT-PCH088": {
+    "area": 35,
+    "bus_name": "C.MOT-PCH088",
+    "number": 3197,
+    "type": "PCH"
+  },
+  "31SCRU13UTE000": {
+    "area": 1,
+    "bus_name": "SCRU13UTE000",
+    "number": 31,
+    "type": "Steam"
+  },
+  "32SCRU16UTE002": {
+    "area": 1,
+    "bus_name": "SCRU16UTE002",
+    "number": 32,
+    "type": "Steam"
+  },
+  "3304N.U.MAPCH069": {
+    "area": 18,
+    "bus_name": "N.U.MAPCH069",
+    "number": 3304,
+    "type": "PCH"
+  },
+  "3306CATAG2PCH069": {
+    "area": 18,
+    "bus_name": "CATAG2PCH069",
+    "number": 3306,
+    "type": "PCH"
+  },
+  "3308MURIA2-MG069": {
+    "area": 18,
+    "bus_name": "MURIA2-MG069",
+    "number": 3308,
+    "type": "Unknown"
+  },
+  "3309MURIA1PCH069": {
+    "area": 18,
+    "bus_name": "MURIA1PCH069",
+    "number": 3309,
+    "type": "PCH"
+  },
+  "3316U.ITU-PCH069": {
+    "area": 18,
+    "bus_name": "U.ITU-PCH069",
+    "number": 3316,
+    "type": "PCH"
+  },
+  "3319MANHU-PCH069": {
+    "area": 18,
+    "bus_name": "MANHU-PCH069",
+    "number": 3319,
+    "type": "PCH"
+  },
+  "3322MATIPOPCH069": {
+    "area": 18,
+    "bus_name": "MATIPOPCH069",
+    "number": 3322,
+    "type": "PCH"
+  },
+  "3323U.GRANPCH138": {
+    "area": 18,
+    "bus_name": "U.GRANPCH138",
+    "number": 3323,
+    "type": "PCH"
+  },
+  "3326U.ERV-PCH069": {
+    "area": 18,
+    "bus_name": "U.ERV-PCH069",
+    "number": 3326,
+    "type": "PCH"
+  },
+  "3327U.ENC-PCH069": {
+    "area": 18,
+    "bus_name": "U.ENC-PCH069",
+    "number": 3327,
+    "type": "PCH"
+  },
+  "3329S.M.AN-MG138": {
+    "area": 18,
+    "bus_name": "S.M.AN-MG138",
+    "number": 3329,
+    "type": "Unknown"
+  },
+  "3330U.GUA-PCH138": {
+    "area": 18,
+    "bus_name": "U.GUA-PCH138",
+    "number": 3330,
+    "type": "PCH"
+  },
+  "3333U.TRI-PCH138": {
+    "area": 18,
+    "bus_name": "U.TRI-PCH138",
+    "number": 3333,
+    "type": "PCH"
+  },
+  "3337BRAU--PCH138": {
+    "area": 18,
+    "bus_name": "BRAU--PCH138",
+    "number": 3337,
+    "type": "PCH"
+  },
+  "3340JAP----RJ069": {
+    "area": 65,
+    "bus_name": "JAP----RJ069",
+    "number": 3340,
+    "type": "Unknown"
+  },
+  "340MIRAND-MG138": {
+    "area": 3,
+    "bus_name": "MIRAND-MG138",
+    "number": 340,
+    "type": "Unknown"
+  },
+  "3411ESO---BIO088": {
+    "area": 28,
+    "bus_name": "ESO---BIO088",
+    "number": 3411,
+    "type": "Steam"
+  },
+  "3415OESTE-BIO088": {
+    "area": 42,
+    "bus_name": "OESTE-BIO088",
+    "number": 3415,
+    "type": "Steam"
+  },
+  "343IGARAPUHE005": {
+    "area": 3,
+    "bus_name": "IGARAPUHE005",
+    "number": 343,
+    "type": "Hydro"
+  },
+  "3465LES---BIO088": {
+    "area": 28,
+    "bus_name": "LES---BIO088",
+    "number": 3465,
+    "type": "Steam"
+  },
+  "346MESQUISIN001": {
+    "area": 2,
+    "bus_name": "MESQUISIN001",
+    "number": 346,
+    "type": "Synch.Comp."
+  },
+  "3477AGA+PE-SP088": {
+    "area": 42,
+    "bus_name": "AGA+PE-SP088",
+    "number": 3477,
+    "type": "Unknown"
+  },
+  "3482JABAQU-SP088": {
+    "area": 42,
+    "bus_name": "JABAQU-SP088",
+    "number": 3482,
+    "type": "Unknown"
+  },
+  "348VALADAPCH138": {
+    "area": 2,
+    "bus_name": "VALADAPCH138",
+    "number": 348,
+    "type": "PCH"
+  },
+  "3496MFO---BIO088": {
+    "area": 28,
+    "bus_name": "MFO---BIO088",
+    "number": 3496,
+    "type": "Steam"
+  },
+  "34N.MUT-PCH034": {
+    "area": 46,
+    "bus_name": "N.MUT-PCH034",
+    "number": 34,
+    "type": "PCH"
+  },
+  "3515UTEVDV-GO138": {
+    "area": 12,
+    "bus_name": "UTEVDV-GO138",
+    "number": 3515,
+    "type": "Unknown"
+  },
+  "3523ELTB-VUTE002": {
+    "area": 41,
+    "bus_name": "ELTB-VUTE002",
+    "number": 3523,
+    "type": "Steam"
+  },
+  "3524TLGA-VUTE001": {
+    "area": 71,
+    "bus_name": "TLGA-VUTE001",
+    "number": 3524,
+    "type": "Steam"
+  },
+  "3525TLGB-VUTE001": {
+    "area": 71,
+    "bus_name": "TLGB-VUTE001",
+    "number": 3525,
+    "type": "Steam"
+  },
+  "3546JUI117-MT138": {
+    "area": 46,
+    "bus_name": "JUI117-MT138",
+    "number": 3546,
+    "type": "Unknown"
+  },
+  "3547JUI117PCH138": {
+    "area": 46,
+    "bus_name": "JUI117PCH138",
+    "number": 3547,
+    "type": "PCH"
+  },
+  "354NEVE1-SIN001": {
+    "area": 2,
+    "bus_name": "NEVE1-SIN001",
+    "number": 354,
+    "type": "Synch.Comp."
+  },
+  "3551CARAM-PCH034": {
+    "area": 46,
+    "bus_name": "CARAM-PCH034",
+    "number": 3551,
+    "type": "PCH"
+  },
+  "3558MANTO-PCH013": {
+    "area": 46,
+    "bus_name": "MANTO-PCH013",
+    "number": 3558,
+    "type": "PCH"
+  },
+  "355NEVE2-SIN001": {
+    "area": 2,
+    "bus_name": "NEVE2-SIN001",
+    "number": 355,
+    "type": "Synch.Comp."
+  },
+  "3566NVGUA-PCH013": {
+    "area": 46,
+    "bus_name": "NVGUA-PCH013",
+    "number": 3566,
+    "type": "PCH"
+  },
+  "35CORUMBUHE003": {
+    "area": 1,
+    "bus_name": "CORUMBUHE003",
+    "number": 35,
+    "type": "Hydro"
+  },
+  "3623PARANOPCH013": {
+    "area": 13,
+    "bus_name": "PARANOPCH013",
+    "number": 3623,
+    "type": "PCH"
+  },
+  "3641CORUM4UHE002": {
+    "area": 73,
+    "bus_name": "CORUM4UHE002",
+    "number": 3641,
+    "type": "Hydro"
+  },
+  "3642CORUM3UHE002": {
+    "area": 73,
+    "bus_name": "CORUM3UHE002",
+    "number": 3642,
+    "type": "Hydro"
+  },
+  "36S.MESAUHE003": {
+    "area": 1,
+    "bus_name": "S.MESAUHE003",
+    "number": 36,
+    "type": "Hydro"
+  },
+  "3729PAMPLO-GO138": {
+    "area": 12,
+    "bus_name": "PAMPLO-GO138",
+    "number": 3729,
+    "type": "Unknown"
+  },
+  "3730CRISTA-GO138": {
+    "area": 12,
+    "bus_name": "CRISTA-GO138",
+    "number": 3730,
+    "type": "Unknown"
+  },
+  "3740PALMEIUTE099": {
+    "area": 73,
+    "bus_name": "PALMEIUTE099",
+    "number": 3740,
+    "type": "Steam"
+  },
+  "3741RIVIER-GO138": {
+    "area": 12,
+    "bus_name": "RIVIER-GO138",
+    "number": 3741,
+    "type": "Unknown"
+  },
+  "3742RIVIER-GO013": {
+    "area": 12,
+    "bus_name": "RIVIER-GO013",
+    "number": 3742,
+    "type": "Unknown"
+  },
+  "3744ESPORAUHE003": {
+    "area": 73,
+    "bus_name": "ESPORAUHE003",
+    "number": 3744,
+    "type": "Hydro"
+  },
+  "3749MOSQUIPCH013": {
+    "area": 73,
+    "bus_name": "MOSQUIPCH013",
+    "number": 3749,
+    "type": "PCH"
+  },
+  "3752CIBA--BIO013": {
+    "area": 73,
+    "bus_name": "CIBA--BIO013",
+    "number": 3752,
+    "type": "Steam"
+  },
+  "3759QUEIX-PCH138": {
+    "area": 12,
+    "bus_name": "QUEIX-PCH138",
+    "number": 3759,
+    "type": "PCH"
+  },
+  "3760CATAL-BIO069": {
+    "area": 12,
+    "bus_name": "CATAL-BIO069",
+    "number": 3760,
+    "type": "Steam"
+  },
+  "3772CAIAPOPCH138": {
+    "area": 73,
+    "bus_name": "CAIAPOPCH138",
+    "number": 3772,
+    "type": "PCH"
+  },
+  "3773PIRESR-GO138": {
+    "area": 12,
+    "bus_name": "PIRESR-GO138",
+    "number": 3773,
+    "type": "Unknown"
+  },
+  "3779TAMBORPCH013": {
+    "area": 73,
+    "bus_name": "TAMBORPCH013",
+    "number": 3779,
+    "type": "PCH"
+  },
+  "377SGONC-PCH138": {
+    "area": 3,
+    "bus_name": "SGONC-PCH138",
+    "number": 377,
+    "type": "PCH"
+  },
+  "3783RENIC-PCH013": {
+    "area": 73,
+    "bus_name": "RENIC-PCH013",
+    "number": 3783,
+    "type": "PCH"
+  },
+  "3797LAJES-PCH013": {
+    "area": 9,
+    "bus_name": "LAJES-PCH013",
+    "number": 3797,
+    "type": "PCH"
+  },
+  "37S.MESASIN000": {
+    "area": 1,
+    "bus_name": "S.MESASIN000",
+    "number": 37,
+    "type": "Synch.Comp."
+  },
+  "3811LIME2-BIO138": {
+    "area": 30,
+    "bus_name": "LIME2-BIO138",
+    "number": 3811,
+    "type": "Steam"
+  },
+  "3817MGUAC2BIO138": {
+    "area": 30,
+    "bus_name": "MGUAC2BIO138",
+    "number": 3817,
+    "type": "Steam"
+  },
+  "3823MGUA-CBIO138": {
+    "area": 30,
+    "bus_name": "MGUA-CBIO138",
+    "number": 3823,
+    "type": "Steam"
+  },
+  "3824RCLAR1BIO138": {
+    "area": 30,
+    "bus_name": "RCLAR1BIO138",
+    "number": 3824,
+    "type": "Steam"
+  },
+  "3825RCLAR2BIO138": {
+    "area": 30,
+    "bus_name": "RCLAR2BIO138",
+    "number": 3825,
+    "type": "Steam"
+  },
+  "3827SJBV1-BIO138": {
+    "area": 30,
+    "bus_name": "SJBV1-BIO138",
+    "number": 3827,
+    "type": "Steam"
+  },
+  "3829SRPA4-BIO138": {
+    "area": 30,
+    "bus_name": "SRPA4-BIO138",
+    "number": 3829,
+    "type": "Steam"
+  },
+  "3832VGSUL-BIO138": {
+    "area": 30,
+    "bus_name": "VGSUL-BIO138",
+    "number": 3832,
+    "type": "Steam"
+  },
+  "38GRAJA2SIN001": {
+    "area": 1,
+    "bus_name": "GRAJA2SIN001",
+    "number": 38,
+    "type": "Synch.Comp."
+  },
+  "3912INTER-BIO138": {
+    "area": 30,
+    "bus_name": "INTER-BIO138",
+    "number": 3912,
+    "type": "Steam"
+  },
+  "392UBERL1PCH138": {
+    "area": 3,
+    "bus_name": "UBERL1PCH138",
+    "number": 392,
+    "type": "PCH"
+  },
+  "3930TATUI2-SP138": {
+    "area": 30,
+    "bus_name": "TATUI2-SP138",
+    "number": 3930,
+    "type": "Unknown"
+  },
+  "3944APIAI--SP138": {
+    "area": 30,
+    "bus_name": "APIAI--SP138",
+    "number": 3944,
+    "type": "Unknown"
+  },
+  "3962NFLU-GUTE003": {
+    "area": 41,
+    "bus_name": "NFLU-GUTE003",
+    "number": 3962,
+    "type": "Steam"
+  },
+  "3963NFLU-VUTE001": {
+    "area": 41,
+    "bus_name": "NFLU-VUTE001",
+    "number": 3963,
+    "type": "Steam"
+  },
+  "3964CBRAV-UHE003": {
+    "area": 73,
+    "bus_name": "CBRAV-UHE003",
+    "number": 3964,
+    "type": "Hydro"
+  },
+  "3968SSALV-UHE002": {
+    "area": 73,
+    "bus_name": "SSALV-UHE002",
+    "number": 3968,
+    "type": "Hydro"
+  },
+  "3969COCAL2BIO138": {
+    "area": 30,
+    "bus_name": "COCAL2BIO138",
+    "number": 3969,
+    "type": "Steam"
+  },
+  "3974ELTB-GUTE006": {
+    "area": 41,
+    "bus_name": "ELTB-GUTE006",
+    "number": 3974,
+    "type": "Steam"
+  },
+  "3977MERCHAUTE000": {
+    "area": 41,
+    "bus_name": "MERCHAUTE000",
+    "number": 3977,
+    "type": "Steam"
+  },
+  "3978MERCH-UTE000": {
+    "area": 41,
+    "bus_name": "MERCH-UTE000",
+    "number": 3978,
+    "type": "Steam"
+  },
+  "3986ITAOC1UHE000": {
+    "area": 9,
+    "bus_name": "ITAOC1UHE000",
+    "number": 3986,
+    "type": "Hydro"
+  },
+  "3987FERRA-BIO138": {
+    "area": 30,
+    "bus_name": "FERRA-BIO138",
+    "number": 3987,
+    "type": "Steam"
+  },
+  "3993STAFE-PCH013": {
+    "area": 41,
+    "bus_name": "STAFE-PCH013",
+    "number": 3993,
+    "type": "PCH"
+  },
+  "3995BONFA-PCH013": {
+    "area": 41,
+    "bus_name": "BONFA-PCH013",
+    "number": 3995,
+    "type": "PCH"
+  },
+  "3997MONSE-PCH013": {
+    "area": 41,
+    "bus_name": "MONSE-PCH013",
+    "number": 3997,
+    "type": "PCH"
+  },
+  "3999PARACAPCH013": {
+    "area": 41,
+    "bus_name": "PARACAPCH013",
+    "number": 3999,
+    "type": "PCH"
+  },
+  "399VPALM-PCH138": {
+    "area": 3,
+    "bus_name": "VPALM-PCH138",
+    "number": 399,
+    "type": "PCH"
+  },
+  "4004VARGI2-MG138": {
+    "area": 3,
+    "bus_name": "VARGI2-MG138",
+    "number": 4004,
+    "type": "Unknown"
+  },
+  "4008CAXAM1PCH138": {
+    "area": 3,
+    "bus_name": "CAXAM1PCH138",
+    "number": 4008,
+    "type": "PCH"
+  },
+  "4009MIND1-PCH138": {
+    "area": 3,
+    "bus_name": "MIND1-PCH138",
+    "number": 4009,
+    "type": "PCH"
+  },
+  "4010TCOR1-PCH138": {
+    "area": 3,
+    "bus_name": "TCOR1-PCH138",
+    "number": 4010,
+    "type": "PCH"
+  },
+  "4016PIDACAUHE002": {
+    "area": 3,
+    "bus_name": "PIDACAUHE002",
+    "number": 4016,
+    "type": "Hydro"
+  },
+  "4020PNOVA-PCH138": {
+    "area": 3,
+    "bus_name": "PNOVA-PCH138",
+    "number": 4020,
+    "type": "PCH"
+  },
+  "402ARARQ2SIN003": {
+    "area": 71,
+    "bus_name": "ARARQ2SIN003",
+    "number": 402,
+    "type": "Synch.Comp."
+  },
+  "4038UNAI3-BIO138": {
+    "area": 3,
+    "bus_name": "UNAI3-BIO138",
+    "number": 4038,
+    "type": "Steam"
+  },
+  "4039QUEIMAUHE003": {
+    "area": 3,
+    "bus_name": "QUEIMAUHE003",
+    "number": 4039,
+    "type": "Hydro"
+  },
+  "403PIR88-UTE000": {
+    "area": 27,
+    "bus_name": "PIR88-UTE000",
+    "number": 403,
+    "type": "Steam"
+  },
+  "4042AIMOREUHE003": {
+    "area": 2,
+    "bus_name": "AIMOREUHE003",
+    "number": 4042,
+    "type": "Hydro"
+  },
+  "4044FUNGRDUHE003": {
+    "area": 3,
+    "bus_name": "FUNGRDUHE003",
+    "number": 4044,
+    "type": "Hydro"
+  },
+  "4048CLAU2-PCH138": {
+    "area": 3,
+    "bus_name": "CLAU2-PCH138",
+    "number": 4048,
+    "type": "PCH"
+  },
+  "404PIR230UTE002": {
+    "area": 27,
+    "bus_name": "PIR230UTE002",
+    "number": 404,
+    "type": "Steam"
+  },
+  "4052AMADO1UHE003": {
+    "area": 3,
+    "bus_name": "AMADO1UHE003",
+    "number": 4052,
+    "type": "Hydro"
+  },
+  "4054AMADO2UHE003": {
+    "area": 3,
+    "bus_name": "AMADO2UHE003",
+    "number": 4054,
+    "type": "Hydro"
+  },
+  "4057JFOR4-PCH138": {
+    "area": 3,
+    "bus_name": "JFOR4-PCH138",
+    "number": 4057,
+    "type": "PCH"
+  },
+  "4059BCOCA4PCH138": {
+    "area": 3,
+    "bus_name": "BCOCA4PCH138",
+    "number": 4059,
+    "type": "PCH"
+  },
+  "405NPIRA1UTE002": {
+    "area": 27,
+    "bus_name": "NPIRA1UTE002",
+    "number": 405,
+    "type": "Steam"
+  },
+  "4061CARATIPCH138": {
+    "area": 3,
+    "bus_name": "CARATIPCH138",
+    "number": 4061,
+    "type": "PCH"
+  },
+  "4063MANHU-PCH138": {
+    "area": 3,
+    "bus_name": "MANHU-PCH138",
+    "number": 4063,
+    "type": "PCH"
+  },
+  "4064IRAPE-UHE003": {
+    "area": 2,
+    "bus_name": "IRAPE-UHE003",
+    "number": 4064,
+    "type": "Hydro"
+  },
+  "4068R.BAIXUHE002": {
+    "area": 3,
+    "bus_name": "R.BAIXUHE002",
+    "number": 4068,
+    "type": "Hydro"
+  },
+  "406NPIRA2UTE002": {
+    "area": 27,
+    "bus_name": "NPIRA2UTE002",
+    "number": 406,
+    "type": "Steam"
+  },
+  "4073CURVE2PCH138": {
+    "area": 3,
+    "bus_name": "CURVE2PCH138",
+    "number": 4073,
+    "type": "PCH"
+  },
+  "4074CORI1-PCH138": {
+    "area": 3,
+    "bus_name": "CORI1-PCH138",
+    "number": 4074,
+    "type": "PCH"
+  },
+  "4091VTIJU-BIO138": {
+    "area": 72,
+    "bus_name": "VTIJU-BIO138",
+    "number": 4091,
+    "type": "Steam"
+  },
+  "4099FINOCE-MG138": {
+    "area": 3,
+    "bus_name": "FINOCE-MG138",
+    "number": 4099,
+    "type": "Unknown"
+  },
+  "409GUAIMBUFV034": {
+    "area": 7,
+    "bus_name": "GUAIMBUFV034",
+    "number": 409,
+    "type": "PV"
+  },
+  "4100JFORA1UTE001": {
+    "area": 72,
+    "bus_name": "JFORA1UTE001",
+    "number": 4100,
+    "type": "Steam"
+  },
+  "4111DME---BIO138": {
+    "area": 72,
+    "bus_name": "DME---BIO138",
+    "number": 4111,
+    "type": "Steam"
+  },
+  "4117ITAOC2PCH013": {
+    "area": 9,
+    "bus_name": "ITAOC2PCH013",
+    "number": 4117,
+    "type": "PCH"
+  },
+  "4134COLOM-BIO138": {
+    "area": 30,
+    "bus_name": "COLOM-BIO138",
+    "number": 4134,
+    "type": "Steam"
+  },
+  "4135SLUIZ-BIO138": {
+    "area": 30,
+    "bus_name": "SLUIZ-BIO138",
+    "number": 4135,
+    "type": "Steam"
+  },
+  "4136FLORAL-SP138": {
+    "area": 30,
+    "bus_name": "FLORAL-SP138",
+    "number": 4136,
+    "type": "Unknown"
+  },
+  "4137PAULI-BIO069": {
+    "area": 30,
+    "bus_name": "PAULI-BIO069",
+    "number": 4137,
+    "type": "Steam"
+  },
+  "4140GUARI-BIO069": {
+    "area": 30,
+    "bus_name": "GUARI-BIO069",
+    "number": 4140,
+    "type": "Steam"
+  },
+  "4143SJOAO-BIO138": {
+    "area": 30,
+    "bus_name": "SJOAO-BIO138",
+    "number": 4143,
+    "type": "Steam"
+  },
+  "4147VCP-MSBIO138": {
+    "area": 30,
+    "bus_name": "VCP-MSBIO138",
+    "number": 4147,
+    "type": "Steam"
+  },
+  "4148S.JUANPCH138": {
+    "area": 30,
+    "bus_name": "S.JUANPCH138",
+    "number": 4148,
+    "type": "PCH"
+  },
+  "4153CONQUPBIO138": {
+    "area": 30,
+    "bus_name": "CONQUPBIO138",
+    "number": 4153,
+    "type": "Steam"
+  },
+  "4155NOBLE-BIO138": {
+    "area": 30,
+    "bus_name": "NOBLE-BIO138",
+    "number": 4155,
+    "type": "Steam"
+  },
+  "4156BALDINBIO138": {
+    "area": 30,
+    "bus_name": "BALDINBIO138",
+    "number": 4156,
+    "type": "Steam"
+  },
+  "4157MERID-BIO138": {
+    "area": 30,
+    "bus_name": "MERID-BIO138",
+    "number": 4157,
+    "type": "Steam"
+  },
+  "4158VOTUP-BIO138": {
+    "area": 30,
+    "bus_name": "VOTUP-BIO138",
+    "number": 4158,
+    "type": "Steam"
+  },
+  "4159NOROE-BIO138": {
+    "area": 30,
+    "bus_name": "NOROE-BIO138",
+    "number": 4159,
+    "type": "Steam"
+  },
+  "4168GASA--BIO138": {
+    "area": 30,
+    "bus_name": "GASA--BIO138",
+    "number": 4168,
+    "type": "Steam"
+  },
+  "4180JFORA-UTE001": {
+    "area": 72,
+    "bus_name": "JFORA-UTE001",
+    "number": 4180,
+    "type": "Steam"
+  },
+  "4187U.ALC-BIO013": {
+    "area": 30,
+    "bus_name": "U.ALC-BIO013",
+    "number": 4187,
+    "type": "Steam"
+  },
+  "4190CENI--BIO138": {
+    "area": 30,
+    "bus_name": "CENI--BIO138",
+    "number": 4190,
+    "type": "Steam"
+  },
+  "4192ELDOR-BIO013": {
+    "area": 30,
+    "bus_name": "ELDOR-BIO013",
+    "number": 4192,
+    "type": "Steam"
+  },
+  "4198PARAN-BIO138": {
+    "area": 71,
+    "bus_name": "PARAN-BIO138",
+    "number": 4198,
+    "type": "Steam"
+  },
+  "4199TERMOVBIO138": {
+    "area": 30,
+    "bus_name": "TERMOVBIO138",
+    "number": 4199,
+    "type": "Steam"
+  },
+  "41VITOR2SIN001": {
+    "area": 1,
+    "bus_name": "VITOR2SIN001",
+    "number": 41,
+    "type": "Synch.Comp."
+  },
+  "4203TRG111UTE002": {
+    "area": 41,
+    "bus_name": "TRG111UTE002",
+    "number": 4203,
+    "type": "Steam"
+  },
+  "4204TRV18-UTE001": {
+    "area": 41,
+    "bus_name": "TRV18-UTE001",
+    "number": 4204,
+    "type": "Steam"
+  },
+  "4205TRV28-UTE001": {
+    "area": 41,
+    "bus_name": "TRV28-UTE001",
+    "number": 4205,
+    "type": "Steam"
+  },
+  "4206TRG212UTE002": {
+    "area": 41,
+    "bus_name": "TRG212UTE002",
+    "number": 4206,
+    "type": "Steam"
+  },
+  "4207TRG313UTE002": {
+    "area": 41,
+    "bus_name": "TRG313UTE002",
+    "number": 4207,
+    "type": "Steam"
+  },
+  "4208TRV38-UTE001": {
+    "area": 41,
+    "bus_name": "TRV38-UTE001",
+    "number": 4208,
+    "type": "Steam"
+  },
+  "4220B.GRA-BIO138": {
+    "area": 7,
+    "bus_name": "B.GRA-BIO138",
+    "number": 4220,
+    "type": "Steam"
+  },
+  "4222EQUIP-BIO138": {
+    "area": 7,
+    "bus_name": "EQUIP-BIO138",
+    "number": 4222,
+    "type": "Steam"
+  },
+  "4224GUARA-BIO138": {
+    "area": 7,
+    "bus_name": "GUARA-BIO138",
+    "number": 4224,
+    "type": "Steam"
+  },
+  "4225SELIS-BIO138": {
+    "area": 7,
+    "bus_name": "SELIS-BIO138",
+    "number": 4225,
+    "type": "Steam"
+  },
+  "4228S.ANT-BIO138": {
+    "area": 7,
+    "bus_name": "S.ANT-BIO138",
+    "number": 4228,
+    "type": "Steam"
+  },
+  "4229V.ROS-BIO138": {
+    "area": 7,
+    "bus_name": "V.ROS-BIO138",
+    "number": 4229,
+    "type": "Steam"
+  },
+  "4255IBA+BTBIO138": {
+    "area": 7,
+    "bus_name": "IBA+BTBIO138",
+    "number": 4255,
+    "type": "Steam"
+  },
+  "4283DAPED-BIO013": {
+    "area": 71,
+    "bus_name": "DAPED-BIO013",
+    "number": 4283,
+    "type": "Steam"
+  },
+  "4285UNIVA-BIO013": {
+    "area": 71,
+    "bus_name": "UNIVA-BIO013",
+    "number": 4285,
+    "type": "Steam"
+  },
+  "4300TLGA-GUTE002": {
+    "area": 71,
+    "bus_name": "TLGA-GUTE002",
+    "number": 4300,
+    "type": "Steam"
+  },
+  "4301TLGB-GUTE002": {
+    "area": 71,
+    "bus_name": "TLGB-GUTE002",
+    "number": 4301,
+    "type": "Steam"
+  },
+  "4330S.GON-PCH069": {
+    "area": 3,
+    "bus_name": "S.GON-PCH069",
+    "number": 4330,
+    "type": "PCH"
+  },
+  "4335ITAJU1-MG138": {
+    "area": 3,
+    "bus_name": "ITAJU1-MG138",
+    "number": 4335,
+    "type": "Unknown"
+  },
+  "4336ITABI1-MG138": {
+    "area": 3,
+    "bus_name": "ITABI1-MG138",
+    "number": 4336,
+    "type": "Unknown"
+  },
+  "4348VAZAN-UFV034": {
+    "area": 3,
+    "bus_name": "VAZAN-UFV034",
+    "number": 4348,
+    "type": "PV"
+  },
+  "4366PIRAP1UFV034": {
+    "area": 3,
+    "bus_name": "PIRAP1UFV034",
+    "number": 4366,
+    "type": "PV"
+  },
+  "4368VALADAPCH069": {
+    "area": 3,
+    "bus_name": "VALADAPCH069",
+    "number": 4368,
+    "type": "PCH"
+  },
+  "4370PARA4-UFV034": {
+    "area": 72,
+    "bus_name": "PARA4-UFV034",
+    "number": 4370,
+    "type": "PV"
+  },
+  "4371WDPCT-BIO138": {
+    "area": 3,
+    "bus_name": "WDPCT-BIO138",
+    "number": 4371,
+    "type": "Steam"
+  },
+  "4373JFORA1-MG023": {
+    "area": 2,
+    "bus_name": "JFORA1-MG023",
+    "number": 4373,
+    "type": "Unknown"
+  },
+  "4376JANAU3SIN002": {
+    "area": 72,
+    "bus_name": "JANAU3SIN002",
+    "number": 4376,
+    "type": "Synch.Comp."
+  },
+  "4377CORFAB-MG069": {
+    "area": 3,
+    "bus_name": "CORFAB-MG069",
+    "number": 4377,
+    "type": "Unknown"
+  },
+  "4386FRANC1-MG138": {
+    "area": 3,
+    "bus_name": "FRANC1-MG138",
+    "number": 4386,
+    "type": "Unknown"
+  },
+  "4394CONTA3-MG138": {
+    "area": 3,
+    "bus_name": "CONTA3-MG138",
+    "number": 4394,
+    "type": "Unknown"
+  },
+  "4398T.IRA1UTE000": {
+    "area": 3,
+    "bus_name": "T.IRA1UTE000",
+    "number": 4398,
+    "type": "Steam"
+  },
+  "4403APRAT-PCH034": {
+    "area": 49,
+    "bus_name": "APRAT-PCH034",
+    "number": 4403,
+    "type": "PCH"
+  },
+  "4404ABRAV-PCH034": {
+    "area": 49,
+    "bus_name": "ABRAV-PCH034",
+    "number": 4404,
+    "type": "PCH"
+  },
+  "4405ACLAR-PCH034": {
+    "area": 49,
+    "bus_name": "ACLAR-PCH034",
+    "number": 4405,
+    "type": "PCH"
+  },
+  "4416PAMPEAPCH069": {
+    "area": 49,
+    "bus_name": "PAMPEAPCH069",
+    "number": 4416,
+    "type": "PCH"
+  },
+  "4424TERSANPCH013": {
+    "area": 49,
+    "bus_name": "TERSANPCH013",
+    "number": 4424,
+    "type": "PCH"
+  },
+  "4430CIDEZAPCH013": {
+    "area": 49,
+    "bus_name": "CIDEZAPCH013",
+    "number": 4430,
+    "type": "PCH"
+  },
+  "44327GNAII-UTE004": {
+    "area": 41,
+    "bus_name": "GNAII-UTE004",
+    "number": 44327,
+    "type": "Steam"
+  },
+  "44329MAZL-GUTE001": {
+    "area": 41,
+    "bus_name": "MAZL-GUTE001",
+    "number": 44329,
+    "type": "Steam"
+  },
+  "4432JESUITPCH013": {
+    "area": 49,
+    "bus_name": "JESUITPCH013",
+    "number": 4432,
+    "type": "PCH"
+  },
+  "4434SAPEZAPCH013": {
+    "area": 49,
+    "bus_name": "SAPEZAPCH013",
+    "number": 4434,
+    "type": "PCH"
+  },
+  "4436DIVISAPCH013": {
+    "area": 49,
+    "bus_name": "DIVISAPCH013",
+    "number": 4436,
+    "type": "PCH"
+  },
+  "4438SEGREDPCH013": {
+    "area": 49,
+    "bus_name": "SEGREDPCH013",
+    "number": 4438,
+    "type": "PCH"
+  },
+  "4440ILHCOMPCH013": {
+    "area": 49,
+    "bus_name": "ILHCOMPCH013",
+    "number": 4440,
+    "type": "PCH"
+  },
+  "4442PAREC-PCH013": {
+    "area": 49,
+    "bus_name": "PAREC-PCH013",
+    "number": 4442,
+    "type": "PCH"
+  },
+  "4444ROMDOMPCH013": {
+    "area": 49,
+    "bus_name": "ROMDOMPCH013",
+    "number": 4444,
+    "type": "PCH"
+  },
+  "4446TELEG-PCH013": {
+    "area": 49,
+    "bus_name": "TELEG-PCH013",
+    "number": 4446,
+    "type": "PCH"
+  },
+  "4460BOCAIUPCH013": {
+    "area": 49,
+    "bus_name": "BOCAIUPCH013",
+    "number": 4460,
+    "type": "PCH"
+  },
+  "4462COLID-UHE003": {
+    "area": 91,
+    "bus_name": "COLID-UHE003",
+    "number": 4462,
+    "type": "Hydro"
+  },
+  "4468CACH--PCH013": {
+    "area": 49,
+    "bus_name": "CACH--PCH013",
+    "number": 4468,
+    "type": "PCH"
+  },
+  "4472CABDEBPCH000": {
+    "area": 49,
+    "bus_name": "CABDEBPCH000",
+    "number": 4472,
+    "type": "PCH"
+  },
+  "4474SALTA-PCH000": {
+    "area": 49,
+    "bus_name": "SALTA-PCH000",
+    "number": 4474,
+    "type": "PCH"
+  },
+  "4476FAZENDPCH000": {
+    "area": 49,
+    "bus_name": "FAZENDPCH000",
+    "number": 4476,
+    "type": "PCH"
+  },
+  "4478SINOP-UHE002": {
+    "area": 91,
+    "bus_name": "SINOP-UHE002",
+    "number": 4478,
+    "type": "Hydro"
+  },
+  "4489SMANO-UHE004": {
+    "area": 91,
+    "bus_name": "SMANO-UHE004",
+    "number": 4489,
+    "type": "Hydro"
+  },
+  "4492TPIRESUHE005": {
+    "area": 91,
+    "bus_name": "TPIRESUHE005",
+    "number": 4492,
+    "type": "Hydro"
+  },
+  "44GRAJA1SIN001": {
+    "area": 1,
+    "bus_name": "GRAJA1SIN001",
+    "number": 44,
+    "type": "Synch.Comp."
+  },
+  "4506BPEIX2PCH013": {
+    "area": 45,
+    "bus_name": "BPEIX2PCH013",
+    "number": 4506,
+    "type": "PCH"
+  },
+  "4513C.MAG-PCH138": {
+    "area": 45,
+    "bus_name": "C.MAG-PCH138",
+    "number": 4513,
+    "type": "PCH"
+  },
+  "4520P.PEDRUHE003": {
+    "area": 49,
+    "bus_name": "P.PEDRUHE003",
+    "number": 4520,
+    "type": "Hydro"
+  },
+  "4523ITIQ-1UHE002": {
+    "area": 49,
+    "bus_name": "ITIQ-1UHE002",
+    "number": 4523,
+    "type": "Hydro"
+  },
+  "4525ITIQ-2UHE002": {
+    "area": 49,
+    "bus_name": "ITIQ-2UHE002",
+    "number": 4525,
+    "type": "Hydro"
+  },
+  "4575LUC-RV-MT138": {
+    "area": 46,
+    "bus_name": "LUC-RV-MT138",
+    "number": 4575,
+    "type": "Unknown"
+  },
+  "4596CBA-G-UTE002": {
+    "area": 49,
+    "bus_name": "CBA-G-UTE002",
+    "number": 4596,
+    "type": "Steam"
+  },
+  "4597CBA-V-UTE001": {
+    "area": 49,
+    "bus_name": "CBA-V-UTE001",
+    "number": 4597,
+    "type": "Steam"
+  },
+  "4600JOSEG-PCH138": {
+    "area": 49,
+    "bus_name": "JOSEG-PCH138",
+    "number": 4600,
+    "type": "PCH"
+  },
+  "4603ROMDO-PCH138": {
+    "area": 49,
+    "bus_name": "ROMDO-PCH138",
+    "number": 4603,
+    "type": "PCH"
+  },
+  "4604JONASPPCH013": {
+    "area": 49,
+    "bus_name": "JONASPPCH013",
+    "number": 4604,
+    "type": "PCH"
+  },
+  "4605SLOUREPCH013": {
+    "area": 49,
+    "bus_name": "SLOUREPCH013",
+    "number": 4605,
+    "type": "PCH"
+  },
+  "46097QUED-PCH013": {
+    "area": 49,
+    "bus_name": "7QUED-PCH013",
+    "number": 4609,
+    "type": "PCH"
+  },
+  "4616LAJARIPCH138": {
+    "area": 49,
+    "bus_name": "LAJARIPCH138",
+    "number": 4616,
+    "type": "PCH"
+  },
+  "4626ROND3-PCH034": {
+    "area": 46,
+    "bus_name": "ROND3-PCH034",
+    "number": 4626,
+    "type": "PCH"
+  },
+  "4631SGABR-PCH013": {
+    "area": 49,
+    "bus_name": "SGABR-PCH013",
+    "number": 4631,
+    "type": "PCH"
+  },
+  "4637SOZIN-PCH138": {
+    "area": 46,
+    "bus_name": "SOZIN-PCH138",
+    "number": 4637,
+    "type": "PCH"
+  },
+  "4638STADE-PCH013": {
+    "area": 49,
+    "bus_name": "STADE-PCH013",
+    "number": 4638,
+    "type": "PCH"
+  },
+  "4649SUCUP-PCH013": {
+    "area": 49,
+    "bus_name": "SUCUP-PCH013",
+    "number": 4649,
+    "type": "PCH"
+  },
+  "4650PEQUI-PCH013": {
+    "area": 49,
+    "bus_name": "PEQUI-PCH013",
+    "number": 4650,
+    "type": "PCH"
+  },
+  "4651GUACU-BIO034": {
+    "area": 49,
+    "bus_name": "GUACU-BIO034",
+    "number": 4651,
+    "type": "Steam"
+  },
+  "4654MARAC-PCH034": {
+    "area": 49,
+    "bus_name": "MARAC-PCH034",
+    "number": 4654,
+    "type": "PCH"
+  },
+  "4658INXU--PCH138": {
+    "area": 49,
+    "bus_name": "INXU--PCH138",
+    "number": 4658,
+    "type": "PCH"
+  },
+  "4666N.XAV-PCH013": {
+    "area": 46,
+    "bus_name": "N.XAV-PCH013",
+    "number": 4666,
+    "type": "PCH"
+  },
+  "4688GLORI-PCH013": {
+    "area": 49,
+    "bus_name": "GLORI-PCH013",
+    "number": 4688,
+    "type": "PCH"
+  },
+  "4690PARAN-PCH138": {
+    "area": 46,
+    "bus_name": "PARAN-PCH138",
+    "number": 4690,
+    "type": "PCH"
+  },
+  "4691MESTREPCH013": {
+    "area": 49,
+    "bus_name": "MESTREPCH013",
+    "number": 4691,
+    "type": "PCH"
+  },
+  "4692S.CECIPCH013": {
+    "area": 49,
+    "bus_name": "S.CECIPCH013",
+    "number": 4692,
+    "type": "PCH"
+  },
+  "4697CAMBA-PCH013": {
+    "area": 49,
+    "bus_name": "CAMBA-PCH013",
+    "number": 4697,
+    "type": "PCH"
+  },
+  "4698EMBAU-PCH013": {
+    "area": 49,
+    "bus_name": "EMBAU-PCH013",
+    "number": 4698,
+    "type": "PCH"
+  },
+  "4699ARIPU-PCH013": {
+    "area": 46,
+    "bus_name": "ARIPU-PCH013",
+    "number": 4699,
+    "type": "PCH"
+  },
+  "4705N.MUT2-MT013": {
+    "area": 46,
+    "bus_name": "N.MUT2-MT013",
+    "number": 4705,
+    "type": "Unknown"
+  },
+  "4710SORRI2-MT069": {
+    "area": 46,
+    "bus_name": "SORRI2-MT069",
+    "number": 4710,
+    "type": "Unknown"
+  },
+  "4757CASC3-PCH013": {
+    "area": 49,
+    "bus_name": "CASC3-PCH013",
+    "number": 4757,
+    "type": "PCH"
+  },
+  "4758CASC2-PCH013": {
+    "area": 49,
+    "bus_name": "CASC2-PCH013",
+    "number": 4758,
+    "type": "PCH"
+  },
+  "4765C.VERD-MT034": {
+    "area": 46,
+    "bus_name": "C.VERD-MT034",
+    "number": 4765,
+    "type": "Unknown"
+  },
+  "4775PRIMAV-MT034": {
+    "area": 46,
+    "bus_name": "PRIMAV-MT034",
+    "number": 4775,
+    "type": "Unknown"
+  },
+  "4777PTINGA-MT138": {
+    "area": 46,
+    "bus_name": "PTINGA-MT138",
+    "number": 4777,
+    "type": "Unknown"
+  },
+  "4788BURIZ-PCH034": {
+    "area": 46,
+    "bus_name": "BURIZ-PCH034",
+    "number": 4788,
+    "type": "PCH"
+  },
+  "47VITOR1SIN001": {
+    "area": 1,
+    "bus_name": "VITOR1SIN001",
+    "number": 47,
+    "type": "Synch.Comp."
+  },
+  "4800FIGUE-PCH138": {
+    "area": 49,
+    "bus_name": "FIGUE-PCH138",
+    "number": 4800,
+    "type": "PCH"
+  },
+  "4802SALTO-PCH138": {
+    "area": 49,
+    "bus_name": "SALTO-PCH138",
+    "number": 4802,
+    "type": "PCH"
+  },
+  "4804GUAPO-UHE003": {
+    "area": 49,
+    "bus_name": "GUAPO-UHE003",
+    "number": 4804,
+    "type": "Hydro"
+  },
+  "4809JAURU-UHE003": {
+    "area": 49,
+    "bus_name": "JAURU-UHE003",
+    "number": 4809,
+    "type": "Hydro"
+  },
+  "4810INDIA-PCH138": {
+    "area": 49,
+    "bus_name": "INDIA-PCH138",
+    "number": 4810,
+    "type": "PCH"
+  },
+  "4811OMBRE-PCH138": {
+    "area": 49,
+    "bus_name": "OMBRE-PCH138",
+    "number": 4811,
+    "type": "PCH"
+  },
+  "4817SANTI-PCH034": {
+    "area": 49,
+    "bus_name": "SANTI-PCH034",
+    "number": 4817,
+    "type": "PCH"
+  },
+  "4818DIAMAN-MT034": {
+    "area": 46,
+    "bus_name": "DIAMAN-MT034",
+    "number": 4818,
+    "type": "Unknown"
+  },
+  "4827N.OLI-BIO013": {
+    "area": 46,
+    "bus_name": "N.OLI-BIO013",
+    "number": 4827,
+    "type": "Steam"
+  },
+  "4828B.BUG-BIO013": {
+    "area": 46,
+    "bus_name": "B.BUG-BIO013",
+    "number": 4828,
+    "type": "Steam"
+  },
+  "4831JUBA2-UHE003": {
+    "area": 49,
+    "bus_name": "JUBA2-UHE003",
+    "number": 4831,
+    "type": "Hydro"
+  },
+  "4834SACR2-PCH013": {
+    "area": 49,
+    "bus_name": "SACR2-PCH013",
+    "number": 4834,
+    "type": "PCH"
+  },
+  "4840BARU--PCH138": {
+    "area": 49,
+    "bus_name": "BARU--PCH138",
+    "number": 4840,
+    "type": "PCH"
+  },
+  "4842C.NOVO-MT138": {
+    "area": 46,
+    "bus_name": "C.NOVO-MT138",
+    "number": 4842,
+    "type": "Unknown"
+  },
+  "4844ITAMAR-MT069": {
+    "area": 46,
+    "bus_name": "ITAMAR-MT069",
+    "number": 4844,
+    "type": "Unknown"
+  },
+  "4846JUBA--UHE003": {
+    "area": 49,
+    "bus_name": "JUBA--UHE003",
+    "number": 4846,
+    "type": "Hydro"
+  },
+  "4849JUARA--MT138": {
+    "area": 46,
+    "bus_name": "JUARA--MT138",
+    "number": 4849,
+    "type": "Unknown"
+  },
+  "4851JUINA-PCH138": {
+    "area": 46,
+    "bus_name": "JUINA-PCH138",
+    "number": 4851,
+    "type": "PCH"
+  },
+  "4856RECANTPCH138": {
+    "area": 46,
+    "bus_name": "RECANTPCH138",
+    "number": 4856,
+    "type": "PCH"
+  },
+  "4857FAZBC-PCH138": {
+    "area": 46,
+    "bus_name": "FAZBC-PCH138",
+    "number": 4857,
+    "type": "PCH"
+  },
+  "4867ABRE--PCH138": {
+    "area": 49,
+    "bus_name": "ABRE--PCH138",
+    "number": 4867,
+    "type": "PCH"
+  },
+  "4877SCOR--PCH138": {
+    "area": 49,
+    "bus_name": "SCOR--PCH138",
+    "number": 4877,
+    "type": "PCH"
+  },
+  "4878SERRAB-MT138": {
+    "area": 46,
+    "bus_name": "SERRAB-MT138",
+    "number": 4878,
+    "type": "Unknown"
+  },
+  "4879COMODO-MT138": {
+    "area": 46,
+    "bus_name": "COMODO-MT138",
+    "number": 4879,
+    "type": "Unknown"
+  },
+  "4881SLUCI-PCH013": {
+    "area": 49,
+    "bus_name": "SLUCI-PCH013",
+    "number": 4881,
+    "type": "PCH"
+  },
+  "4890DARDA1UHE004": {
+    "area": 45,
+    "bus_name": "DARDA1UHE004",
+    "number": 4890,
+    "type": "Hydro"
+  },
+  "4891DARDA2UHE001": {
+    "area": 45,
+    "bus_name": "DARDA2UHE001",
+    "number": 4891,
+    "type": "Hydro"
+  },
+  "48IBIUNASIN004": {
+    "area": 1,
+    "bus_name": "IBIUNASIN004",
+    "number": 48,
+    "type": "Synch.Comp."
+  },
+  "4900JARAR-PCH138": {
+    "area": 49,
+    "bus_name": "JARAR-PCH138",
+    "number": 4900,
+    "type": "PCH"
+  },
+  "4903N.MUTU-MT138": {
+    "area": 46,
+    "bus_name": "N.MUTU-MT138",
+    "number": 4903,
+    "type": "Unknown"
+  },
+  "4905NMUTUM-MT034": {
+    "area": 46,
+    "bus_name": "NMUTUM-MT034",
+    "number": 4905,
+    "type": "Unknown"
+  },
+  "4907BURIT-PCH013": {
+    "area": 46,
+    "bus_name": "BURIT-PCH013",
+    "number": 4907,
+    "type": "PCH"
+  },
+  "4911BELZA-PCH034": {
+    "area": 46,
+    "bus_name": "BELZA-PCH034",
+    "number": 4911,
+    "type": "PCH"
+  },
+  "4912ABRAN-PCH034": {
+    "area": 46,
+    "bus_name": "ABRAN-PCH034",
+    "number": 4912,
+    "type": "PCH"
+  },
+  "4917CANOAQPCH069": {
+    "area": 49,
+    "bus_name": "CANOAQPCH069",
+    "number": 4917,
+    "type": "PCH"
+  },
+  "4919ARS-G-PCH013": {
+    "area": 49,
+    "bus_name": "ARS-G-PCH013",
+    "number": 4919,
+    "type": "PCH"
+  },
+  "4939CONFR-SIN001": {
+    "area": 46,
+    "bus_name": "CONFR-SIN001",
+    "number": 4939,
+    "type": "Synch.Comp."
+  },
+  "4969BNOR3-PCH013": {
+    "area": 49,
+    "bus_name": "BNOR3-PCH013",
+    "number": 4969,
+    "type": "PCH"
+  },
+  "4979ARIPUAPCH034": {
+    "area": 46,
+    "bus_name": "ARIPUAPCH034",
+    "number": 4979,
+    "type": "PCH"
+  },
+  "4982BRAZAU-PA138": {
+    "area": 46,
+    "bus_name": "BRAZAU-PA138",
+    "number": 4982,
+    "type": "Unknown"
+  },
+  "4984BNOR2-PCH007": {
+    "area": 49,
+    "bus_name": "BNOR2-PCH007",
+    "number": 4984,
+    "type": "PCH"
+  },
+  "4988BNOR1-PCH034": {
+    "area": 49,
+    "bus_name": "BNOR1-PCH034",
+    "number": 4988,
+    "type": "PCH"
+  },
+  "49913MAIO-PCH013": {
+    "area": 49,
+    "bus_name": "3MAIO-PCH013",
+    "number": 4991,
+    "type": "PCH"
+  },
+  "4993NMONTE-MT138": {
+    "area": 46,
+    "bus_name": "NMONTE-MT138",
+    "number": 4993,
+    "type": "Unknown"
+  },
+  "4996BURITIPCH013": {
+    "area": 49,
+    "bus_name": "BURITIPCH013",
+    "number": 4996,
+    "type": "PCH"
+  },
+  "4998BNOR4-PCH013": {
+    "area": 49,
+    "bus_name": "BNOR4-PCH013",
+    "number": 4998,
+    "type": "PCH"
+  },
+  "4999CURUA-PCH013": {
+    "area": 49,
+    "bus_name": "CURUA-PCH013",
+    "number": 4999,
+    "type": "PCH"
+  },
+  "5006PAFO1GUHE000": {
+    "area": 51,
+    "bus_name": "PAFO1GUHE000",
+    "number": 5006,
+    "type": "Hydro"
+  },
+  "5009PAF2G1UHE000": {
+    "area": 51,
+    "bus_name": "PAF2G1UHE000",
+    "number": 5009,
+    "type": "Hydro"
+  },
+  "500A.VERMUHE005": {
+    "area": 14,
+    "bus_name": "A.VERMUHE005",
+    "number": 500,
+    "type": "Hydro"
+  },
+  "5010PAF2G2UHE000": {
+    "area": 51,
+    "bus_name": "PAF2G2UHE000",
+    "number": 5010,
+    "type": "Hydro"
+  },
+  "5011PAF2G3UHE000": {
+    "area": 51,
+    "bus_name": "PAF2G3UHE000",
+    "number": 5011,
+    "type": "Hydro"
+  },
+  "5012PAF2G4UHE000": {
+    "area": 51,
+    "bus_name": "PAF2G4UHE000",
+    "number": 5012,
+    "type": "Hydro"
+  },
+  "5013PAF2G5UHE000": {
+    "area": 51,
+    "bus_name": "PAF2G5UHE000",
+    "number": 5013,
+    "type": "Hydro"
+  },
+  "5014PAF2G6UHE000": {
+    "area": 51,
+    "bus_name": "PAF2G6UHE000",
+    "number": 5014,
+    "type": "Hydro"
+  },
+  "5015PAF3G1UHE000": {
+    "area": 51,
+    "bus_name": "PAF3G1UHE000",
+    "number": 5015,
+    "type": "Hydro"
+  },
+  "5016PAF3G2UHE000": {
+    "area": 51,
+    "bus_name": "PAF3G2UHE000",
+    "number": 5016,
+    "type": "Hydro"
+  },
+  "501I.SOLTUHE013": {
+    "area": 8,
+    "bus_name": "I.SOLTUHE013",
+    "number": 501,
+    "type": "Hydro"
+  },
+  "5022PAFO-4UHE002": {
+    "area": 51,
+    "bus_name": "PAFO-4UHE002",
+    "number": 5022,
+    "type": "Hydro"
+  },
+  "502JUPIA-UHE010": {
+    "area": 8,
+    "bus_name": "JUPIA-UHE010",
+    "number": 502,
+    "type": "Hydro"
+  },
+  "5030ASALG1UHE000": {
+    "area": 51,
+    "bus_name": "ASALG1UHE000",
+    "number": 5030,
+    "type": "Hydro"
+  },
+  "5032ASALG3UHE000": {
+    "area": 51,
+    "bus_name": "ASALG3UHE000",
+    "number": 5032,
+    "type": "Hydro"
+  },
+  "503JUPI--UHE002": {
+    "area": 8,
+    "bus_name": "JUPI--UHE002",
+    "number": 503,
+    "type": "Hydro"
+  },
+  "5040LBARR2EOL036": {
+    "area": 57,
+    "bus_name": "LBARR2EOL036",
+    "number": 5040,
+    "type": "Wind"
+  },
+  "5044CUTIAAEOL047": {
+    "area": 55,
+    "bus_name": "CUTIAAEOL047",
+    "number": 5044,
+    "type": "Wind"
+  },
+  "5048BABIL2EOL026": {
+    "area": 53,
+    "bus_name": "BABIL2EOL026",
+    "number": 5048,
+    "type": "Wind"
+  },
+  "5051LGONG1UHE001": {
+    "area": 51,
+    "bus_name": "LGONG1UHE001",
+    "number": 5051,
+    "type": "Hydro"
+  },
+  "5054LGONG4UHE001": {
+    "area": 51,
+    "bus_name": "LGONG4UHE001",
+    "number": 5054,
+    "type": "Hydro"
+  },
+  "505ROSAN2UHE002": {
+    "area": 15,
+    "bus_name": "ROSAN2UHE002",
+    "number": 505,
+    "type": "Hydro"
+  },
+  "5061XINGO-UHE002": {
+    "area": 51,
+    "bus_name": "XINGO-UHE002",
+    "number": 5061,
+    "type": "Hydro"
+  },
+  "5067CAETITEOL035": {
+    "area": 53,
+    "bus_name": "CAETITEOL035",
+    "number": 5067,
+    "type": "Wind"
+  },
+  "506JURUMIUHE002": {
+    "area": 15,
+    "bus_name": "JURUMIUHE002",
+    "number": 506,
+    "type": "Hydro"
+  },
+  "5075CALAN1EOL030": {
+    "area": 55,
+    "bus_name": "CALAN1EOL030",
+    "number": 5075,
+    "type": "Wind"
+  },
+  "5078CUTIABEOL050": {
+    "area": 55,
+    "bus_name": "CUTIABEOL050",
+    "number": 5078,
+    "type": "Wind"
+  },
+  "5079SSAN12EOL025": {
+    "area": 55,
+    "bus_name": "SSAN12EOL025",
+    "number": 5079,
+    "type": "Wind"
+  },
+  "507CAPIVAUHE004": {
+    "area": 15,
+    "bus_name": "CAPIVAUHE004",
+    "number": 507,
+    "type": "Hydro"
+  },
+  "508CANOA1UHE003": {
+    "area": 15,
+    "bus_name": "CANOA1UHE003",
+    "number": 508,
+    "type": "Hydro"
+  },
+  "509CANOA2UHE003": {
+    "area": 15,
+    "bus_name": "CANOA2UHE003",
+    "number": 509,
+    "type": "Hydro"
+  },
+  "50TPRETOSIN001": {
+    "area": 1,
+    "bus_name": "TPRETOSIN001",
+    "number": 50,
+    "type": "Synch.Comp."
+  },
+  "5103ANGELI-PE069": {
+    "area": 55,
+    "bus_name": "ANGELI-PE069",
+    "number": 5103,
+    "type": "Unknown"
+  },
+  "510PPRIMAUHE012": {
+    "area": 8,
+    "bus_name": "PPRIMAUHE012",
+    "number": 510,
+    "type": "Hydro"
+  },
+  "5113R.LARG-AL069": {
+    "area": 55,
+    "bus_name": "R.LARG-AL069",
+    "number": 5113,
+    "type": "Unknown"
+  },
+  "511ROSAN1UHE002": {
+    "area": 15,
+    "bus_name": "ROSAN1UHE002",
+    "number": 511,
+    "type": "Hydro"
+  },
+  "5124BL-SULEOL074": {
+    "area": 55,
+    "bus_name": "BL-SULEOL074",
+    "number": 5124,
+    "type": "Wind"
+  },
+  "5126CUTIACEOL052": {
+    "area": 55,
+    "bus_name": "CUTIACEOL052",
+    "number": 5126,
+    "type": "Wind"
+  },
+  "5127CABPRBEOL035": {
+    "area": 55,
+    "bus_name": "CABPRBEOL035",
+    "number": 5127,
+    "type": "Wind"
+  },
+  "512S.GRD-UHE004": {
+    "area": 15,
+    "bus_name": "S.GRD-UHE004",
+    "number": 512,
+    "type": "Hydro"
+  },
+  "5133PIRAPA-PE069": {
+    "area": 55,
+    "bus_name": "PIRAPA-PE069",
+    "number": 5133,
+    "type": "Unknown"
+  },
+  "5134TCB---UTE000": {
+    "area": 55,
+    "bus_name": "TCB---UTE000",
+    "number": 5134,
+    "type": "Steam"
+  },
+  "513TAQUARUHE004": {
+    "area": 15,
+    "bus_name": "TAQUARUHE004",
+    "number": 513,
+    "type": "Hydro"
+  },
+  "5145RCDSIESIN001": {
+    "area": 55,
+    "bus_name": "RCDSIESIN001",
+    "number": 5145,
+    "type": "Synch.Comp."
+  },
+  "5147RCDALSSIN001": {
+    "area": 55,
+    "bus_name": "RCDALSSIN001",
+    "number": 5147,
+    "type": "Synch.Comp."
+  },
+  "514CHAVANUHE004": {
+    "area": 15,
+    "bus_name": "CHAVANUHE004",
+    "number": 514,
+    "type": "Hydro"
+  },
+  "5151TERPEGUTE000": {
+    "area": 55,
+    "bus_name": "TERPEGUTE000",
+    "number": 5151,
+    "type": "Steam"
+  },
+  "5154TERPEVUTE000": {
+    "area": 55,
+    "bus_name": "TERPEVUTE000",
+    "number": 5154,
+    "type": "Steam"
+  },
+  "515BARIRIUHE002": {
+    "area": 14,
+    "bus_name": "BARIRIUHE002",
+    "number": 515,
+    "type": "Hydro"
+  },
+  "516BBONITUHE004": {
+    "area": 14,
+    "bus_name": "BBONITUHE004",
+    "number": 516,
+    "type": "Hydro"
+  },
+  "5170CALCARUFV136": {
+    "area": 56,
+    "bus_name": "CALCARUFV136",
+    "number": 5170,
+    "type": "PV"
+  },
+  "5178PEIII-UTE000": {
+    "area": 55,
+    "bus_name": "PEIII-UTE000",
+    "number": 5178,
+    "type": "Steam"
+  },
+  "517IBITINUHE003": {
+    "area": 14,
+    "bus_name": "IBITINUHE003",
+    "number": 517,
+    "type": "Hydro"
+  },
+  "5183P.FERR-PE069": {
+    "area": 55,
+    "bus_name": "P.FERR-PE069",
+    "number": 5183,
+    "type": "Unknown"
+  },
+  "5187PFERROUTE000": {
+    "area": 55,
+    "bus_name": "PFERROUTE000",
+    "number": 5187,
+    "type": "Steam"
+  },
+  "5188TMANAUUTE000": {
+    "area": 55,
+    "bus_name": "TMANAUUTE000",
+    "number": 5188,
+    "type": "Steam"
+  },
+  "518N.AVANUHE003": {
+    "area": 14,
+    "bus_name": "N.AVANUHE003",
+    "number": 518,
+    "type": "Hydro"
+  },
+  "519PROMISUHE003": {
+    "area": 14,
+    "bus_name": "PROMISUHE003",
+    "number": 519,
+    "type": "Hydro"
+  },
+  "5203GOIANI-PE069": {
+    "area": 55,
+    "bus_name": "GOIANI-PE069",
+    "number": 5203,
+    "type": "Unknown"
+  },
+  "5203IRMAOUHE005": {
+    "area": 8,
+    "bus_name": "3IRMAOUHE005",
+    "number": 520,
+    "type": "Hydro"
+  },
+  "5205GNNT1-SIN000": {
+    "area": 55,
+    "bus_name": "GNNT1-SIN000",
+    "number": 5205,
+    "type": "Synch.Comp."
+  },
+  "5218UTEPB-UTE000": {
+    "area": 55,
+    "bus_name": "UTEPB-UTE000",
+    "number": 5218,
+    "type": "Unknown"
+  },
+  "5219UTENE-UTE000": {
+    "area": 55,
+    "bus_name": "UTENE-UTE000",
+    "number": 5219,
+    "type": "Unknown"
+  },
+  "521CACONDUHE002": {
+    "area": 14,
+    "bus_name": "CACONDUHE002",
+    "number": 521,
+    "type": "Hydro"
+  },
+  "5220CGRAN-UTE000": {
+    "area": 55,
+    "bus_name": "CGRAN-UTE000",
+    "number": 5220,
+    "type": "Steam"
+  },
+  "5226CGRAN2-PB069": {
+    "area": 55,
+    "bus_name": "CGRAN2-PB069",
+    "number": 5226,
+    "type": "Unknown"
+  },
+  "522ECUNHAUHE004": {
+    "area": 14,
+    "bus_name": "ECUNHAUHE004",
+    "number": 522,
+    "type": "Hydro"
+  },
+  "5232CGD1--CER000": {
+    "area": 55,
+    "bus_name": "CGD1--CER000",
+    "number": 5232,
+    "type": "Unknown"
+  },
+  "523LIMOEIUHE002": {
+    "area": 14,
+    "bus_name": "LIMOEIUHE002",
+    "number": 523,
+    "type": "Hydro"
+  },
+  "5240POT1--UTE000": {
+    "area": 55,
+    "bus_name": "POT1--UTE000",
+    "number": 5240,
+    "type": "Steam"
+  },
+  "5242POT3--UTE000": {
+    "area": 55,
+    "bus_name": "POT3--UTE000",
+    "number": 5242,
+    "type": "Steam"
+  },
+  "5243NATAL2-RN069": {
+    "area": 55,
+    "bus_name": "NATAL2-RN069",
+    "number": 5243,
+    "type": "Unknown"
+  },
+  "5246NATAL3-RN069": {
+    "area": 55,
+    "bus_name": "NATAL3-RN069",
+    "number": 5246,
+    "type": "Unknown"
+  },
+  "5248CGDT3--PB013": {
+    "area": 55,
+    "bus_name": "CGDT3--PB013",
+    "number": 5248,
+    "type": "Unknown"
+  },
+  "524BARIR2UHE001": {
+    "area": 14,
+    "bus_name": "BARIR2UHE001",
+    "number": 524,
+    "type": "Hydro"
+  },
+  "525JAGUA-UHE002": {
+    "area": 8,
+    "bus_name": "JAGUA-UHE002",
+    "number": 525,
+    "type": "Hydro"
+  },
+  "526PARAIBUHE002": {
+    "area": 8,
+    "bus_name": "PARAIBUHE002",
+    "number": 526,
+    "type": "Hydro"
+  },
+  "5273SRITA2-PB069": {
+    "area": 55,
+    "bus_name": "SRITA2-PB069",
+    "number": 5273,
+    "type": "Unknown"
+  },
+  "5283RIBEIR-PE069": {
+    "area": 55,
+    "bus_name": "RIBEIR-PE069",
+    "number": 5283,
+    "type": "Unknown"
+  },
+  "5293PENEDO-AL069": {
+    "area": 55,
+    "bus_name": "PENEDO-AL069",
+    "number": 5293,
+    "type": "Unknown"
+  },
+  "5294CRLANDEOL045": {
+    "area": 54,
+    "bus_name": "CRLANDEOL045",
+    "number": 5294,
+    "type": "Wind"
+  },
+  "5298FASEIIEOL077": {
+    "area": 57,
+    "bus_name": "FASEIIEOL077",
+    "number": 5298,
+    "type": "Wind"
+  },
+  "5299FLORE-UFV000": {
+    "area": 56,
+    "bus_name": "FLORE-UFV000",
+    "number": 5299,
+    "type": "PV"
+  },
+  "5315RIOALTUFV000": {
+    "area": 56,
+    "bus_name": "RIOALTUFV000",
+    "number": 5315,
+    "type": "PV"
+  },
+  "531I.SOLTSIN000": {
+    "area": 8,
+    "bus_name": "I.SOLTSIN000",
+    "number": 531,
+    "type": "Synch.Comp."
+  },
+  "5320CATAVEEOL014": {
+    "area": 56,
+    "bus_name": "CATAVEEOL014",
+    "number": 5320,
+    "type": "Wind"
+  },
+  "5322LBARR1EOL029": {
+    "area": 57,
+    "bus_name": "LBARR1EOL029",
+    "number": 5322,
+    "type": "Wind"
+  },
+  "532EMBU--SIN001": {
+    "area": 5,
+    "bus_name": "EMBU--SIN001",
+    "number": 532,
+    "type": "Synch.Comp."
+  },
+  "533SANGELSIN001": {
+    "area": 5,
+    "bus_name": "SANGELSIN001",
+    "number": 533,
+    "type": "Synch.Comp."
+  },
+  "5363SUAPE3-PE069": {
+    "area": 55,
+    "bus_name": "SUAPE3-PE069",
+    "number": 5363,
+    "type": "Unknown"
+  },
+  "5372RNEST--PE230": {
+    "area": 55,
+    "bus_name": "RNEST--PE230",
+    "number": 5372,
+    "type": "Unknown"
+  },
+  "5374SANTOSEOL032": {
+    "area": 56,
+    "bus_name": "SANTOSEOL032",
+    "number": 5374,
+    "type": "Wind"
+  },
+  "5383AQUIR2-CE069": {
+    "area": 56,
+    "bus_name": "AQUIR2-CE069",
+    "number": 5383,
+    "type": "Unknown"
+  },
+  "53NOVT-GUTE003": {
+    "area": 41,
+    "bus_name": "NOVT-GUTE003",
+    "number": 53,
+    "type": "Steam"
+  },
+  "5433RUSSAS-CE069": {
+    "area": 56,
+    "bus_name": "RUSSAS-CE069",
+    "number": 5433,
+    "type": "Unknown"
+  },
+  "5439CANOAQEOL067": {
+    "area": 56,
+    "bus_name": "CANOAQEOL067",
+    "number": 5439,
+    "type": "Wind"
+  },
+  "5443MSD----RN069": {
+    "area": 56,
+    "bus_name": "MSD----RN069",
+    "number": 5443,
+    "type": "Unknown"
+  },
+  "5459ALEGRIEOL092": {
+    "area": 55,
+    "bus_name": "ALEGRIEOL092",
+    "number": 5459,
+    "type": "Wind"
+  },
+  "5460MRU---UTE000": {
+    "area": 56,
+    "bus_name": "MRU---UTE000",
+    "number": 5460,
+    "type": "Steam"
+  },
+  "5463ACU2---RN069": {
+    "area": 55,
+    "bus_name": "ACU2---RN069",
+    "number": 5463,
+    "type": "Unknown"
+  },
+  "5466UJSP--UTE000": {
+    "area": 55,
+    "bus_name": "UJSP--UTE000",
+    "number": 5466,
+    "type": "Steam"
+  },
+  "5468ACU2---RN138": {
+    "area": 55,
+    "bus_name": "ACU2---RN138",
+    "number": 5468,
+    "type": "Unknown"
+  },
+  "5472PMORGAEOL047": {
+    "area": 56,
+    "bus_name": "PMORGAEOL047",
+    "number": 5472,
+    "type": "Wind"
+  },
+  "5473D.GOUV-CE069": {
+    "area": 56,
+    "bus_name": "D.GOUV-CE069",
+    "number": 5473,
+    "type": "Unknown"
+  },
+  "5492PIRIPI-PI138": {
+    "area": 57,
+    "bus_name": "PIRIPI-PI138",
+    "number": 5492,
+    "type": "Unknown"
+  },
+  "5493PIRIPI-PI069": {
+    "area": 57,
+    "bus_name": "PIRIPI-PI069",
+    "number": 5493,
+    "type": "Unknown"
+  },
+  "54NOVT-VUTE000": {
+    "area": 41,
+    "bus_name": "NOVT-VUTE000",
+    "number": 54,
+    "type": "Steam"
+  },
+  "5503TERESI-PI069": {
+    "area": 57,
+    "bus_name": "TERESI-PI069",
+    "number": 5503,
+    "type": "Unknown"
+  },
+  "5509TERESISIN001": {
+    "area": 57,
+    "bus_name": "TERESISIN001",
+    "number": 5509,
+    "type": "Synch.Comp."
+  },
+  "5520UBE1--UHE001": {
+    "area": 57,
+    "bus_name": "UBE1--UHE001",
+    "number": 5520,
+    "type": "Hydro"
+  },
+  "5522UBE2--UHE001": {
+    "area": 57,
+    "bus_name": "UBE2--UHE001",
+    "number": 5522,
+    "type": "Hydro"
+  },
+  "5523BOAESPSIN001": {
+    "area": 57,
+    "bus_name": "BOAESPSIN001",
+    "number": 5523,
+    "type": "Synch.Comp."
+  },
+  "5557TOC.I1UTE000": {
+    "area": 58,
+    "bus_name": "TOC.I1UTE000",
+    "number": 5557,
+    "type": "Steam"
+  },
+  "5558TOC.I2UTE000": {
+    "area": 58,
+    "bus_name": "TOC.I2UTE000",
+    "number": 5558,
+    "type": "Steam"
+  },
+  "5586PDUTRASIN002": {
+    "area": 58,
+    "bus_name": "PDUTRASIN002",
+    "number": 5586,
+    "type": "Synch.Comp."
+  },
+  "5593IMPERA-MA069": {
+    "area": 58,
+    "bus_name": "IMPERA-MA069",
+    "number": 5593,
+    "type": "Unknown"
+  },
+  "5595ESTREIUHE007": {
+    "area": 58,
+    "bus_name": "ESTREIUHE007",
+    "number": 5595,
+    "type": "Hydro"
+  },
+  "5596IMPERASIN003": {
+    "area": 58,
+    "bus_name": "IMPERASIN003",
+    "number": 5596,
+    "type": "Synch.Comp."
+  },
+  "5600CHAP1BEOL045": {
+    "area": 57,
+    "bus_name": "CHAP1BEOL045",
+    "number": 5600,
+    "type": "Wind"
+  },
+  "5609PITAQUUTE001": {
+    "area": 58,
+    "bus_name": "PITAQUUTE001",
+    "number": 5609,
+    "type": "Steam"
+  },
+  "5612TRACTBEOL000": {
+    "area": 56,
+    "bus_name": "TRACTBEOL000",
+    "number": 5612,
+    "type": "Wind"
+  },
+  "5622CHAP3BEOL065": {
+    "area": 57,
+    "bus_name": "CHAP3BEOL065",
+    "number": 5622,
+    "type": "Wind"
+  },
+  "5623COREMA-PB069": {
+    "area": 56,
+    "bus_name": "COREMA-PB069",
+    "number": 5623,
+    "type": "Unknown"
+  },
+  "5633ICO----CE069": {
+    "area": 56,
+    "bus_name": "ICO----CE069",
+    "number": 5633,
+    "type": "Unknown"
+  },
+  "5642PARNIVUTE003": {
+    "area": 58,
+    "bus_name": "PARNIVUTE003",
+    "number": 5642,
+    "type": "Steam"
+  },
+  "5644UTENVNUTE000": {
+    "area": 58,
+    "bus_name": "UTENVNUTE000",
+    "number": 5644,
+    "type": "Unknown"
+  },
+  "5646MAR3-GUTE000": {
+    "area": 58,
+    "bus_name": "MAR3-GUTE000",
+    "number": 5646,
+    "type": "Steam"
+  },
+  "5647MARIV-UTE000": {
+    "area": 58,
+    "bus_name": "MARIV-UTE000",
+    "number": 5647,
+    "type": "Steam"
+  },
+  "5648MARV--UTE000": {
+    "area": 58,
+    "bus_name": "MARV--UTE000",
+    "number": 5648,
+    "type": "Steam"
+  },
+  "5650NVNC2-UTE000": {
+    "area": 58,
+    "bus_name": "NVNC2-UTE000",
+    "number": 5650,
+    "type": "Steam"
+  },
+  "5653CAUIPE-CE069": {
+    "area": 56,
+    "bus_name": "CAUIPE-CE069",
+    "number": 5653,
+    "type": "Unknown"
+  },
+  "5654T.FTZGUTE000": {
+    "area": 56,
+    "bus_name": "T.FTZGUTE000",
+    "number": 5654,
+    "type": "Steam"
+  },
+  "5655T.FTZVUTE000": {
+    "area": 56,
+    "bus_name": "T.FTZVUTE000",
+    "number": 5655,
+    "type": "Steam"
+  },
+  "5658PPECEMUTE000": {
+    "area": 56,
+    "bus_name": "PPECEMUTE000",
+    "number": 5658,
+    "type": "Steam"
+  },
+  "5659PPD---UTE000": {
+    "area": 56,
+    "bus_name": "PPD---UTE000",
+    "number": 5659,
+    "type": "Steam"
+  },
+  "5660TERMOCUTE000": {
+    "area": 56,
+    "bus_name": "TERMOCUTE000",
+    "number": 5660,
+    "type": "Steam"
+  },
+  "5672VERONIEOL033": {
+    "area": 57,
+    "bus_name": "VERONIEOL033",
+    "number": 5672,
+    "type": "Wind"
+  },
+  "5698SUZAN-UTE002": {
+    "area": 58,
+    "bus_name": "SUZAN-UTE002",
+    "number": 5698,
+    "type": "Steam"
+  },
+  "5700PSE-G-UTE000": {
+    "area": 54,
+    "bus_name": "PSE-G-UTE000",
+    "number": 5700,
+    "type": "Steam"
+  },
+  "5702SOLFUTUFV072": {
+    "area": 56,
+    "bus_name": "SOLFUTUFV072",
+    "number": 5702,
+    "type": "PV"
+  },
+  "5713ITABAI-SE069": {
+    "area": 54,
+    "bus_name": "ITABAI-SE069",
+    "number": 5713,
+    "type": "Unknown"
+  },
+  "5729SVACASEOL022": {
+    "area": 55,
+    "bus_name": "SVACASEOL022",
+    "number": 5729,
+    "type": "Wind"
+  },
+  "5744CNOVA-EOL026": {
+    "area": 53,
+    "bus_name": "CNOVA-EOL026",
+    "number": 5744,
+    "type": "Wind"
+  },
+  "5746CSP---UTE002": {
+    "area": 56,
+    "bus_name": "CSP---UTE002",
+    "number": 5746,
+    "type": "Steam"
+  },
+  "5757CMD-BP-BA069": {
+    "area": 54,
+    "bus_name": "CMD-BP-BA069",
+    "number": 5757,
+    "type": "Unknown"
+  },
+  "5762AREMBEUTE000": {
+    "area": 54,
+    "bus_name": "AREMBEUTE000",
+    "number": 5762,
+    "type": "Steam"
+  },
+  "5764MURICIUTE000": {
+    "area": 54,
+    "bus_name": "MURICIUTE000",
+    "number": 5764,
+    "type": "Steam"
+  },
+  "5771CMDBP2SIN000": {
+    "area": 54,
+    "bus_name": "CMDBP2SIN000",
+    "number": 5771,
+    "type": "Synch.Comp."
+  },
+  "5778CMDBP1SIN002": {
+    "area": 54,
+    "bus_name": "CMDBP1SIN002",
+    "number": 5778,
+    "type": "Synch.Comp."
+  },
+  "5799CSP---UTE001": {
+    "area": 56,
+    "bus_name": "CSP---UTE001",
+    "number": 5799,
+    "type": "Steam"
+  },
+  "5800PSE-V-UTE000": {
+    "area": 54,
+    "bus_name": "PSE-V-UTE000",
+    "number": 5800,
+    "type": "Steam"
+  },
+  "5803COTEGI-BA069": {
+    "area": 54,
+    "bus_name": "COTEGI-BA069",
+    "number": 5803,
+    "type": "Unknown"
+  },
+  "5805ASSUV-UFV030": {
+    "area": 55,
+    "bus_name": "ASSUV-UFV030",
+    "number": 5805,
+    "type": "PV"
+  },
+  "5815MAR3-VUTE000": {
+    "area": 58,
+    "bus_name": "MAR3-VUTE000",
+    "number": 5815,
+    "type": "Steam"
+  },
+  "5818S.GONCUFV000": {
+    "area": 57,
+    "bus_name": "S.GONCUFV000",
+    "number": 5818,
+    "type": "PV"
+  },
+  "5820GLOBA1UTE000": {
+    "area": 54,
+    "bus_name": "GLOBA1UTE000",
+    "number": 5820,
+    "type": "Steam"
+  },
+  "5823GLOBA2UTE000": {
+    "area": 54,
+    "bus_name": "GLOBA2UTE000",
+    "number": 5823,
+    "type": "Steam"
+  },
+  "5827CFURTAUTE000": {
+    "area": 54,
+    "bus_name": "CFURTAUTE000",
+    "number": 5827,
+    "type": "Steam"
+  },
+  "5840BRIGDAUFV000": {
+    "area": 56,
+    "bus_name": "BRIGDAUFV000",
+    "number": 5840,
+    "type": "PV"
+  },
+  "5855PACABA-CE069": {
+    "area": 56,
+    "bus_name": "PACABA-CE069",
+    "number": 5855,
+    "type": "Unknown"
+  },
+  "5863MTTT04-BA011": {
+    "area": 54,
+    "bus_name": "MTTT04-BA011",
+    "number": 5863,
+    "type": "Unknown"
+  },
+  "5864MTTT05-BA011": {
+    "area": 54,
+    "bus_name": "MTTT05-BA011",
+    "number": 5864,
+    "type": "Unknown"
+  },
+  "5879VSANEAEOL029": {
+    "area": 53,
+    "bus_name": "VSANEAEOL029",
+    "number": 5879,
+    "type": "Wind"
+  },
+  "5888P.CAVAUHE000": {
+    "area": 54,
+    "bus_name": "P.CAVAUHE000",
+    "number": 5888,
+    "type": "Hydro"
+  },
+  "5899DELTACEOL000": {
+    "area": 58,
+    "bus_name": "DELTACEOL000",
+    "number": 5899,
+    "type": "Wind"
+  },
+  "5900CHAFAREOL000": {
+    "area": 55,
+    "bus_name": "CHAFAREOL000",
+    "number": 5900,
+    "type": "Wind"
+  },
+  "5901VILAACEOL000": {
+    "area": 56,
+    "bus_name": "VILAACEOL000",
+    "number": 5901,
+    "type": "Wind"
+  },
+  "5905VSANGEEOL000": {
+    "area": 57,
+    "bus_name": "VSANGEEOL000",
+    "number": 5905,
+    "type": "Wind"
+  },
+  "5913AVENTDEOL000": {
+    "area": 55,
+    "bus_name": "AVENTDEOL000",
+    "number": 5913,
+    "type": "Wind"
+  },
+  "5914SAROSAEOL000": {
+    "area": 55,
+    "bus_name": "SAROSAEOL000",
+    "number": 5914,
+    "type": "Wind"
+  },
+  "5915FUNIL--BA013": {
+    "area": 54,
+    "bus_name": "FUNIL--BA013",
+    "number": 5915,
+    "type": "Unknown"
+  },
+  "5916VSMEL2EOL036": {
+    "area": 55,
+    "bus_name": "VSMEL2EOL036",
+    "number": 5916,
+    "type": "Wind"
+  },
+  "5920UFL01GUHE000": {
+    "area": 54,
+    "bus_name": "UFL01GUHE000",
+    "number": 5920,
+    "type": "Hydro"
+  },
+  "5921UFL02GUHE000": {
+    "area": 54,
+    "bus_name": "UFL02GUHE000",
+    "number": 5921,
+    "type": "Hydro"
+  },
+  "5922UFL03GUHE000": {
+    "area": 54,
+    "bus_name": "UFL03GUHE000",
+    "number": 5922,
+    "type": "Hydro"
+  },
+  "5935ALEX--UFV000": {
+    "area": 56,
+    "bus_name": "ALEX--UFV000",
+    "number": 5935,
+    "type": "PV"
+  },
+  "5938LAVRASUFV000": {
+    "area": 56,
+    "bus_name": "LAVRASUFV000",
+    "number": 5938,
+    "type": "PV"
+  },
+  "5940VSJNUAEOL000": {
+    "area": 53,
+    "bus_name": "VSJNUAEOL000",
+    "number": 5940,
+    "type": "Wind"
+  },
+  "5957ETESA-UFV000": {
+    "area": 57,
+    "bus_name": "ETESA-UFV000",
+    "number": 5957,
+    "type": "PV"
+  },
+  "5975ITAPEBUHE000": {
+    "area": 54,
+    "bus_name": "ITAPEBUHE000",
+    "number": 5975,
+    "type": "Hydro"
+  },
+  "5978VERACEUTE001": {
+    "area": 54,
+    "bus_name": "VERACEUTE001",
+    "number": 5978,
+    "type": "Steam"
+  },
+  "5985BWGUI2EOL044": {
+    "area": 53,
+    "bus_name": "BWGUI2EOL044",
+    "number": 5985,
+    "type": "Wind"
+  },
+  "5993TFREIT-BA138": {
+    "area": 54,
+    "bus_name": "TFREIT-BA138",
+    "number": 5993,
+    "type": "Unknown"
+  },
+  "5995ITAMAR-BA138": {
+    "area": 54,
+    "bus_name": "ITAMAR-BA138",
+    "number": 5995,
+    "type": "Unknown"
+  },
+  "6014CLEMNTEOL-66": {
+    "area": 55,
+    "bus_name": "CLEMNTEOL-66",
+    "number": 6014,
+    "type": "Wind"
+  },
+  "6015VSGERAEOL000": {
+    "area": 56,
+    "bus_name": "VSGERAEOL000",
+    "number": 6015,
+    "type": "Wind"
+  },
+  "6016MALHADEOL011": {
+    "area": 56,
+    "bus_name": "MALHADEOL011",
+    "number": 6016,
+    "type": "Wind"
+  },
+  "6019EDWIGEEOL044": {
+    "area": 57,
+    "bus_name": "EDWIGEEOL044",
+    "number": 6019,
+    "type": "Wind"
+  },
+  "6020CLEMNTEOL-60": {
+    "area": 55,
+    "bus_name": "CLEMNTEOL-60",
+    "number": 6020,
+    "type": "Wind"
+  },
+  "6021SUP1--UTE000": {
+    "area": 55,
+    "bus_name": "SUP1--UTE000",
+    "number": 6021,
+    "type": "Steam"
+  },
+  "6022SUP2--UTE000": {
+    "area": 55,
+    "bus_name": "SUP2--UTE000",
+    "number": 6022,
+    "type": "Steam"
+  },
+  "6023SUP3--UTE000": {
+    "area": 55,
+    "bus_name": "SUP3--UTE000",
+    "number": 6023,
+    "type": "Steam"
+  },
+  "6024SUP4--UTE000": {
+    "area": 55,
+    "bus_name": "SUP4--UTE000",
+    "number": 6024,
+    "type": "Steam"
+  },
+  "6025SUP5--UTE000": {
+    "area": 55,
+    "bus_name": "SUP5--UTE000",
+    "number": 6025,
+    "type": "Steam"
+  },
+  "6026SUP6--UTE000": {
+    "area": 55,
+    "bus_name": "SUP6--UTE000",
+    "number": 6026,
+    "type": "Steam"
+  },
+  "6030M.SECOEOL052": {
+    "area": 55,
+    "bus_name": "M.SECOEOL052",
+    "number": 6030,
+    "type": "Wind"
+  },
+  "6031MIASS3EOL041": {
+    "area": 55,
+    "bus_name": "MIASS3EOL041",
+    "number": 6031,
+    "type": "Wind"
+  },
+  "6035RVENT1EOL035": {
+    "area": 55,
+    "bus_name": "RVENT1EOL035",
+    "number": 6035,
+    "type": "Wind"
+  },
+  "6036RVENT3EOL037": {
+    "area": 55,
+    "bus_name": "RVENT3EOL037",
+    "number": 6036,
+    "type": "Wind"
+  },
+  "6037PFORMOEOL050": {
+    "area": 56,
+    "bus_name": "PFORMOEOL050",
+    "number": 6037,
+    "type": "Wind"
+  },
+  "6038ICAZINEOL026": {
+    "area": 56,
+    "bus_name": "ICAZINEOL026",
+    "number": 6038,
+    "type": "Wind"
+  },
+  "6042ABMT-BEOL013": {
+    "area": 56,
+    "bus_name": "ABMT-BEOL013",
+    "number": 6042,
+    "type": "Wind"
+  },
+  "6043ABMT-AEOL011": {
+    "area": 56,
+    "bus_name": "ABMT-AEOL011",
+    "number": 6043,
+    "type": "Wind"
+  },
+  "6051VFORMOEOL100": {
+    "area": 56,
+    "bus_name": "VFORMOEOL100",
+    "number": 6051,
+    "type": "Wind"
+  },
+  "6052CABPRAEOL035": {
+    "area": 55,
+    "bus_name": "CABPRAEOL035",
+    "number": 6052,
+    "type": "Wind"
+  },
+  "6053JANDAIEOL021": {
+    "area": 56,
+    "bus_name": "JANDAIEOL021",
+    "number": 6053,
+    "type": "Wind"
+  },
+  "6057AMAZONEOL031": {
+    "area": 56,
+    "bus_name": "AMAZONEOL031",
+    "number": 6057,
+    "type": "Wind"
+  },
+  "6065CALAN3EOL042": {
+    "area": 55,
+    "bus_name": "CALAN3EOL042",
+    "number": 6065,
+    "type": "Wind"
+  },
+  "6066ITAREMEOL032": {
+    "area": 56,
+    "bus_name": "ITAREMEOL032",
+    "number": 6066,
+    "type": "Wind"
+  },
+  "6068UMBUR1EOL000": {
+    "area": 53,
+    "bus_name": "UMBUR1EOL000",
+    "number": 6068,
+    "type": "Wind"
+  },
+  "6072LARANJEOL010": {
+    "area": 53,
+    "bus_name": "LARANJEOL010",
+    "number": 6072,
+    "type": "Wind"
+  },
+  "6073CLARG1EOL066": {
+    "area": 53,
+    "bus_name": "CLARG1EOL066",
+    "number": 6073,
+    "type": "Wind"
+  },
+  "6074MCSUL1EOL043": {
+    "area": 53,
+    "bus_name": "MCSUL1EOL043",
+    "number": 6074,
+    "type": "Wind"
+  },
+  "6084BJL411UFV040": {
+    "area": 53,
+    "bus_name": "BJL411UFV040",
+    "number": 6084,
+    "type": "PV"
+  },
+  "6090BJS1E2UFV016": {
+    "area": 53,
+    "bus_name": "BJS1E2UFV016",
+    "number": 6090,
+    "type": "PV"
+  },
+  "6102HO1211UFV076": {
+    "area": 53,
+    "bus_name": "HO1211UFV076",
+    "number": 6102,
+    "type": "PV"
+  },
+  "6104PROSP-UTE001": {
+    "area": 54,
+    "bus_name": "PROSP-UTE001",
+    "number": 6104,
+    "type": "Steam"
+  },
+  "6105CARNAUEOL036": {
+    "area": 55,
+    "bus_name": "CARNAUEOL036",
+    "number": 6105,
+    "type": "Wind"
+  },
+  "6106PITOMBEOL047": {
+    "area": 56,
+    "bus_name": "PITOMBEOL047",
+    "number": 6106,
+    "type": "Wind"
+  },
+  "6108SS3PELEOL025": {
+    "area": 55,
+    "bus_name": "SS3PELEOL025",
+    "number": 6108,
+    "type": "Wind"
+  },
+  "6109BABIL1EOL039": {
+    "area": 53,
+    "bus_name": "BABIL1EOL039",
+    "number": 6109,
+    "type": "Wind"
+  },
+  "6112ACARAU-CE069": {
+    "area": 56,
+    "bus_name": "ACARAU-CE069",
+    "number": 6112,
+    "type": "Unknown"
+  },
+  "6114BURITIEOL124": {
+    "area": 56,
+    "bus_name": "BURITIEOL124",
+    "number": 6114,
+    "type": "Wind"
+  },
+  "6127MVENT2EOL000": {
+    "area": 1,
+    "bus_name": "MVENT2EOL000",
+    "number": 6127,
+    "type": "Wind"
+  },
+  "6129FEIJAOEOL060": {
+    "area": 55,
+    "bus_name": "FEIJAOEOL060",
+    "number": 6129,
+    "type": "Wind"
+  },
+  "6133EXTREM-RN069": {
+    "area": 55,
+    "bus_name": "EXTREM-RN069",
+    "number": 6133,
+    "type": "Unknown"
+  },
+  "6135CDVENTEOL024": {
+    "area": 53,
+    "bus_name": "CDVENTEOL024",
+    "number": 6135,
+    "type": "Wind"
+  },
+  "6136EUR1.5EOL008": {
+    "area": 55,
+    "bus_name": "EUR1.5EOL008",
+    "number": 6136,
+    "type": "Wind"
+  },
+  "6138EUR1.6EOL030": {
+    "area": 55,
+    "bus_name": "EUR1.6EOL030",
+    "number": 6138,
+    "type": "Wind"
+  },
+  "6144BWGUI1EOL048": {
+    "area": 53,
+    "bus_name": "BWGUI1EOL048",
+    "number": 6144,
+    "type": "Wind"
+  },
+  "6145SCLARAEOL094": {
+    "area": 55,
+    "bus_name": "SCLARAEOL094",
+    "number": 6145,
+    "type": "Wind"
+  },
+  "614PIRAJUUHE002": {
+    "area": 71,
+    "bus_name": "PIRAJUUHE002",
+    "number": 614,
+    "type": "Hydro"
+  },
+  "6150RIACHAEOL054": {
+    "area": 55,
+    "bus_name": "RIACHAEOL054",
+    "number": 6150,
+    "type": "Wind"
+  },
+  "6160MVENTOEOL091": {
+    "area": 55,
+    "bus_name": "MVENTOEOL091",
+    "number": 6160,
+    "type": "Wind"
+  },
+  "6164RENASCEOL075": {
+    "area": 55,
+    "bus_name": "RENASCEOL075",
+    "number": 6164,
+    "type": "Wind"
+  },
+  "6165ASABRAEOL100": {
+    "area": 55,
+    "bus_name": "ASABRAEOL100",
+    "number": 6165,
+    "type": "Wind"
+  },
+  "6166CVENT2EOL015": {
+    "area": 55,
+    "bus_name": "CVENT2EOL015",
+    "number": 6166,
+    "type": "Wind"
+  },
+  "6167MACACOEOL034": {
+    "area": 55,
+    "bus_name": "MACACOEOL034",
+    "number": 6167,
+    "type": "Wind"
+  },
+  "6173IGAPO2-BA069": {
+    "area": 53,
+    "bus_name": "IGAPO2-BA069",
+    "number": 6173,
+    "type": "Unknown"
+  },
+  "6195CAETITEOL045": {
+    "area": 53,
+    "bus_name": "CAETITEOL045",
+    "number": 6195,
+    "type": "Wind"
+  },
+  "6209DRIDAMEOL030": {
+    "area": 53,
+    "bus_name": "DRIDAMEOL030",
+    "number": 6209,
+    "type": "Wind"
+  },
+  "6213UVENT1EOL025": {
+    "area": 55,
+    "bus_name": "UVENT1EOL025",
+    "number": 6213,
+    "type": "Wind"
+  },
+  "6214UVENT2EOL081": {
+    "area": 55,
+    "bus_name": "UVENT2EOL081",
+    "number": 6214,
+    "type": "Wind"
+  },
+  "6215MODELOEOL024": {
+    "area": 55,
+    "bus_name": "MODELOEOL024",
+    "number": 6215,
+    "type": "Wind"
+  },
+  "6222IGT012EOL000": {
+    "area": 53,
+    "bus_name": "IGT012EOL000",
+    "number": 6222,
+    "type": "Wind"
+  },
+  "6223PND012EOL000": {
+    "area": 53,
+    "bus_name": "PND012EOL000",
+    "number": 6223,
+    "type": "Wind"
+  },
+  "6227PELOUREOL025": {
+    "area": 53,
+    "bus_name": "PELOUREOL025",
+    "number": 6227,
+    "type": "Wind"
+  },
+  "6229CFORM1EOL045": {
+    "area": 53,
+    "bus_name": "CFORM1EOL045",
+    "number": 6229,
+    "type": "Wind"
+  },
+  "6232DELFINEOL052": {
+    "area": 53,
+    "bus_name": "DELFINEOL052",
+    "number": 6232,
+    "type": "Wind"
+  },
+  "6241SALVADEOL000": {
+    "area": 53,
+    "bus_name": "SALVADEOL000",
+    "number": 6241,
+    "type": "Wind"
+  },
+  "6242MANESPEOL029": {
+    "area": 53,
+    "bus_name": "MANESPEOL029",
+    "number": 6242,
+    "type": "Wind"
+  },
+  "6244G.OUR1EOL049": {
+    "area": 53,
+    "bus_name": "G.OUR1EOL049",
+    "number": 6244,
+    "type": "Wind"
+  },
+  "6266CAEABCEOL032": {
+    "area": 53,
+    "bus_name": "CAEABCEOL032",
+    "number": 6266,
+    "type": "Wind"
+  },
+  "6269JSOLARUFV120": {
+    "area": 53,
+    "bus_name": "JSOLARUFV120",
+    "number": 6269,
+    "type": "PV"
+  },
+  "6276REPIF1EOL012": {
+    "area": 53,
+    "bus_name": "REPIF1EOL012",
+    "number": 6276,
+    "type": "Wind"
+  },
+  "6277REPIF2EOL002": {
+    "area": 53,
+    "bus_name": "REPIF2EOL002",
+    "number": 6277,
+    "type": "Wind"
+  },
+  "6278REPIA1EOL003": {
+    "area": 53,
+    "bus_name": "REPIA1EOL003",
+    "number": 6278,
+    "type": "Wind"
+  },
+  "6279REPIA2EOL021": {
+    "area": 53,
+    "bus_name": "REPIA2EOL021",
+    "number": 6279,
+    "type": "Wind"
+  },
+  "6292CRISTAEOL000": {
+    "area": 53,
+    "bus_name": "CRISTAEOL000",
+    "number": 6292,
+    "type": "Wind"
+  },
+  "6294SOBRADUHE002": {
+    "area": 53,
+    "bus_name": "SOBRADUHE002",
+    "number": 6294,
+    "type": "Hydro"
+  },
+  "6295SOBRADSIN002": {
+    "area": 53,
+    "bus_name": "SOBRADSIN002",
+    "number": 6295,
+    "type": "Synch.Comp."
+  },
+  "6297USB01GUHE000": {
+    "area": 53,
+    "bus_name": "USB01GUHE000",
+    "number": 6297,
+    "type": "Hydro"
+  },
+  "6304SETEGAEOL015": {
+    "area": 53,
+    "bus_name": "SETEGAEOL015",
+    "number": 6304,
+    "type": "Wind"
+  },
+  "6307SPEDRLEOL013": {
+    "area": 53,
+    "bus_name": "SPEDRLEOL013",
+    "number": 6307,
+    "type": "Wind"
+  },
+  "6308SENSE2EOL053": {
+    "area": 53,
+    "bus_name": "SENSE2EOL053",
+    "number": 6308,
+    "type": "Wind"
+  },
+  "6309PEDRBREOL012": {
+    "area": 53,
+    "bus_name": "PEDRBREOL012",
+    "number": 6309,
+    "type": "Wind"
+  },
+  "6310BARAU1EOL014": {
+    "area": 53,
+    "bus_name": "BARAU1EOL014",
+    "number": 6310,
+    "type": "Wind"
+  },
+  "6313JUAZE2-BA069": {
+    "area": 53,
+    "bus_name": "JUAZE2-BA069",
+    "number": 6313,
+    "type": "Unknown"
+  },
+  "6314PET---UTE000": {
+    "area": 53,
+    "bus_name": "PET---UTE000",
+    "number": 6314,
+    "type": "Steam"
+  },
+  "6317RIOGRA-BA138": {
+    "area": 53,
+    "bus_name": "RIOGRA-BA138",
+    "number": 6317,
+    "type": "Unknown"
+  },
+  "6318RENOVAEOL000": {
+    "area": 53,
+    "bus_name": "RENOVAEOL000",
+    "number": 6318,
+    "type": "Wind"
+  },
+  "6320SBABILEOL047": {
+    "area": 53,
+    "bus_name": "SBABILEOL047",
+    "number": 6320,
+    "type": "Wind"
+  },
+  "6343IRECE--BA069": {
+    "area": 53,
+    "bus_name": "IRECE--BA069",
+    "number": 6343,
+    "type": "Unknown"
+  },
+  "6347IRECE-SIN001": {
+    "area": 53,
+    "bus_name": "IRECE-SIN001",
+    "number": 6347,
+    "type": "Synch.Comp."
+  },
+  "6350BJLAPASIN001": {
+    "area": 53,
+    "bus_name": "BJLAPASIN001",
+    "number": 6350,
+    "type": "Synch.Comp."
+  },
+  "6353BJLAPA-BA069": {
+    "area": 53,
+    "bus_name": "BJLAPA-BA069",
+    "number": 6353,
+    "type": "Unknown"
+  },
+  "6363BARREI-BA069": {
+    "area": 53,
+    "bus_name": "BARREI-BA069",
+    "number": 6363,
+    "type": "Unknown"
+  },
+  "6365BARREI-BA138": {
+    "area": 53,
+    "bus_name": "BARREI-BA138",
+    "number": 6365,
+    "type": "Unknown"
+  },
+  "6370BROTASEOL057": {
+    "area": 53,
+    "bus_name": "BROTASEOL057",
+    "number": 6370,
+    "type": "Wind"
+  },
+  "6372VBAHI2EOL053": {
+    "area": 53,
+    "bus_name": "VBAHI2EOL053",
+    "number": 6372,
+    "type": "Wind"
+  },
+  "6379ARACASEOL100": {
+    "area": 53,
+    "bus_name": "ARACASEOL100",
+    "number": 6379,
+    "type": "Wind"
+  },
+  "6382RENOV2EOL070": {
+    "area": 53,
+    "bus_name": "RENOV2EOL070",
+    "number": 6382,
+    "type": "Wind"
+  },
+  "6386TRAIRIEOL050": {
+    "area": 56,
+    "bus_name": "TRAIRIEOL050",
+    "number": 6386,
+    "type": "Wind"
+  },
+  "6387PLANALEOL033": {
+    "area": 53,
+    "bus_name": "PLANALEOL033",
+    "number": 6387,
+    "type": "Wind"
+  },
+  "6405MARABASIN001": {
+    "area": 59,
+    "bus_name": "MARABASIN001",
+    "number": 6405,
+    "type": "Synch.Comp."
+  },
+  "6411GA1TUCUHE000": {
+    "area": 59,
+    "bus_name": "GA1TUCUHE000",
+    "number": 6411,
+    "type": "Hydro"
+  },
+  "6412GA2TUCUHE000": {
+    "area": 59,
+    "bus_name": "GA2TUCUHE000",
+    "number": 6412,
+    "type": "Hydro"
+  },
+  "6419TUCUR1UHE005": {
+    "area": 59,
+    "bus_name": "TUCUR1UHE005",
+    "number": 6419,
+    "type": "Hydro"
+  },
+  "6420TUCUR2UHE003": {
+    "area": 59,
+    "bus_name": "TUCUR2UHE003",
+    "number": 6420,
+    "type": "Hydro"
+  },
+  "6421TUCUR2SIN000": {
+    "area": 59,
+    "bus_name": "TUCUR2SIN000",
+    "number": 6421,
+    "type": "Synch.Comp."
+  },
+  "6422TUCUR3UHE004": {
+    "area": 59,
+    "bus_name": "TUCUR3UHE004",
+    "number": 6422,
+    "type": "Hydro"
+  },
+  "6423TUCUR3SIN000": {
+    "area": 59,
+    "bus_name": "TUCUR3SIN000",
+    "number": 6423,
+    "type": "Synch.Comp."
+  },
+  "6424TUCUR5UHE004": {
+    "area": 59,
+    "bus_name": "TUCUR5UHE004",
+    "number": 6424,
+    "type": "Hydro"
+  },
+  "6425TUCUR6UHE007": {
+    "area": 59,
+    "bus_name": "TUCUR6UHE007",
+    "number": 6425,
+    "type": "Hydro"
+  },
+  "6447NOLI1-UTE000": {
+    "area": 58,
+    "bus_name": "NOLI1-UTE000",
+    "number": 6447,
+    "type": "Steam"
+  },
+  "6448NOLI2-UTE000": {
+    "area": 58,
+    "bus_name": "NOLI2-UTE000",
+    "number": 6448,
+    "type": "Steam"
+  },
+  "6465VCONDESIN002": {
+    "area": 59,
+    "bus_name": "VCONDESIN002",
+    "number": 6465,
+    "type": "Synch.Comp."
+  },
+  "6492STA.MA-PA138": {
+    "area": 59,
+    "bus_name": "STA.MA-PA138",
+    "number": 6492,
+    "type": "Unknown"
+  },
+  "6503JUAZE3-BA069": {
+    "area": 53,
+    "bus_name": "JUAZE3-BA069",
+    "number": 6503,
+    "type": "Unknown"
+  },
+  "6537TAPAJOSIN000": {
+    "area": 59,
+    "bus_name": "TAPAJOSIN000",
+    "number": 6537,
+    "type": "Synch.Comp."
+  },
+  "6550CACIA-EOL024": {
+    "area": 56,
+    "bus_name": "CACIA-EOL024",
+    "number": 6550,
+    "type": "Wind"
+  },
+  "6552RUROP-SIN000": {
+    "area": 59,
+    "bus_name": "RUROP-SIN000",
+    "number": 6552,
+    "type": "Synch.Comp."
+  },
+  "6555PMTBL1UHE002": {
+    "area": 59,
+    "bus_name": "PMTBL1UHE002",
+    "number": 6555,
+    "type": "Hydro"
+  },
+  "6556PMTBL2UHE002": {
+    "area": 59,
+    "bus_name": "PMTBL2UHE002",
+    "number": 6556,
+    "type": "Hydro"
+  },
+  "6559PMTBL3UHE002": {
+    "area": 59,
+    "bus_name": "PMTBL3UHE002",
+    "number": 6559,
+    "type": "Hydro"
+  },
+  "6577LAPA23UFV016": {
+    "area": 53,
+    "bus_name": "LAPA23UFV016",
+    "number": 6577,
+    "type": "PV"
+  },
+  "6583RAFARDBIO138": {
+    "area": 7,
+    "bus_name": "RAFARDBIO138",
+    "number": 6583,
+    "type": "Steam"
+  },
+  "6589STCRUZBIO138": {
+    "area": 7,
+    "bus_name": "STCRUZBIO138",
+    "number": 6589,
+    "type": "Steam"
+  },
+  "6591COLORABIO138": {
+    "area": 7,
+    "bus_name": "COLORABIO138",
+    "number": 6591,
+    "type": "Steam"
+  },
+  "6592CERRADBIO138": {
+    "area": 7,
+    "bus_name": "CERRADBIO138",
+    "number": 6592,
+    "type": "Steam"
+  },
+  "6593DAMATABIO138": {
+    "area": 7,
+    "bus_name": "DAMATABIO138",
+    "number": 6593,
+    "type": "Steam"
+  },
+  "6595CPINTOBIO138": {
+    "area": 7,
+    "bus_name": "CPINTOBIO138",
+    "number": 6595,
+    "type": "Steam"
+  },
+  "6597ANHANGPCH138": {
+    "area": 7,
+    "bus_name": "ANHANGPCH138",
+    "number": 6597,
+    "type": "PCH"
+  },
+  "6598RETIR-PCH138": {
+    "area": 7,
+    "bus_name": "RETIR-PCH138",
+    "number": 6598,
+    "type": "PCH"
+  },
+  "6599PALMEIPCH138": {
+    "area": 7,
+    "bus_name": "PALMEIPCH138",
+    "number": 6599,
+    "type": "PCH"
+  },
+  "6611ERBCANBIO230": {
+    "area": 54,
+    "bus_name": "ERBCANBIO230",
+    "number": 6611,
+    "type": "Steam"
+  },
+  "6616PCHEIR-CE230": {
+    "area": 56,
+    "bus_name": "PCHEIR-CE230",
+    "number": 6616,
+    "type": "Unknown"
+  },
+  "6618CACIMBEOL017": {
+    "area": 56,
+    "bus_name": "CACIMBEOL017",
+    "number": 6618,
+    "type": "Wind"
+  },
+  "6619UVENT2EOL000": {
+    "area": 55,
+    "bus_name": "UVENT2EOL000",
+    "number": 6619,
+    "type": "Wind"
+  },
+  "6624GPEXP-EOL028": {
+    "area": 53,
+    "bus_name": "GPEXP-EOL028",
+    "number": 6624,
+    "type": "Wind"
+  },
+  "6625ACACIAEOL000": {
+    "area": 53,
+    "bus_name": "ACACIAEOL000",
+    "number": 6625,
+    "type": "Wind"
+  },
+  "6626GPEXP-EOL027": {
+    "area": 53,
+    "bus_name": "GPEXP-EOL027",
+    "number": 6626,
+    "type": "Wind"
+  },
+  "6629BRIGIDEOL107": {
+    "area": 1,
+    "bus_name": "BRIGIDEOL107",
+    "number": 6629,
+    "type": "Wind"
+  },
+  "6630CHAP1AEOL060": {
+    "area": 57,
+    "bus_name": "CHAP1AEOL060",
+    "number": 6630,
+    "type": "Wind"
+  },
+  "6634SVACASEOL043": {
+    "area": 55,
+    "bus_name": "SVACASEOL043",
+    "number": 6634,
+    "type": "Wind"
+  },
+  "6636ITAREMEOL000": {
+    "area": 56,
+    "bus_name": "ITAREMEOL000",
+    "number": 6636,
+    "type": "Wind"
+  },
+  "6637CFORM2EOL045": {
+    "area": 53,
+    "bus_name": "CFORM2EOL045",
+    "number": 6637,
+    "type": "Wind"
+  },
+  "6638AUGUSTEOL067": {
+    "area": 57,
+    "bus_name": "AUGUSTEOL067",
+    "number": 6638,
+    "type": "Wind"
+  },
+  "6642AMAZONEOL033": {
+    "area": 56,
+    "bus_name": "AMAZONEOL033",
+    "number": 6642,
+    "type": "Wind"
+  },
+  "6644AVENTUEOL000": {
+    "area": 55,
+    "bus_name": "AVENTUEOL000",
+    "number": 6644,
+    "type": "Wind"
+  },
+  "6647CP21.8EOL064": {
+    "area": 57,
+    "bus_name": "CP21.8EOL064",
+    "number": 6647,
+    "type": "Wind"
+  },
+  "6648CP21.7EOL051": {
+    "area": 57,
+    "bus_name": "CP21.7EOL051",
+    "number": 6648,
+    "type": "Wind"
+  },
+  "6653CARCAREOL030": {
+    "area": 56,
+    "bus_name": "CARCAREOL030",
+    "number": 6653,
+    "type": "Wind"
+  },
+  "6654SVACASEOL010": {
+    "area": 55,
+    "bus_name": "SVACASEOL010",
+    "number": 6654,
+    "type": "Wind"
+  },
+  "6659INACI-EOL000": {
+    "area": 56,
+    "bus_name": "INACI-EOL000",
+    "number": 6659,
+    "type": "Wind"
+  },
+  "6672ARA3-C-EOL41": {
+    "area": 57,
+    "bus_name": "ARA3-C-EOL41",
+    "number": 6672,
+    "type": "Wind"
+  },
+  "6673ARA3-D-EOL37": {
+    "area": 57,
+    "bus_name": "ARA3-D-EOL37",
+    "number": 6673,
+    "type": "Wind"
+  },
+  "6674ARA3-B-EOL37": {
+    "area": 57,
+    "bus_name": "ARA3-B-EOL37",
+    "number": 6674,
+    "type": "Wind"
+  },
+  "6675ARA3-A-EOL41": {
+    "area": 57,
+    "bus_name": "ARA3-A-EOL41",
+    "number": 6675,
+    "type": "Wind"
+  },
+  "6678TACARAEOL034": {
+    "area": 51,
+    "bus_name": "TACARAEOL034",
+    "number": 6678,
+    "type": "Wind"
+  },
+  "6686ITUVERUFV098": {
+    "area": 53,
+    "bus_name": "ITUVERUFV098",
+    "number": 6686,
+    "type": "PV"
+  },
+  "6688VACREIEOL013": {
+    "area": 56,
+    "bus_name": "VACREIEOL013",
+    "number": 6688,
+    "type": "Wind"
+  },
+  "6693PCHEIREOL023": {
+    "area": 56,
+    "bus_name": "PCHEIREOL023",
+    "number": 6693,
+    "type": "Wind"
+  },
+  "6708VSVB1-EOL042": {
+    "area": 57,
+    "bus_name": "VSVB1-EOL042",
+    "number": 6708,
+    "type": "Wind"
+  },
+  "6709VSVB2-EOL056": {
+    "area": 57,
+    "bus_name": "VSVB2-EOL056",
+    "number": 6709,
+    "type": "Wind"
+  },
+  "6711DELT3-EOL093": {
+    "area": 58,
+    "bus_name": "DELT3-EOL093",
+    "number": 6711,
+    "type": "Wind"
+  },
+  "6714VBAHIAEOL022": {
+    "area": 53,
+    "bus_name": "VBAHIAEOL022",
+    "number": 6714,
+    "type": "Wind"
+  },
+  "6719DELFINEOL052": {
+    "area": 53,
+    "bus_name": "DELFINEOL052",
+    "number": 6719,
+    "type": "Wind"
+  },
+  "6728BMONTESIN000": {
+    "area": 43,
+    "bus_name": "BMONTESIN000",
+    "number": 6728,
+    "type": "Synch.Comp."
+  },
+  "6729BMONTEUHE018": {
+    "area": 43,
+    "bus_name": "BMONTEUHE018",
+    "number": 6729,
+    "type": "Hydro"
+  },
+  "6731G.OUR1EOL060": {
+    "area": 53,
+    "bus_name": "G.OUR1EOL060",
+    "number": 6731,
+    "type": "Wind"
+  },
+  "6732G.OUR1EOL022": {
+    "area": 53,
+    "bus_name": "G.OUR1EOL022",
+    "number": 6732,
+    "type": "Wind"
+  },
+  "6741MCSUL-EOL043": {
+    "area": 53,
+    "bus_name": "MCSUL-EOL043",
+    "number": 6741,
+    "type": "Wind"
+  },
+  "6742CGEJAUEOL042": {
+    "area": 55,
+    "bus_name": "CGEJAUEOL042",
+    "number": 6742,
+    "type": "Wind"
+  },
+  "6746NOLN08UFV112": {
+    "area": 57,
+    "bus_name": "NOLN08UFV112",
+    "number": 6746,
+    "type": "PV"
+  },
+  "6747NOLN12UFV112": {
+    "area": 57,
+    "bus_name": "NOLN12UFV112",
+    "number": 6747,
+    "type": "PV"
+  },
+  "6750S.BARRUFV056": {
+    "area": 53,
+    "bus_name": "S.BARRUFV056",
+    "number": 6750,
+    "type": "PV"
+  },
+  "6751VSMEL1EOL038": {
+    "area": 55,
+    "bus_name": "VSMEL1EOL038",
+    "number": 6751,
+    "type": "Wind"
+  },
+  "6756CLARG2EOL055": {
+    "area": 53,
+    "bus_name": "CLARG2EOL055",
+    "number": 6756,
+    "type": "Wind"
+  },
+  "6763RNASCVEOL030": {
+    "area": 55,
+    "bus_name": "RNASCVEOL030",
+    "number": 6763,
+    "type": "Wind"
+  },
+  "6768ICARAIEOL031": {
+    "area": 56,
+    "bus_name": "ICARAIEOL031",
+    "number": 6768,
+    "type": "Wind"
+  },
+  "6775ODAGUAEOL047": {
+    "area": 55,
+    "bus_name": "ODAGUAEOL047",
+    "number": 6775,
+    "type": "Wind"
+  },
+  "6776BRISAPEOL068": {
+    "area": 55,
+    "bus_name": "BRISAPEOL068",
+    "number": 6776,
+    "type": "Wind"
+  },
+  "6777TAIBA-EOL027": {
+    "area": 56,
+    "bus_name": "TAIBA-EOL027",
+    "number": 6777,
+    "type": "Wind"
+  },
+  "6781FAISAAEOL040": {
+    "area": 56,
+    "bus_name": "FAISAAEOL040",
+    "number": 6781,
+    "type": "Wind"
+  },
+  "6782FAISABEOL038": {
+    "area": 56,
+    "bus_name": "FAISABEOL038",
+    "number": 6782,
+    "type": "Wind"
+  },
+  "6785SBABILEOL048": {
+    "area": 53,
+    "bus_name": "SBABILEOL048",
+    "number": 6785,
+    "type": "Wind"
+  },
+  "6786SPEDROUFV054": {
+    "area": 53,
+    "bus_name": "SPEDROUFV054",
+    "number": 6786,
+    "type": "PV"
+  },
+  "6793BCIGRIEOL028": {
+    "area": 55,
+    "bus_name": "BCIGRIEOL028",
+    "number": 6793,
+    "type": "Wind"
+  },
+  "6802VILHE-PCH069": {
+    "area": 47,
+    "bus_name": "VILHE-PCH069",
+    "number": 6802,
+    "type": "PCH"
+  },
+  "6811COLOR-PCH069": {
+    "area": 47,
+    "bus_name": "COLOR-PCH069",
+    "number": 6811,
+    "type": "PCH"
+  },
+  "6812CACHO-PCH069": {
+    "area": 47,
+    "bus_name": "CACHO-PCH069",
+    "number": 6812,
+    "type": "PCH"
+  },
+  "6822PBUEN2PCH138": {
+    "area": 47,
+    "bus_name": "PBUEN2PCH138",
+    "number": 6822,
+    "type": "PCH"
+  },
+  "6831ROND2-UHE003": {
+    "area": 47,
+    "bus_name": "ROND2-UHE003",
+    "number": 6831,
+    "type": "Hydro"
+  },
+  "6832ROND2-UTE000": {
+    "area": 47,
+    "bus_name": "ROND2-UTE000",
+    "number": 6832,
+    "type": "Steam"
+  },
+  "6858ROLIM-PCH069": {
+    "area": 47,
+    "bus_name": "ROLIM-PCH069",
+    "number": 6858,
+    "type": "PCH"
+  },
+  "6861ROLIM-PCH034": {
+    "area": 47,
+    "bus_name": "ROLIM-PCH034",
+    "number": 6861,
+    "type": "PCH"
+  },
+  "6881ARIQU-PCH069": {
+    "area": 47,
+    "bus_name": "ARIQU-PCH069",
+    "number": 6881,
+    "type": "PCH"
+  },
+  "6885JIPAR-SIN000": {
+    "area": 47,
+    "bus_name": "JIPAR-SIN000",
+    "number": 6885,
+    "type": "Synch.Comp."
+  },
+  "6888SA-AD1UHE003": {
+    "area": 81,
+    "bus_name": "SA-AD1UHE003",
+    "number": 6888,
+    "type": "Hydro"
+  },
+  "6891SAMU1-UHE005": {
+    "area": 47,
+    "bus_name": "SAMU1-UHE005",
+    "number": 6891,
+    "type": "Hydro"
+  },
+  "6892SA-AD2UHE003": {
+    "area": 81,
+    "bus_name": "SA-AD2UHE003",
+    "number": 6892,
+    "type": "Hydro"
+  },
+  "6911T.NOR1UTE000": {
+    "area": 47,
+    "bus_name": "T.NOR1UTE000",
+    "number": 6911,
+    "type": "Steam"
+  },
+  "6912T.N2-GUTE000": {
+    "area": 47,
+    "bus_name": "T.N2-GUTE000",
+    "number": 6912,
+    "type": "Steam"
+  },
+  "6913T.N2-VUTE000": {
+    "area": 47,
+    "bus_name": "T.N2-VUTE000",
+    "number": 6913,
+    "type": "Steam"
+  },
+  "6925RMAD--UTE000": {
+    "area": 47,
+    "bus_name": "RMAD--UTE000",
+    "number": 6925,
+    "type": "Steam"
+  },
+  "6926RMAD2-UTE000": {
+    "area": 47,
+    "bus_name": "RMAD2-UTE000",
+    "number": 6926,
+    "type": "Steam"
+  },
+  "6970ARIQU-SIN000": {
+    "area": 47,
+    "bus_name": "ARIQU-SIN000",
+    "number": 6970,
+    "type": "Synch.Comp."
+  },
+  "7050SA-MD-UHE008": {
+    "area": 81,
+    "bus_name": "SA-MD-UHE008",
+    "number": 7050,
+    "type": "Hydro"
+  },
+  "7051JIR-MDUHE027": {
+    "area": 81,
+    "bus_name": "JIR-MDUHE027",
+    "number": 7051,
+    "type": "Hydro"
+  },
+  "7061JIR-MEUHE021": {
+    "area": 81,
+    "bus_name": "JIR-MEUHE021",
+    "number": 7061,
+    "type": "Hydro"
+  },
+  "7062SA-LR-UHE012": {
+    "area": 81,
+    "bus_name": "SA-LR-UHE012",
+    "number": 7062,
+    "type": "Hydro"
+  },
+  "7064SA-ME-UHE023": {
+    "area": 81,
+    "bus_name": "SA-ME-UHE023",
+    "number": 7064,
+    "type": "Hydro"
+  },
+  "7072VERDE8PCH138": {
+    "area": 12,
+    "bus_name": "VERDE8PCH138",
+    "number": 7072,
+    "type": "PCH"
+  },
+  "7073YPE---PCH138": {
+    "area": 12,
+    "bus_name": "YPE---PCH138",
+    "number": 7073,
+    "type": "PCH"
+  },
+  "7093JATAI-PCH013": {
+    "area": 73,
+    "bus_name": "JATAI-PCH013",
+    "number": 7093,
+    "type": "PCH"
+  },
+  "7095IRARA-PCH013": {
+    "area": 73,
+    "bus_name": "IRARA-PCH013",
+    "number": 7095,
+    "type": "PCH"
+  },
+  "7097FAZVELPCH013": {
+    "area": 73,
+    "bus_name": "FAZVELPCH013",
+    "number": 7097,
+    "type": "PCH"
+  },
+  "7110PEIXEAUHE003": {
+    "area": 63,
+    "bus_name": "PEIXEAUHE003",
+    "number": 7110,
+    "type": "Hydro"
+  },
+  "7120PONTALPCH013": {
+    "area": 73,
+    "bus_name": "PONTALPCH013",
+    "number": 7120,
+    "type": "PCH"
+  },
+  "7151FSOLARUFV000": {
+    "area": 1,
+    "bus_name": "FSOLARUFV000",
+    "number": 7151,
+    "type": "PV"
+  },
+  "7159ITUIUTBIO138": {
+    "area": 3,
+    "bus_name": "ITUIUTBIO138",
+    "number": 7159,
+    "type": "Steam"
+  },
+  "7202MIRACEPCH138": {
+    "area": 58,
+    "bus_name": "MIRACEPCH138",
+    "number": 7202,
+    "type": "PCH"
+  },
+  "7206LAJEADUHE005": {
+    "area": 63,
+    "bus_name": "LAJEADUHE005",
+    "number": 7206,
+    "type": "Hydro"
+  },
+  "7222PALMAS-TO138": {
+    "area": 63,
+    "bus_name": "PALMAS-TO138",
+    "number": 7222,
+    "type": "Unknown"
+  },
+  "7340ITABI3-MG138": {
+    "area": 3,
+    "bus_name": "ITABI3-MG138",
+    "number": 7340,
+    "type": "Unknown"
+  },
+  "7358MSIDE-UTE138": {
+    "area": 3,
+    "bus_name": "MSIDE-UTE138",
+    "number": 7358,
+    "type": "Steam"
+  },
+  "7441JAIB1-UFV138": {
+    "area": 3,
+    "bus_name": "JAIB1-UFV138",
+    "number": 7441,
+    "type": "PV"
+  },
+  "7446PIRAP2UFV034": {
+    "area": 3,
+    "bus_name": "PIRAP2UFV034",
+    "number": 7446,
+    "type": "PV"
+  },
+  "7451HBORD1UHE001": {
+    "area": 27,
+    "bus_name": "HBORD1UHE001",
+    "number": 7451,
+    "type": "Hydro"
+  },
+  "7452HBORD2UHE000": {
+    "area": 27,
+    "bus_name": "HBORD2UHE000",
+    "number": 7452,
+    "type": "Hydro"
+  },
+  "7453HBORD3UHE000": {
+    "area": 27,
+    "bus_name": "HBORD3UHE000",
+    "number": 7453,
+    "type": "Hydro"
+  },
+  "7454HBORD4UHE001": {
+    "area": 27,
+    "bus_name": "HBORD4UHE001",
+    "number": 7454,
+    "type": "Hydro"
+  },
+  "7458HBORD8UHE000": {
+    "area": 27,
+    "bus_name": "HBORD8UHE000",
+    "number": 7458,
+    "type": "Hydro"
+  },
+  "7459HBORD9UHE000": {
+    "area": 27,
+    "bus_name": "HBORD9UHE000",
+    "number": 7459,
+    "type": "Hydro"
+  },
+  "7461HBORDESIN000": {
+    "area": 27,
+    "bus_name": "HBORDESIN000",
+    "number": 7461,
+    "type": "Synch.Comp."
+  },
+  "7462HBORDESIN000": {
+    "area": 27,
+    "bus_name": "HBORDESIN000",
+    "number": 7462,
+    "type": "Synch.Comp."
+  },
+  "7463HBORDESIN000": {
+    "area": 27,
+    "bus_name": "HBORDESIN000",
+    "number": 7463,
+    "type": "Synch.Comp."
+  },
+  "7464HBORDESIN000": {
+    "area": 27,
+    "bus_name": "HBORDESIN000",
+    "number": 7464,
+    "type": "Synch.Comp."
+  },
+  "7468HBORDSSIN000": {
+    "area": 27,
+    "bus_name": "HBORDSSIN000",
+    "number": 7468,
+    "type": "Synch.Comp."
+  },
+  "7469HBORDSSIN000": {
+    "area": 27,
+    "bus_name": "HBORDSSIN000",
+    "number": 7469,
+    "type": "Synch.Comp."
+  },
+  "750C.DO11UHE002": {
+    "area": 73,
+    "bus_name": "C.DO11UHE002",
+    "number": 750,
+    "type": "Hydro"
+  },
+  "751C.DO13UHE002": {
+    "area": 73,
+    "bus_name": "C.DO13UHE002",
+    "number": 751,
+    "type": "Hydro"
+  },
+  "752C.DOU1UHE001": {
+    "area": 73,
+    "bus_name": "C.DOU1UHE001",
+    "number": 752,
+    "type": "Hydro"
+  },
+  "753C.D13NUHE003": {
+    "area": 73,
+    "bus_name": "C.D13NUHE003",
+    "number": 753,
+    "type": "Hydro"
+  },
+  "754C.D13KUHE002": {
+    "area": 73,
+    "bus_name": "C.D13KUHE002",
+    "number": 754,
+    "type": "Hydro"
+  },
+  "7569MANTOV-MT138": {
+    "area": 46,
+    "bus_name": "MANTOV-MT138",
+    "number": 7569,
+    "type": "Unknown"
+  },
+  "7611RVERM2BIO138": {
+    "area": 30,
+    "bus_name": "RVERM2BIO138",
+    "number": 7611,
+    "type": "Steam"
+  },
+  "7614DRACE-UFV034": {
+    "area": 30,
+    "bus_name": "DRACE-UFV034",
+    "number": 7614,
+    "type": "PV"
+  },
+  "7619RVERM3BIO138": {
+    "area": 30,
+    "bus_name": "RVERM3BIO138",
+    "number": 7619,
+    "type": "Steam"
+  },
+  "7622VPARANBIO138": {
+    "area": 30,
+    "bus_name": "VPARANBIO138",
+    "number": 7622,
+    "type": "Steam"
+  },
+  "7625LEME2--SP138": {
+    "area": 30,
+    "bus_name": "LEME2--SP138",
+    "number": 7625,
+    "type": "Unknown"
+  },
+  "7629BHORA-UFV034": {
+    "area": 30,
+    "bus_name": "BHORA-UFV034",
+    "number": 7629,
+    "type": "PV"
+  },
+  "7630AVERM-UFV034": {
+    "area": 30,
+    "bus_name": "AVERM-UFV034",
+    "number": 7630,
+    "type": "PV"
+  },
+  "7631OE-ELK-SP088": {
+    "area": 30,
+    "bus_name": "OE-ELK-SP088",
+    "number": 7631,
+    "type": "Unknown"
+  },
+  "7633PLANALBIO138": {
+    "area": 30,
+    "bus_name": "PLANALBIO138",
+    "number": 7633,
+    "type": "Steam"
+  },
+  "782QUIRI--GO138": {
+    "area": 12,
+    "bus_name": "QUIRI--GO138",
+    "number": 782,
+    "type": "Unknown"
+  },
+  "785QUIRINUTE000": {
+    "area": 73,
+    "bus_name": "QUIRINUTE000",
+    "number": 785,
+    "type": "Steam"
+  },
+  "791PQ.EMA-GO138": {
+    "area": 12,
+    "bus_name": "PQ.EMA-GO138",
+    "number": 791,
+    "type": "Unknown"
+  },
+  "8004ALU_BIUHE001": {
+    "area": 61,
+    "bus_name": "ALU_BIUHE001",
+    "number": 8004,
+    "type": "Hydro"
+  },
+  "800GBMUNHUHE003": {
+    "area": 21,
+    "bus_name": "GBMUNHUHE003",
+    "number": 800,
+    "type": "Hydro"
+  },
+  "8013DELT3BEOL036": {
+    "area": 58,
+    "bus_name": "DELT3BEOL036",
+    "number": 8013,
+    "type": "Wind"
+  },
+  "8014DELT3CEOL036": {
+    "area": 58,
+    "bus_name": "DELT3CEOL036",
+    "number": 8014,
+    "type": "Wind"
+  },
+  "8015DELTA5EOL010": {
+    "area": 58,
+    "bus_name": "DELTA5EOL010",
+    "number": 8015,
+    "type": "Wind"
+  },
+  "801GBMUNHSIN000": {
+    "area": 21,
+    "bus_name": "GBMUNHSIN000",
+    "number": 801,
+    "type": "Synch.Comp."
+  },
+  "802ARAUCGUTE000": {
+    "area": 75,
+    "bus_name": "ARAUCGUTE000",
+    "number": 802,
+    "type": "Steam"
+  },
+  "803ARAUCVUTE000": {
+    "area": 75,
+    "bus_name": "ARAUCVUTE000",
+    "number": 803,
+    "type": "Steam"
+  },
+  "804GPSOUZUHE003": {
+    "area": 21,
+    "bus_name": "GPSOUZUHE003",
+    "number": 804,
+    "type": "Hydro"
+  },
+  "805GPSOUZSIN000": {
+    "area": 21,
+    "bus_name": "GPSOUZSIN000",
+    "number": 805,
+    "type": "Synch.Comp."
+  },
+  "806SCLARAUHE002": {
+    "area": 75,
+    "bus_name": "SCLARAUHE002",
+    "number": 806,
+    "type": "Hydro"
+  },
+  "8071NSCONCEOL048": {
+    "area": 53,
+    "bus_name": "NSCONCEOL048",
+    "number": 8071,
+    "type": "Wind"
+  },
+  "8074LICALMEOL046": {
+    "area": 53,
+    "bus_name": "LICALMEOL046",
+    "number": 8074,
+    "type": "Wind"
+  },
+  "8077GUIRAPEOL033": {
+    "area": 53,
+    "bus_name": "GUIRAPEOL033",
+    "number": 8077,
+    "type": "Wind"
+  },
+  "8080ALVORAEOL024": {
+    "area": 53,
+    "bus_name": "ALVORAEOL024",
+    "number": 8080,
+    "type": "Wind"
+  },
+  "8085UBN-B2EOL047": {
+    "area": 53,
+    "bus_name": "UBN-B2EOL047",
+    "number": 8085,
+    "type": "Wind"
+  },
+  "8086UBN-B3EOL050": {
+    "area": 53,
+    "bus_name": "UBN-B3EOL050",
+    "number": 8086,
+    "type": "Wind"
+  },
+  "808GJRICHUHE003": {
+    "area": 21,
+    "bus_name": "GJRICHUHE003",
+    "number": 808,
+    "type": "Hydro"
+  },
+  "8091CALAN2EOL045": {
+    "area": 55,
+    "bus_name": "CALAN2EOL045",
+    "number": 8091,
+    "type": "Wind"
+  },
+  "8098MACAMBEOL009": {
+    "area": 55,
+    "bus_name": "MACAMBEOL009",
+    "number": 8098,
+    "type": "Wind"
+  },
+  "8099LANCHIEOL014": {
+    "area": 55,
+    "bus_name": "LANCHIEOL014",
+    "number": 8099,
+    "type": "Wind"
+  },
+  "809GJRICHSIN000": {
+    "area": 21,
+    "bus_name": "GJRICHSIN000",
+    "number": 809,
+    "type": "Synch.Comp."
+  },
+  "8105GUAIR-BIO138": {
+    "area": 7,
+    "bus_name": "GUAIR-BIO138",
+    "number": 8105,
+    "type": "Steam"
+  },
+  "810GNBRAGUHE003": {
+    "area": 21,
+    "bus_name": "GNBRAGUHE003",
+    "number": 810,
+    "type": "Hydro"
+  },
+  "8113MACAM2EOL009": {
+    "area": 55,
+    "bus_name": "MACAM2EOL009",
+    "number": 8113,
+    "type": "Wind"
+  },
+  "8114PEDRAJEOL020": {
+    "area": 55,
+    "bus_name": "PEDRAJEOL020",
+    "number": 8114,
+    "type": "Wind"
+  },
+  "811GNBRAGSIN000": {
+    "area": 21,
+    "bus_name": "GNBRAGSIN000",
+    "number": 811,
+    "type": "Synch.Comp."
+  },
+  "8141ECH6-7EOL032": {
+    "area": 55,
+    "bus_name": "ECH6-7EOL032",
+    "number": 8141,
+    "type": "Wind"
+  },
+  "8147M.VERDEOL000": {
+    "area": 55,
+    "bus_name": "M.VERDEOL000",
+    "number": 8147,
+    "type": "Wind"
+  },
+  "8153V.MARTEOL120": {
+    "area": 55,
+    "bus_name": "V.MARTEOL120",
+    "number": 8153,
+    "type": "Wind"
+  },
+  "8156TRSA-6EOL023": {
+    "area": 55,
+    "bus_name": "TRSA-6EOL023",
+    "number": 8156,
+    "type": "Wind"
+  },
+  "8224CNUNE1UHE002": {
+    "area": 82,
+    "bus_name": "CNUNE1UHE002",
+    "number": 8224,
+    "type": "Hydro"
+  },
+  "8225CNUNE2UHE001": {
+    "area": 82,
+    "bus_name": "CNUNE2UHE001",
+    "number": 8225,
+    "type": "Hydro"
+  },
+  "8235SANT1-UTE000": {
+    "area": 82,
+    "bus_name": "SANT1-UTE000",
+    "number": 8235,
+    "type": "Steam"
+  },
+  "8236SANT2-UTE000": {
+    "area": 82,
+    "bus_name": "SANT2-UTE000",
+    "number": 8236,
+    "type": "Steam"
+  },
+  "8237SANT33UTE000": {
+    "area": 82,
+    "bus_name": "SANT33UTE000",
+    "number": 8237,
+    "type": "Steam"
+  },
+  "8238UTESANUTE000": {
+    "area": 82,
+    "bus_name": "UTESANUTE000",
+    "number": 8238,
+    "type": "Unknown"
+  },
+  "825GUARAP-PR138": {
+    "area": 22,
+    "bus_name": "GUARAP-PR138",
+    "number": 825,
+    "type": "Unknown"
+  },
+  "8267SA.J.VUHE000": {
+    "area": 80,
+    "bus_name": "SA.J.VUHE000",
+    "number": 8267,
+    "type": "Hydro"
+  },
+  "8269SA.JARUHE002": {
+    "area": 80,
+    "bus_name": "SA.JARUHE002",
+    "number": 8269,
+    "type": "Hydro"
+  },
+  "8276CALDEIUHE002": {
+    "area": 80,
+    "bus_name": "CALDEIUHE002",
+    "number": 8276,
+    "type": "Hydro"
+  },
+  "8279FGOMESUHE002": {
+    "area": 80,
+    "bus_name": "FGOMESUHE002",
+    "number": 8279,
+    "type": "Hydro"
+  },
+  "828PITANG-PR138": {
+    "area": 22,
+    "bus_name": "PITANG-PR138",
+    "number": 828,
+    "type": "Unknown"
+  },
+  "8292TSANTAEOL034": {
+    "area": 55,
+    "bus_name": "TSANTAEOL034",
+    "number": 8292,
+    "type": "Wind"
+  },
+  "8295ECH3-6EOL033": {
+    "area": 55,
+    "bus_name": "ECH3-6EOL033",
+    "number": 8295,
+    "type": "Wind"
+  },
+  "8299CHAFA2EOL051": {
+    "area": 55,
+    "bus_name": "CHAFA2EOL051",
+    "number": 8299,
+    "type": "Wind"
+  },
+  "8306JANDAIEOL020": {
+    "area": 56,
+    "bus_name": "JANDAIEOL020",
+    "number": 8306,
+    "type": "Wind"
+  },
+  "8309UVENT-EOL023": {
+    "area": 55,
+    "bus_name": "UVENT-EOL023",
+    "number": 8309,
+    "type": "Wind"
+  },
+  "8312DELTA7EOL000": {
+    "area": 58,
+    "bus_name": "DELTA7EOL000",
+    "number": 8312,
+    "type": "Wind"
+  },
+  "8328VSANG2EOL000": {
+    "area": 57,
+    "bus_name": "VSANG2EOL000",
+    "number": 8328,
+    "type": "Wind"
+  },
+  "8329S.GON2UFV000": {
+    "area": 57,
+    "bus_name": "S.GON2UFV000",
+    "number": 8329,
+    "type": "PV"
+  },
+  "8330S.JANUEOL016": {
+    "area": 53,
+    "bus_name": "S.JANUEOL016",
+    "number": 8330,
+    "type": "Wind"
+  },
+  "8333S.FER1EOL022": {
+    "area": 55,
+    "bus_name": "S.FER1EOL022",
+    "number": 8333,
+    "type": "Wind"
+  },
+  "8340OITIS-EOL000": {
+    "area": 57,
+    "bus_name": "OITIS-EOL000",
+    "number": 8340,
+    "type": "Wind"
+  },
+  "8343V.ALAGEOL000": {
+    "area": 55,
+    "bus_name": "V.ALAGEOL000",
+    "number": 8343,
+    "type": "Wind"
+  },
+  "8347MILAG-UFV000": {
+    "area": 56,
+    "bus_name": "MILAG-UFV000",
+    "number": 8347,
+    "type": "PV"
+  },
+  "836UVITOR-PR138": {
+    "area": 22,
+    "bus_name": "UVITOR-PR138",
+    "number": 836,
+    "type": "Unknown"
+  },
+  "8376CUMARUEOL049": {
+    "area": 55,
+    "bus_name": "CUMARUEOL049",
+    "number": 8376,
+    "type": "Wind"
+  },
+  "837VILCAR-PR138": {
+    "area": 22,
+    "bus_name": "VILCAR-PR138",
+    "number": 837,
+    "type": "Unknown"
+  },
+  "838ACHATE-PR138": {
+    "area": 22,
+    "bus_name": "ACHATE-PR138",
+    "number": 838,
+    "type": "Unknown"
+  },
+  "841CEUAZU-PR138": {
+    "area": 22,
+    "bus_name": "CEUAZU-PR138",
+    "number": 841,
+    "type": "Unknown"
+  },
+  "842DVIZIN-PR138": {
+    "area": 22,
+    "bus_name": "DVIZIN-PR138",
+    "number": 842,
+    "type": "Unknown"
+  },
+  "8442SERROTEOL049": {
+    "area": 56,
+    "bus_name": "SERROTEOL049",
+    "number": 8442,
+    "type": "Wind"
+  },
+  "845FBELTR-PR138": {
+    "area": 22,
+    "bus_name": "FBELTR-PR138",
+    "number": 845,
+    "type": "Unknown"
+  },
+  "848FCHOPI-PR138": {
+    "area": 22,
+    "bus_name": "FCHOPI-PR138",
+    "number": 848,
+    "type": "Unknown"
+  },
+  "849MCROND-PR138": {
+    "area": 22,
+    "bus_name": "MCROND-PR138",
+    "number": 849,
+    "type": "Unknown"
+  },
+  "8535MAUAG1UTE000": {
+    "area": 85,
+    "bus_name": "MAUAG1UTE000",
+    "number": 8535,
+    "type": "Steam"
+  },
+  "8538MAUAG2UTE000": {
+    "area": 85,
+    "bus_name": "MAUAG2UTE000",
+    "number": 8538,
+    "type": "Steam"
+  },
+  "857TOLEDO-PR138": {
+    "area": 22,
+    "bus_name": "TOLEDO-PR138",
+    "number": 857,
+    "type": "Unknown"
+  },
+  "8597BALBEQUHE005": {
+    "area": 85,
+    "bus_name": "BALBEQUHE005",
+    "number": 8597,
+    "type": "Hydro"
+  },
+  "8609PIE-MAUTE004": {
+    "area": 85,
+    "bus_name": "PIE-MAUTE004",
+    "number": 8609,
+    "type": "Steam"
+  },
+  "8610PIEGERUTE004": {
+    "area": 85,
+    "bus_name": "PIEGERUTE004",
+    "number": 8610,
+    "type": "Steam"
+  },
+  "8611CROCHAUTE004": {
+    "area": 85,
+    "bus_name": "CROCHAUTE004",
+    "number": 8611,
+    "type": "Steam"
+  },
+  "8612PIEJR2UTE010": {
+    "area": 85,
+    "bus_name": "PIEJR2UTE010",
+    "number": 8612,
+    "type": "Steam"
+  },
+  "8615PIETB1UTE011": {
+    "area": 85,
+    "bus_name": "PIETB1UTE011",
+    "number": 8615,
+    "type": "Steam"
+  },
+  "8616PIEJR1UTE011": {
+    "area": 85,
+    "bus_name": "PIEJR1UTE011",
+    "number": 8616,
+    "type": "Steam"
+  },
+  "8617PIETB2UTE010": {
+    "area": 85,
+    "bus_name": "PIETB2UTE010",
+    "number": 8617,
+    "type": "Steam"
+  },
+  "861CIANOR-PR138": {
+    "area": 22,
+    "bus_name": "CIANOR-PR138",
+    "number": 861,
+    "type": "Unknown"
+  },
+  "8646APARE1UTE000": {
+    "area": 85,
+    "bus_name": "APARE1UTE000",
+    "number": 8646,
+    "type": "Steam"
+  },
+  "8653APARE2UTE000": {
+    "area": 85,
+    "bus_name": "APARE2UTE000",
+    "number": 8653,
+    "type": "Steam"
+  },
+  "869MARING-PR138": {
+    "area": 22,
+    "bus_name": "MARING-PR138",
+    "number": 869,
+    "type": "Unknown"
+  },
+  "8701GARGA-EOL000": {
+    "area": 10,
+    "bus_name": "GARGA-EOL000",
+    "number": 8701,
+    "type": "Wind"
+  },
+  "870PARANA-PR138": {
+    "area": 22,
+    "bus_name": "PARANA-PR138",
+    "number": 870,
+    "type": "Unknown"
+  },
+  "871SDUMON-PR138": {
+    "area": 22,
+    "bus_name": "SDUMON-PR138",
+    "number": 871,
+    "type": "Unknown"
+  },
+  "888IVAIPO-PR138": {
+    "area": 22,
+    "bus_name": "IVAIPO-PR138",
+    "number": 888,
+    "type": "Unknown"
+  },
+  "8900ARCEL2UTE000": {
+    "area": 41,
+    "bus_name": "ARCEL2UTE000",
+    "number": 8900,
+    "type": "Steam"
+  },
+  "8901ARCEL3UTE000": {
+    "area": 41,
+    "bus_name": "ARCEL3UTE000",
+    "number": 8901,
+    "type": "Steam"
+  },
+  "8902ARCEL1UTE000": {
+    "area": 41,
+    "bus_name": "ARCEL1UTE000",
+    "number": 8902,
+    "type": "Steam"
+  },
+  "8904CST1-2UTE002": {
+    "area": 41,
+    "bus_name": "CST1-2UTE002",
+    "number": 8904,
+    "type": "Steam"
+  },
+  "8905CST3-4UTE002": {
+    "area": 41,
+    "bus_name": "CST3-4UTE002",
+    "number": 8905,
+    "type": "Steam"
+  },
+  "8906SOL.--UTE002": {
+    "area": 41,
+    "bus_name": "SOL.--UTE002",
+    "number": 8906,
+    "type": "Steam"
+  },
+  "8907CSTTRTUTE001": {
+    "area": 41,
+    "bus_name": "CSTTRTUTE001",
+    "number": 8907,
+    "type": "Steam"
+  },
+  "8910VIANA1UTE000": {
+    "area": 41,
+    "bus_name": "VIANA1UTE000",
+    "number": 8910,
+    "type": "Steam"
+  },
+  "8911VIANA2UTE000": {
+    "area": 41,
+    "bus_name": "VIANA2UTE000",
+    "number": 8911,
+    "type": "Steam"
+  },
+  "892VERACR-PR138": {
+    "area": 22,
+    "bus_name": "VERACR-PR138",
+    "number": 892,
+    "type": "Unknown"
+  },
+  "9020ITABI2PCH013": {
+    "area": 3,
+    "bus_name": "ITABI2PCH013",
+    "number": 9020,
+    "type": "PCH"
+  },
+  "9026LINH--UTE024": {
+    "area": 41,
+    "bus_name": "LINH--UTE024",
+    "number": 9026,
+    "type": "Steam"
+  },
+  "902COGLAGBIO034": {
+    "area": 19,
+    "bus_name": "COGLAGBIO034",
+    "number": 902,
+    "type": "Steam"
+  },
+  "9034EMBORCSIN000": {
+    "area": 2,
+    "bus_name": "EMBORCSIN000",
+    "number": 9034,
+    "type": "Synch.Comp."
+  },
+  "9035NPONTESIN000": {
+    "area": 2,
+    "bus_name": "NPONTESIN000",
+    "number": 9035,
+    "type": "Synch.Comp."
+  },
+  "9037VGRANDSIN000": {
+    "area": 2,
+    "bus_name": "VGRANDSIN000",
+    "number": 9037,
+    "type": "Synch.Comp."
+  },
+  "9038SANTONPCH069": {
+    "area": 10,
+    "bus_name": "SANTONPCH069",
+    "number": 9038,
+    "type": "PCH"
+  },
+  "9040UMINA1-MG230": {
+    "area": 72,
+    "bus_name": "UMINA1-MG230",
+    "number": 9040,
+    "type": "Unknown"
+  },
+  "9041IRAPE-SIN000": {
+    "area": 2,
+    "bus_name": "IRAPE-SIN000",
+    "number": 9041,
+    "type": "Synch.Comp."
+  },
+  "9045UMINA2-MG230": {
+    "area": 72,
+    "bus_name": "UMINA2-MG230",
+    "number": 9045,
+    "type": "Unknown"
+  },
+  "904ITA---UHE004": {
+    "area": 19,
+    "bus_name": "ITA---UHE004",
+    "number": 904,
+    "type": "Hydro"
+  },
+  "9058PORTOG-SP088": {
+    "area": 42,
+    "bus_name": "PORTOG-SP088",
+    "number": 9058,
+    "type": "Unknown"
+  },
+  "9059ITU2---SP088": {
+    "area": 42,
+    "bus_name": "ITU2---SP088",
+    "number": 9059,
+    "type": "Unknown"
+  },
+  "905ITA---SIN001": {
+    "area": 19,
+    "bus_name": "ITA---SIN001",
+    "number": 905,
+    "type": "Synch.Comp."
+  },
+  "9061GUANH2-MG138": {
+    "area": 3,
+    "bus_name": "GUANH2-MG138",
+    "number": 9061,
+    "type": "Unknown"
+  },
+  "9067MARAC-PCH138": {
+    "area": 3,
+    "bus_name": "MARAC-PCH138",
+    "number": 9067,
+    "type": "PCH"
+  },
+  "9075CISLUZ-MG138": {
+    "area": 3,
+    "bus_name": "CISLUZ-MG138",
+    "number": 9075,
+    "type": "Unknown"
+  },
+  "907JLA12AUTE000": {
+    "area": 19,
+    "bus_name": "JLA12AUTE000",
+    "number": 907,
+    "type": "Steam"
+  },
+  "9080SRCALDPCH138": {
+    "area": 3,
+    "bus_name": "SRCALDPCH138",
+    "number": 9080,
+    "type": "PCH"
+  },
+  "9083BDAMATPCH138": {
+    "area": 3,
+    "bus_name": "BDAMATPCH138",
+    "number": 9083,
+    "type": "PCH"
+  },
+  "9089ALFEN1PCH138": {
+    "area": 3,
+    "bus_name": "ALFEN1PCH138",
+    "number": 9089,
+    "type": "PCH"
+  },
+  "9094BOTEL-PCH138": {
+    "area": 3,
+    "bus_name": "BOTEL-PCH138",
+    "number": 9094,
+    "type": "PCH"
+  },
+  "9099CACHOEPCH069": {
+    "area": 3,
+    "bus_name": "CACHOEPCH069",
+    "number": 9099,
+    "type": "PCH"
+  },
+  "909JLA34AUTE002": {
+    "area": 19,
+    "bus_name": "JLA34AUTE002",
+    "number": 909,
+    "type": "Steam"
+  },
+  "9100ROCH-GUTE001": {
+    "area": 71,
+    "bus_name": "ROCH-GUTE001",
+    "number": 9100,
+    "type": "Steam"
+  },
+  "9101ROCH-VUTE001": {
+    "area": 71,
+    "bus_name": "ROCH-VUTE001",
+    "number": 9101,
+    "type": "Steam"
+  },
+  "9109QUELUZPCH013": {
+    "area": 71,
+    "bus_name": "QUELUZPCH013",
+    "number": 9109,
+    "type": "PCH"
+  },
+  "9111LAVRINPCH013": {
+    "area": 71,
+    "bus_name": "LAVRINPCH013",
+    "number": 9111,
+    "type": "PCH"
+  },
+  "9115IPAUS-BIO013": {
+    "area": 71,
+    "bus_name": "IPAUS-BIO013",
+    "number": 9115,
+    "type": "Steam"
+  },
+  "911JLA56BUTE002": {
+    "area": 19,
+    "bus_name": "JLA56BUTE002",
+    "number": 911,
+    "type": "Steam"
+  },
+  "9126RVERM-BIO138": {
+    "area": 30,
+    "bus_name": "RVERM-BIO138",
+    "number": 9126,
+    "type": "Steam"
+  },
+  "913JLA7C-UTE001": {
+    "area": 19,
+    "bus_name": "JLA7C-UTE001",
+    "number": 913,
+    "type": "Steam"
+  },
+  "915MACHADUHE002": {
+    "area": 19,
+    "bus_name": "MACHADUHE002",
+    "number": 915,
+    "type": "Hydro"
+  },
+  "9165HORIZOEOL138": {
+    "area": 38,
+    "bus_name": "HORIZOEOL138",
+    "number": 9165,
+    "type": "Wind"
+  },
+  "916MACHADSIN000": {
+    "area": 19,
+    "bus_name": "MACHADSIN000",
+    "number": 916,
+    "type": "Synch.Comp."
+  },
+  "917PFUNDOUHE002": {
+    "area": 19,
+    "bus_name": "PFUNDOUHE002",
+    "number": 917,
+    "type": "Hydro"
+  },
+  "9183XANGRIEOL034": {
+    "area": 39,
+    "bus_name": "XANGRIEOL034",
+    "number": 9183,
+    "type": "Wind"
+  },
+  "9184PALMASEOL138": {
+    "area": 22,
+    "bus_name": "PALMASEOL138",
+    "number": 9184,
+    "type": "Wind"
+  },
+  "918PFUNDOSIN000": {
+    "area": 19,
+    "bus_name": "PFUNDOSIN000",
+    "number": 918,
+    "type": "Synch.Comp."
+  },
+  "919SOSO14UHE003": {
+    "area": 19,
+    "bus_name": "SOSO14UHE003",
+    "number": 919,
+    "type": "Hydro"
+  },
+  "920SOSO14SIN000": {
+    "area": 19,
+    "bus_name": "SOSO14SIN000",
+    "number": 920,
+    "type": "Synch.Comp."
+  },
+  "92117None": {
+    "area": 1,
+    "bus_name": "None",
+    "number": 92117,
+    "type": "Unknown"
+  },
+  "9218PSJOAOUHE002": {
+    "area": 20,
+    "bus_name": "PSJOAOUHE002",
+    "number": 9218,
+    "type": "Hydro"
+  },
+  "921SOSO56UHE002": {
+    "area": 19,
+    "bus_name": "SOSO56UHE002",
+    "number": 921,
+    "type": "Hydro"
+  },
+  "9220SJOSE-UHE002": {
+    "area": 39,
+    "bus_name": "SJOSE-UHE002",
+    "number": 9220,
+    "type": "Hydro"
+  },
+  "9222KOTZIAPCH006": {
+    "area": 39,
+    "bus_name": "KOTZIAPCH006",
+    "number": 9222,
+    "type": "PCH"
+  },
+  "9224DREHERPCH006": {
+    "area": 39,
+    "bus_name": "DREHERPCH006",
+    "number": 9224,
+    "type": "PCH"
+  },
+  "922SOSO56SIN000": {
+    "area": 19,
+    "bus_name": "SOSO56SIN000",
+    "number": 922,
+    "type": "Synch.Comp."
+  },
+  "92329None": {
+    "area": 1,
+    "bus_name": "None",
+    "number": 92329,
+    "type": "Unknown"
+  },
+  "925SSANTIUHE003": {
+    "area": 19,
+    "bus_name": "SSANTIUHE003",
+    "number": 925,
+    "type": "Hydro"
+  },
+  "926SSANTISIN000": {
+    "area": 19,
+    "bus_name": "SSANTISIN000",
+    "number": 926,
+    "type": "Synch.Comp."
+  },
+  "9292SMARCO-RS069": {
+    "area": 32,
+    "bus_name": "SMARCO-RS069",
+    "number": 9292,
+    "type": "Unknown"
+  },
+  "9310SCAVA2PCH006": {
+    "area": 39,
+    "bus_name": "SCAVA2PCH006",
+    "number": 9310,
+    "type": "PCH"
+  },
+  "9312PEZZI-PCH006": {
+    "area": 39,
+    "bus_name": "PEZZI-PCH006",
+    "number": 9312,
+    "type": "PCH"
+  },
+  "931MONJOLUHE002": {
+    "area": 39,
+    "bus_name": "MONJOLUHE002",
+    "number": 931,
+    "type": "Hydro"
+  },
+  "9323JAGUAR-PR013": {
+    "area": 22,
+    "bus_name": "JAGUAR-PR013",
+    "number": 9323,
+    "type": "Unknown"
+  },
+  "9328PGRON2-PR034": {
+    "area": 22,
+    "bus_name": "PGRON2-PR034",
+    "number": 9328,
+    "type": "Unknown"
+  },
+  "9340PBRANC-PR034": {
+    "area": 22,
+    "bus_name": "PBRANC-PR034",
+    "number": 9340,
+    "type": "Unknown"
+  },
+  "9356BAIGUAUHE002": {
+    "area": 75,
+    "bus_name": "BAIGUAUHE002",
+    "number": 9356,
+    "type": "Hydro"
+  },
+  "9362BERNECUTE013": {
+    "area": 68,
+    "bus_name": "BERNECUTE013",
+    "number": 9362,
+    "type": "Steam"
+  },
+  "9364KLABI3-PR069": {
+    "area": 68,
+    "bus_name": "KLABI3-PR069",
+    "number": 9364,
+    "type": "Unknown"
+  },
+  "9368RBRANC-PR138": {
+    "area": 22,
+    "bus_name": "RBRANC-PR138",
+    "number": 9368,
+    "type": "Unknown"
+  },
+  "93888None": {
+    "area": 1,
+    "bus_name": "None",
+    "number": 93888,
+    "type": "Unknown"
+  },
+  "9394KLABINBIO013": {
+    "area": 68,
+    "bus_name": "KLABINBIO013",
+    "number": 9394,
+    "type": "Steam"
+  },
+  "9405PIGUAC-PR138": {
+    "area": 22,
+    "bus_name": "PIGUAC-PR138",
+    "number": 9405,
+    "type": "Unknown"
+  },
+  "9408PRUDEN-PR138": {
+    "area": 22,
+    "bus_name": "PRUDEN-PR138",
+    "number": 9408,
+    "type": "Unknown"
+  },
+  "94224None": {
+    "area": 1,
+    "bus_name": "None",
+    "number": 94224,
+    "type": "Unknown"
+  },
+  "9422LUDESAPCH138": {
+    "area": 22,
+    "bus_name": "LUDESAPCH138",
+    "number": 9422,
+    "type": "PCH"
+  },
+  "9442SALTO-UHE002": {
+    "area": 73,
+    "bus_name": "SALTO-UHE002",
+    "number": 9442,
+    "type": "Hydro"
+  },
+  "9443S.R.V-UHE002": {
+    "area": 73,
+    "bus_name": "S.R.V-UHE002",
+    "number": 9443,
+    "type": "Hydro"
+  },
+  "9446BATALHUHE002": {
+    "area": 1,
+    "bus_name": "BATALHUHE002",
+    "number": 9446,
+    "type": "Hydro"
+  },
+  "9447FRCLARUHE002": {
+    "area": 73,
+    "bus_name": "FRCLARUHE002",
+    "number": 9447,
+    "type": "Hydro"
+  },
+  "9448CACU--UHE002": {
+    "area": 73,
+    "bus_name": "CACU--UHE002",
+    "number": 9448,
+    "type": "Hydro"
+  },
+  "9449BCOQUEUHE002": {
+    "area": 73,
+    "bus_name": "BCOQUEUHE002",
+    "number": 9449,
+    "type": "Hydro"
+  },
+  "9451CACUI-UTE000": {
+    "area": 73,
+    "bus_name": "CACUI-UTE000",
+    "number": 9451,
+    "type": "Steam"
+  },
+  "9452QUIRI-UTE000": {
+    "area": 73,
+    "bus_name": "QUIRI-UTE000",
+    "number": 9452,
+    "type": "Steam"
+  },
+  "9453BVISTAUTE000": {
+    "area": 73,
+    "bus_name": "BVISTAUTE000",
+    "number": 9453,
+    "type": "Steam"
+  },
+  "9454C.DOURUTE000": {
+    "area": 73,
+    "bus_name": "C.DOURUTE000",
+    "number": 9454,
+    "type": "Steam"
+  },
+  "9455BIOEN1UTE000": {
+    "area": 73,
+    "bus_name": "BIOEN1UTE000",
+    "number": 9455,
+    "type": "Steam"
+  },
+  "9465BIOEN2UTE000": {
+    "area": 73,
+    "bus_name": "BIOEN2UTE000",
+    "number": 9465,
+    "type": "Steam"
+  },
+  "9500SIMPL-UHE003": {
+    "area": 1,
+    "bus_name": "SIMPL-UHE003",
+    "number": 9500,
+    "type": "Hydro"
+  },
+  "9503ANTA--UHE002": {
+    "area": 1,
+    "bus_name": "ANTA--UHE002",
+    "number": 9503,
+    "type": "Hydro"
+  },
+  "9504T.RIO-SIN002": {
+    "area": 43,
+    "bus_name": "T.RIO-SIN002",
+    "number": 9504,
+    "type": "Synch.Comp."
+  },
+  "9531TUNAS--PR138": {
+    "area": 22,
+    "bus_name": "TUNAS--PR138",
+    "number": 9531,
+    "type": "Unknown"
+  },
+  "9561ELDORABIO013": {
+    "area": 126,
+    "bus_name": "ELDORABIO013",
+    "number": 9561,
+    "type": "Steam"
+  },
+  "9562CERILU-RS069": {
+    "area": 32,
+    "bus_name": "CERILU-RS069",
+    "number": 9562,
+    "type": "Unknown"
+  },
+  "9582SLU-I-BIO013": {
+    "area": 126,
+    "bus_name": "SLU-I-BIO013",
+    "number": 9582,
+    "type": "Steam"
+  },
+  "9594LAGEGR-RS138": {
+    "area": 32,
+    "bus_name": "LAGEGR-RS138",
+    "number": 9594,
+    "type": "Unknown"
+  },
+  "9600CSA-G-UTE001": {
+    "area": 41,
+    "bus_name": "CSA-G-UTE001",
+    "number": 9600,
+    "type": "Steam"
+  },
+  "9603CSA-V-UTE001": {
+    "area": 41,
+    "bus_name": "CSA-V-UTE001",
+    "number": 9603,
+    "type": "Steam"
+  },
+  "9615CSA-G2UTE001": {
+    "area": 41,
+    "bus_name": "CSA-G2UTE001",
+    "number": 9615,
+    "type": "Steam"
+  },
+  "9627BFLUMGUTE002": {
+    "area": 41,
+    "bus_name": "BFLUMGUTE002",
+    "number": 9627,
+    "type": "Steam"
+  },
+  "9628BFLUMVUTE001": {
+    "area": 41,
+    "bus_name": "BFLUMVUTE001",
+    "number": 9628,
+    "type": "Steam"
+  },
+  "9650BARRA-BIO138": {
+    "area": 7,
+    "bus_name": "BARRA-BIO138",
+    "number": 9650,
+    "type": "Steam"
+  },
+  "9654COPRE1-RS013": {
+    "area": 124,
+    "bus_name": "COPRE1-RS013",
+    "number": 9654,
+    "type": "Unknown"
+  },
+  "9682AMANDIBIO013": {
+    "area": 126,
+    "bus_name": "AMANDIBIO013",
+    "number": 9682,
+    "type": "Steam"
+  },
+  "9685USJOSE-PR138": {
+    "area": 7,
+    "bus_name": "USJOSE-PR138",
+    "number": 9685,
+    "type": "Unknown"
+  },
+  "9688CHAPEC-SC069": {
+    "area": 25,
+    "bus_name": "CHAPEC-SC069",
+    "number": 9688,
+    "type": "Unknown"
+  },
+  "9689FAXGUE-SC069": {
+    "area": 25,
+    "bus_name": "FAXGUE-SC069",
+    "number": 9689,
+    "type": "Unknown"
+  },
+  "9695CRICA-PCH004": {
+    "area": 126,
+    "bus_name": "CRICA-PCH004",
+    "number": 9695,
+    "type": "PCH"
+  },
+  "9699CANTU2PCH138": {
+    "area": 22,
+    "bus_name": "CANTU2PCH138",
+    "number": 9699,
+    "type": "PCH"
+  },
+  "9719TANGAR-SC138": {
+    "area": 25,
+    "bus_name": "TANGAR-SC138",
+    "number": 9719,
+    "type": "Unknown"
+  },
+  "9732CERCH1EOL034": {
+    "area": 20,
+    "bus_name": "CERCH1EOL034",
+    "number": 9732,
+    "type": "Wind"
+  },
+  "9733CERCH2EOL034": {
+    "area": 20,
+    "bus_name": "CERCH2EOL034",
+    "number": 9733,
+    "type": "Wind"
+  },
+  "9734CERCH3EOL034": {
+    "area": 20,
+    "bus_name": "CERCH3EOL034",
+    "number": 9734,
+    "type": "Wind"
+  },
+  "9735GARIBAUHE002": {
+    "area": 38,
+    "bus_name": "GARIBAUHE002",
+    "number": 9735,
+    "type": "Hydro"
+  },
+  "9742NHORIZPCH034": {
+    "area": 22,
+    "bus_name": "NHORIZPCH034",
+    "number": 9742,
+    "type": "PCH"
+  },
+  "9747OURO--PCH034": {
+    "area": 38,
+    "bus_name": "OURO--PCH034",
+    "number": 9747,
+    "type": "PCH"
+  },
+  "9749MOINHOPCH034": {
+    "area": 38,
+    "bus_name": "MOINHOPCH034",
+    "number": 9749,
+    "type": "PCH"
+  },
+  "9759CAVERN-PR138": {
+    "area": 22,
+    "bus_name": "CAVERN-PR138",
+    "number": 9759,
+    "type": "Unknown"
+  },
+  "9760ALTOTABIO013": {
+    "area": 126,
+    "bus_name": "ALTOTABIO013",
+    "number": 9760,
+    "type": "Steam"
+  },
+  "9761PORTAGBIO013": {
+    "area": 126,
+    "bus_name": "PORTAGBIO013",
+    "number": 9761,
+    "type": "Steam"
+  },
+  "9762CRICA-BIO013": {
+    "area": 126,
+    "bus_name": "CRICA-BIO013",
+    "number": 9762,
+    "type": "Steam"
+  },
+  "9763IACO--BIO013": {
+    "area": 126,
+    "bus_name": "IACO--BIO013",
+    "number": 9763,
+    "type": "Steam"
+  },
+  "9764INDAIAPCH006": {
+    "area": 126,
+    "bus_name": "INDAIAPCH006",
+    "number": 9764,
+    "type": "PCH"
+  },
+  "9765INDGRDPCH006": {
+    "area": 126,
+    "bus_name": "INDGRDPCH006",
+    "number": 9765,
+    "type": "PCH"
+  },
+  "9766NARDINBIO013": {
+    "area": 126,
+    "bus_name": "NARDINBIO013",
+    "number": 9766,
+    "type": "Steam"
+  },
+  "9767JATAI-BIO013": {
+    "area": 126,
+    "bus_name": "JATAI-BIO013",
+    "number": 9767,
+    "type": "Steam"
+  },
+  "9768AGUAEMBIO013": {
+    "area": 126,
+    "bus_name": "AGUAEMBIO013",
+    "number": 9768,
+    "type": "Steam"
+  },
+  "9769MVERMEBIO013": {
+    "area": 126,
+    "bus_name": "MVERMEBIO013",
+    "number": 9769,
+    "type": "Steam"
+  },
+  "9784BANDEIPCH013": {
+    "area": 126,
+    "bus_name": "BANDEIPCH013",
+    "number": 9784,
+    "type": "PCH"
+  },
+  "978GUAIRA-PR230": {
+    "area": 21,
+    "bus_name": "GUAIRA-PR230",
+    "number": 978,
+    "type": "Unknown"
+  },
+  "9798CERTE2-RS069": {
+    "area": 124,
+    "bus_name": "CERTE2-RS069",
+    "number": 9798,
+    "type": "Unknown"
+  },
+  "9824MARME2SIN003": {
+    "area": 39,
+    "bus_name": "MARME2SIN003",
+    "number": 9824,
+    "type": "Synch.Comp."
+  },
+  "983MAUA--UHE003": {
+    "area": 75,
+    "bus_name": "MAUA--UHE003",
+    "number": 983,
+    "type": "Hydro"
+  },
+  "984MAUA--PCH002": {
+    "area": 75,
+    "bus_name": "MAUA--PCH002",
+    "number": 984,
+    "type": "PCH"
+  },
+  "9853IBIRAPEOL034": {
+    "area": 20,
+    "bus_name": "IBIRAPEOL034",
+    "number": 9853,
+    "type": "Wind"
+  },
+  "9854CERCH6EOL034": {
+    "area": 20,
+    "bus_name": "CERCH6EOL034",
+    "number": 9854,
+    "type": "Wind"
+  },
+  "9867PONT2BEOL034": {
+    "area": 39,
+    "bus_name": "PONT2BEOL034",
+    "number": 9867,
+    "type": "Wind"
+  },
+  "9868PO2A3BEOL034": {
+    "area": 39,
+    "bus_name": "PO2A3BEOL034",
+    "number": 9868,
+    "type": "Wind"
+  },
+  "9871PERY2--SC138": {
+    "area": 25,
+    "bus_name": "PERY2--SC138",
+    "number": 9871,
+    "type": "Unknown"
+  },
+  "9872SJCERR-SC138": {
+    "area": 25,
+    "bus_name": "SJCERR-SC138",
+    "number": 9872,
+    "type": "Unknown"
+  },
+  "9900CHUI9-EOL034": {
+    "area": 39,
+    "bus_name": "CHUI9-EOL034",
+    "number": 9900,
+    "type": "Wind"
+  },
+  "9905AGDOCEEOL138": {
+    "area": 22,
+    "bus_name": "AGDOCEEOL138",
+    "number": 9905,
+    "type": "Wind"
+  },
+  "9921VILMAR-RS138": {
+    "area": 32,
+    "bus_name": "VILMAR-RS138",
+    "number": 9921,
+    "type": "Unknown"
+  },
+  "9923CERBRA-SC138": {
+    "area": 25,
+    "bus_name": "CERBRA-SC138",
+    "number": 9923,
+    "type": "Unknown"
+  },
+  "9948CINGLEEOL034": {
+    "area": 20,
+    "bus_name": "CINGLEEOL034",
+    "number": 9948,
+    "type": "Wind"
+  },
+  "9949COXSECEOL034": {
+    "area": 20,
+    "bus_name": "COXSECEOL034",
+    "number": 9949,
+    "type": "Wind"
+  },
+  "994UBIRAT-PR138": {
+    "area": 22,
+    "bus_name": "UBIRAT-PR138",
+    "number": 994,
+    "type": "Unknown"
+  },
+  "9950GALPOEEOL034": {
+    "area": 20,
+    "bus_name": "GALPOEEOL034",
+    "number": 9950,
+    "type": "Wind"
+  },
+  "9953POVNOVEOL034": {
+    "area": 39,
+    "bus_name": "POVNOVEOL034",
+    "number": 9953,
+    "type": "Wind"
+  },
+  "99625BIO-BONF-138": {
+    "area": 1,
+    "bus_name": "BIO-BONF-138",
+    "number": 99625,
+    "type": "Unknown"
+  },
+  "9974BRANOR-SC069": {
+    "area": 25,
+    "bus_name": "BRANOR-SC069",
+    "number": 9974,
+    "type": "Unknown"
+  },
+  "99751CRU-G1UHE001": {
+    "area": 59,
+    "bus_name": "CRU-G1UHE001",
+    "number": 99751,
+    "type": "Hydro"
+  },
+  "99752CRU-G2UHE001": {
+    "area": 59,
+    "bus_name": "CRU-G2UHE001",
+    "number": 99752,
+    "type": "Hydro"
+  },
+  "99753CRU-G3UHE001": {
+    "area": 59,
+    "bus_name": "CRU-G3UHE001",
+    "number": 99753,
+    "type": "Hydro"
+  },
+  "9977GRAVAT-SC069": {
+    "area": 25,
+    "bus_name": "GRAVAT-SC069",
+    "number": 9977,
+    "type": "Unknown"
+  },
+  "9986KLACELUTE002": {
+    "area": 68,
+    "bus_name": "KLACELUTE002",
+    "number": 9986,
+    "type": "Steam"
+  },
+  "998PAMPASUTE000": {
+    "area": 19,
+    "bus_name": "PAMPASUTE000",
+    "number": 998,
+    "type": "Steam"
+  },
+  "9998CMP123-RS013": {
+    "area": 66,
+    "bus_name": "CMP123-RS013",
+    "number": 9998,
+    "type": "Unknown"
+  },
+  "9999CMPC45-RS013": {
+    "area": 66,
+    "bus_name": "CMPC45-RS013",
+    "number": 9999,
+    "type": "Unknown"
+  }
+}

@@ -8,7 +8,7 @@ from pydantic import Field, model_validator
 
 from o_grid.models.base import AnaredeComponent
 from o_grid.models.control import DCLineData
-from o_grid.models.enums import CircuitState, CSCControlMode
+from o_grid.models.enums import CircuitState, CSCControlMode, TransformerManeuverable
 from o_grid.models.named_tuples import FromToToFrom, MinMax
 from o_grid.models.topology import ACBus, Arc, Area, DCBus
 from o_grid.units import (
@@ -323,6 +323,16 @@ class LTCTransformer(AnaredeComponent):
 
     ctap_option: CtapOption = False
     flow_monitoring: FlowMonitoring = False
+    maneuverable: Annotated[
+        TransformerManeuverable | None,
+        Field(
+            description=(
+                "Exclusive field for transformers, used during the power-flow solution "
+                "when the AUTO option is used together with the CTAP option. S if the "
+                "transformer is maneuverable, N if it is not."
+            ),
+        ),
+    ] = TransformerManeuverable.MANEUVERABLE
     controlled_bus: Annotated[
         ACBus | None,
         Field(
@@ -462,6 +472,16 @@ class PhaseShiftingTransformer(AnaredeComponent):
 
     ctap_option: CtapOption = False
     flow_monitoring: FlowMonitoring = False
+    maneuverable: Annotated[
+        TransformerManeuverable | None,
+        Field(
+            description=(
+                "Exclusive field for transformers, used during the power-flow solution "
+                "when the AUTO option is used together with the CTAP option. S if the "
+                "transformer is maneuverable, N if it is not."
+            ),
+        ),
+    ] = TransformerManeuverable.MANEUVERABLE
     controlled_bus: Annotated[
         ACBus | None,
         Field(

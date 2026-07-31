@@ -107,3 +107,32 @@ class OptionState(StrEnum):
 
     ACTIVATED = "L"
     DEACTIVATED = "D"
+
+
+class VoltageMonitoringCondition(StrEnum):
+    """Enum defining selection-set operators for AC bus voltage monitoring (DMTE)."""
+
+    INTERVAL = "A"
+    UNION = "E"
+    DIFFERENCE = "X"
+    INTERSECTION = "S"
+
+
+class TransformerManeuverable(StrEnum):
+    """Enum defining whether a transformer is maneuverable (DLIN)."""
+
+    MANEUVERABLE = "S"
+    NON_MANEUVERABLE = "N"
+
+
+class GenType(StrEnum):
+    """Enum defining generator technology types from the gen-type mapping."""
+
+    NUCLEAR = "Nuclear"
+    HYDRO = "Hydro"
+    PCH = "PCH"
+    PV = "PV"
+    STEAM = "Steam"
+    SYNCHRONOUS_COMPENSATOR = "Synch.Comp."
+    WIND = "Wind"
+    UNKNOWN = "Unknown"

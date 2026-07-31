@@ -7,7 +7,7 @@ from typing import Annotated
 from pydantic import Field
 
 from o_grid.models.base import AnaredeComponent
-from o_grid.models.enums import SVCControlMode
+from o_grid.models.enums import GenType, SVCControlMode
 from o_grid.units import ActivePower, Angle, ApparentPower, Percentage, ReactivePower
 
 
@@ -26,6 +26,14 @@ class Generator(AnaredeComponent):
         Field(
             description="Armature current service factor, in %",
             json_schema_extra={"units": "%"},
+        ),
+    ] = None
+    gen_type: Annotated[
+        GenType | None,
+        Field(
+            description=(
+                "Generator technology type resolved from the gen-type mapping by bus number."
+            ),
         ),
     ] = None
     load_angle: Annotated[
@@ -101,6 +109,155 @@ class Generator(AnaredeComponent):
         Percentage | None,
         Field(
             description="Rotor current service factor, in %",
+            json_schema_extra={"units": "%"},
+        ),
+    ] = None
+
+
+class IndividualizedGeneratorGroup(AnaredeComponent):
+    """Individualized generator group data (DGEI)."""
+
+    active_generation: Annotated[
+        ActivePower | None,
+        Field(
+            description="Active power generation value for each unit of the group, in MW.",
+            json_schema_extra={"units": "MW"},
+        ),
+    ] = None
+    automatic_mode: Annotated[
+        str | None,
+        Field(
+            description=(
+                "S makes the program automatically compute the number of dispatched "
+                "units from the equivalent active power generation. N redefines the "
+                "equivalent dispatch as the product of the units in operation by the "
+                "individualized dispatch."
+            ),
+        ),
+    ] = "N"
+    bus: Annotated[
+        int | float | str | None,
+        Field(
+            description=(
+                "Bus number, as defined in the Number field of the DBAR Execution Code, "
+                "to which the individualized generator group is connected."
+            ),
+        ),
+    ] = None
+    direct_axis_reactance: Annotated[
+        Percentage | None,
+        Field(
+            description=(
+                "Direct-axis reactance of each unit of the group, in %, on the machine base."
+            ),
+            json_schema_extra={"units": "%"},
+        ),
+    ] = None
+    group: Annotated[
+        int | float | str | None,
+        Field(
+            description="Identification number of the individualized generator group.",
+        ),
+    ] = None
+    leakage_reactance: Annotated[
+        Percentage | None,
+        Field(
+            description="Leakage reactance of each unit of the group, in %, on the machine base.",
+            json_schema_extra={"units": "%"},
+        ),
+    ] = None
+    maximum_reactive_generation: Annotated[
+        ReactivePower | None,
+        Field(
+            description=(
+                "Maximum reactive power generation limit value for each unit of the group, in Mvar."
+            ),
+            json_schema_extra={"units": "MVAr"},
+        ),
+    ] = ReactivePower(99999.0, "MVAr")
+    mechanical_limit: Annotated[
+        ActivePower | None,
+        Field(
+            description="Mechanical limit of each unit of the group, in MW.",
+            json_schema_extra={"units": "MW"},
+        ),
+    ] = ActivePower(99999.0, "MW")
+    minimum_power: Annotated[
+        ActivePower | None,
+        Field(
+            description="Minimum power of each unit of the group, in MW.",
+            json_schema_extra={"units": "MW"},
+        ),
+    ] = ActivePower(0.0, "MW")
+    minimum_reactive_generation: Annotated[
+        ReactivePower | None,
+        Field(
+            description=(
+                "Minimum reactive power generation limit value for each unit of the group, in Mvar."
+            ),
+            json_schema_extra={"units": "MVAr"},
+        ),
+    ] = ReactivePower(-9999.0, "MVAr")
+    minimum_units_in_operation: Annotated[
+        int | float | str | None,
+        Field(
+            description="Minimum number of units in operation that make up the group.",
+        ),
+    ] = 1
+    nominal_apparent_power: Annotated[
+        ApparentPower | None,
+        Field(
+            description="Nominal apparent power in MVA of each unit of the group.",
+            json_schema_extra={"units": "MVA"},
+        ),
+    ] = ApparentPower(99999.0, "MVA")
+    nominal_power_factor: Annotated[
+        int | float | str | None,
+        Field(
+            description="Nominal power factor of each unit of the group.",
+        ),
+    ] = None
+    quadrature_axis_reactance: Annotated[
+        Percentage | None,
+        Field(
+            description=(
+                "Quadrature-axis reactance of each unit of the group, in %, on the machine base."
+            ),
+            json_schema_extra={"units": "%"},
+        ),
+    ] = None
+    reactive_generation: Annotated[
+        ReactivePower | None,
+        Field(
+            description="Reactive power generation value for each unit of the group, in Mvar.",
+            json_schema_extra={"units": "MVAr"},
+        ),
+    ] = None
+    step_up_transformer_reactance: Annotated[
+        Percentage | None,
+        Field(
+            description="Step-up transformer reactance value for each unit of the group, in %.",
+            json_schema_extra={"units": "%"},
+        ),
+    ] = None
+    units: Annotated[
+        int | float | str | None,
+        Field(
+            description=(
+                "Number of identical units that make up the individualized generator group."
+            ),
+        ),
+    ] = 1
+    units_in_operation: Annotated[
+        int | float | str | None,
+        Field(
+            description="Number of units in operation that make up the group.",
+        ),
+    ] = None
+    voltage_droop: Annotated[
+        Percentage | None,
+        Field(
+            description="Speed droop of each unit of the group, in % on the system base.",
             json_schema_extra={"units": "%"},
         ),
     ] = None
