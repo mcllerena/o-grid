@@ -9,11 +9,28 @@ description = "Open power system modeling and optimization framework."
 readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "MIT" }
-authors = [{ name = "o-grid contributors" }]
-dependencies = ["infrasys>=1.2.0", "pyomo>=6.10.1"]
+authors = [{ name = "mcllerena", email = "mcllerena@users.noreply.github.com" }]
+maintainers = [
+  { name = "mcllerena", email = "mcllerena@users.noreply.github.com" },
+]
+dependencies = [
+  "infrasys>=1.2.0,<2.0.0",
+  "loguru>=0.7.3,<1.0.0",
+  "pydantic>=2.11.0,<3.0.0",
+  "pyomo>=6.10.1",
+  "r2x-core>=0.4.0,<1.0.0",
+  "rust-ok>=0.3.0,<1.0.0",
+]
 
 [dependency-groups]
-dev = ["pytest>=8.3.0", "pytest-cov>=6.0.0", "ruff>=0.12.0", "ty>=0.0.1a19"]
+dev = [
+  "ipython>=8.32.0",
+  "prek>=0.2.28",
+  "pytest>=8.3.0",
+  "pytest-cov>=6.0.0",
+  "ruff>=0.12.0",
+  "ty>=0.0.1a19",
+]
 
 [tool.ruff]
 line-length = 100

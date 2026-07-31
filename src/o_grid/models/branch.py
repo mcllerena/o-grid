@@ -273,7 +273,7 @@ class ACLine(Line):
     ] = "L"
 
 
-class SeriesCompensator(AnaredeComponent):
+class ControllableSeriesCompensator(AnaredeComponent):
     """Series compensation element model."""
 
     bypass: Annotated[
@@ -410,7 +410,10 @@ class SeriesCompensator(AnaredeComponent):
     ] = None
 
 
-class TapChangingTransformer(AnaredeComponent):
+SeriesCompensator = ControllableSeriesCompensator
+
+
+class TapTransformer(AnaredeComponent):
     """Tap-changing transformer derived from line tap values."""
 
     controlled_bus: Annotated[
@@ -600,6 +603,9 @@ class TapChangingTransformer(AnaredeComponent):
             description="L - Connected.\\nD - Disconnected",
         ),
     ] = "L"
+
+
+TapChangingTransformer = TapTransformer
 
 
 class PhaseShiftingTransformer(AnaredeComponent):

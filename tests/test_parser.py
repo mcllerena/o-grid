@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+from infrasys import System
 
 from o_grid import export_rows, parse_rows
 from o_grid.constants import REQUIRED_KEYS
@@ -10,13 +11,20 @@ from o_grid.models import (
     ACBranch,
     ACBus,
     ACLine,
+    Arc,
+    Area,
     Branch,
     BusShunt,
+    ControllableSeriesCompensator,
     Line,
     LineShunt,
     PhaseShiftingTransformer,
+    StaticVARCompensator,
     TapChangingTransformer,
+    TapTransformer,
     TapTransformerControl,
+    VoltageBaseGroup,
+    VoltageLimitGroup,
 )
 from o_grid.parser import AnaredeInfrasysParser, parse_anarede_system
 from o_grid.utils.utils_exporter import format_row
@@ -95,8 +103,11 @@ def test_models_package_exports_expected_types() -> None:
     assert Line.__name__ == "Line"
     assert BusShunt.__name__ == "BusShunt"
     assert LineShunt.__name__ == "LineShunt"
-    assert TapChangingTransformer.__name__ == "TapChangingTransformer"
+    assert TapChangingTransformer.__name__ == "TapTransformer"
+    assert TapTransformer.__name__ == "TapTransformer"
     assert PhaseShiftingTransformer.__name__ == "PhaseShiftingTransformer"
+    assert StaticVARCompensator.__name__ == "StaticVARCompensator"
+    assert ControllableSeriesCompensator.__name__ == "ControllableSeriesCompensator"
     assert TapTransformerControl.__name__ == "TapTransformerControl"
 
 
@@ -104,6 +115,30 @@ def test_acline_follows_branch_hierarchy() -> None:
     assert issubclass(ACLine, Line)
     assert issubclass(Line, ACBranch)
     assert issubclass(ACBranch, Branch)
+
+
+def test_example_helpers_expose_public_class_types() -> None:
+    assert Branch.example().class_type == "Branch"
+    assert Line.example().class_type == "Line"
+    assert ACBus.example().class_type == "ACBus"
+    assert Area.example().class_type == "Area"
+
+
+def test_parser_attach_bus_areas_and_build_arc() -> None:
+    parser = AnaredeInfrasysParser()
+    system = System(name="demo")
+    bus = ACBus(number=1, name="Bus-1", area=1)
+    parser._attach_bus_areas(system, {"DBAR": [bus]})
+
+    assert len(list(system.get_components(Area))) == 1
+    assert len(list(system.get_components(ACBus))) == 1
+    assert isinstance(bus.area, Area)
+
+    line = ACLine(name="Line-1", from_bus=1, to_bus=2)
+    arc = parser._build_arc_from_dlin_record(line, 3)
+    assert arc.name == "Arc_3"
+    assert arc.from_to == 1
+    assert arc.to_from == 2
 
 
 def test_parse_anarede_d9nodes_to_infrasys() -> None:
@@ -124,6 +159,28 @@ def test_parse_anarede_d9nodes_to_infrasys() -> None:
 
     assert len(list(parsed.system.get_components(ac_bus_type))) == 9
     assert len(list(parsed.system.get_components(ac_line_type))) == 10
+    assert len(list(parsed.system.get_components(Area))) == 1
+    assert len(list(parsed.system.get_components(Arc))) == 10
+
+    assert len(list(parsed.system.get_components(parsed.component_classes["DGBT"]))) == 0
+    assert len(list(parsed.system.get_components(parsed.component_classes["DGLT"]))) == 0
+    assert len(list(parsed.system.get_components(parsed.component_classes["DLIN_TAP"]))) == 0
+
+    buses = parsed.components_by_block["DBAR"]
+    assert all(isinstance(bus, ACBus) for bus in buses)
+    assert buses[1].name == "BAR-2_GER2_2"
+    assert buses[1].bus_type == 1
+    assert buses[0].bus_type == 2
+    assert buses[2].bus_type == 0
+    assert all(getattr(component, "uuid", None) is not None for component in buses)
+    assert all(bus.voltage_base_group_data is not None for bus in buses)
+    assert all(bus.voltage_limit_group_data is not None for bus in buses)
+    assert all(isinstance(bus.voltage_base_group_data, VoltageBaseGroup) for bus in buses)
+    assert all(isinstance(bus.voltage_limit_group_data, VoltageLimitGroup) for bus in buses)
+
+    line = parsed.components_by_block["DLIN"][0]
+    assert not line.name.startswith("ACLine_")
+    assert getattr(line, "uuid", None) is not None
 
     assert "TITU" not in parsed.components_by_block
     assert parsed.system.description == "Sistema-Teste de 9 Barras - Caso Inicial"
@@ -134,8 +191,8 @@ def test_parse_anarede_dcer_dcsc_blocks() -> None:
 
     assert len(parsed.components_by_block["DCER"]) > 0
     assert len(parsed.components_by_block["DCSC"]) > 0
-    assert parsed.component_classes["DCER"].__name__ == "ReactiveCompensator"
-    assert parsed.component_classes["DCSC"].__name__ == "SeriesCompensator"
+    assert parsed.component_classes["DCER"].__name__ == "StaticVARCompensator"
+    assert parsed.component_classes["DCSC"].__name__ == "ControllableSeriesCompensator"
     assert issubclass(parsed.component_classes["DCTR"], TapTransformerControl)
 
 

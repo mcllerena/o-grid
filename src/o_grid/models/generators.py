@@ -107,7 +107,7 @@ class GeneratorDispatchData(AnaredeComponent):
     ] = None
 
 
-class ReactiveCompensator(AnaredeComponent):
+class StaticVARCompensator(AnaredeComponent):
     """Reactive compensation element model."""
 
     bus: Annotated[
@@ -206,3 +206,6 @@ class ReactiveCompensator(AnaredeComponent):
             description="Number of equal units that compose the SVC group.",
         ),
     ] = None
+
+
+ReactiveCompensator = StaticVARCompensator

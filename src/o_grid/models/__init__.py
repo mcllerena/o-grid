@@ -7,6 +7,7 @@ from o_grid.models.branch import (
     ACBranch,
     ACLine,
     Branch,
+    ControllableSeriesCompensator,
     DCLink,
     FromToToFrom,
     Line,
@@ -15,6 +16,7 @@ from o_grid.models.branch import (
     SeriesCompensator,
     ShuntLine,
     TapChangingTransformer,
+    TapTransformer,
     TransferFunctionCircuit,
 )
 from o_grid.models.case import CaseTitle
@@ -27,7 +29,11 @@ from o_grid.models.control import (
     TapTransformerControl,
     TransferFunctionConstraint,
 )
-from o_grid.models.generators import GeneratorDispatchData, ReactiveCompensator
+from o_grid.models.generators import (
+    GeneratorDispatchData,
+    ReactiveCompensator,
+    StaticVARCompensator,
+)
 from o_grid.models.load import (
     BusShunt,
     CurrentInjectionLoad,
@@ -60,8 +66,8 @@ BLOCK_BASE_CLASSES: dict[str, type[AnaredeComponent]] = {
     "DBSH": BusShunt,
     "DBSH_BANK": LineShunt,
     "DCAI": CurrentInjectionLoad,
-    "DCER": ReactiveCompensator,
-    "DCSC": SeriesCompensator,
+    "DCER": StaticVARCompensator,
+    "DCSC": ControllableSeriesCompensator,
     "DCTR": TapTransformerControl,
     "DGER": GeneratorDispatchData,
     "DCLI": DCLink,
@@ -72,7 +78,7 @@ BLOCK_BASE_CLASSES: dict[str, type[AnaredeComponent]] = {
     "DSHL": ShuntLine,
     "DTPF": TransferFunctionConstraint,
     "DTPF_CIRC": TransferFunctionCircuit,
-    "DLIN_TAP": TapChangingTransformer,
+    "DLIN_TAP": TapTransformer,
     "DLIN_PHASE_SHIFT": PhaseShiftingTransformer,
 }
 
@@ -106,11 +112,14 @@ __all__ = [
     "PowerFlowOption",
     "ProgramConstant",
     "ReactiveCompensator",
+    "StaticVARCompensator",
     "SeriesCompensator",
+    "ControllableSeriesCompensator",
     "ShuntBank",
     "ShuntCompensator",
     "ShuntLine",
     "TapTransformerControl",
+    "TapTransformer",
     "TapChangingTransformer",
     "Topology",
     "TransferFunctionCircuit",

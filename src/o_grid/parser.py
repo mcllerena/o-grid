@@ -12,13 +12,14 @@ from typing import Any, TypeAlias
 from infrasys import System
 
 from o_grid.constants import REQUIRED_KEYS
-from o_grid.models import BLOCK_BASE_CLASSES, AnaredeComponent
+from o_grid.models import BLOCK_BASE_CLASSES, AnaredeComponent, Arc, Area
 from o_grid.utils.utils_parser import normalize_row
 
 ParsedScalar: TypeAlias = int | float | str | None
 MAPPING_PATH = Path(__file__).resolve().parent / "config" / "anarede_mapping.json"
 
 DLIN_DERIVED_BLOCKS: tuple[str, ...] = ("DLIN_TAP", "DLIN_PHASE_SHIFT")
+BUS_INTERNAL_GROUP_BLOCKS: tuple[str, ...] = ("DGBT", "DGLT")
 
 
 @dataclass(slots=True)
@@ -76,7 +77,9 @@ class AnaredeInfrasysParser:
         self, block: str, field_specs: dict[str, Any]
     ) -> type[AnaredeComponent]:
         base_class = BLOCK_BASE_CLASSES.get(block, AnaredeComponent)
-        class_name = f"Anarede{block}"
+        class_name = (
+            base_class.__name__ if base_class is not AnaredeComponent else f"Anarede{block}"
+        )
         annotations: dict[str, Any] = {}
         namespace: dict[str, Any] = {
             "__module__": __name__,
@@ -101,6 +104,8 @@ class AnaredeInfrasysParser:
     def _model_field_name(field_name: str) -> str:
         if field_name == "name":
             return "anarede_name"
+        if field_name == "type":
+            return "bus_type"
         return field_name
 
     def _to_model_values(self, values: Mapping[str, ParsedScalar]) -> dict[str, ParsedScalar]:
@@ -138,6 +143,8 @@ class AnaredeInfrasysParser:
             if upper == "FIM":
                 break
             if upper.startswith("99999"):
+                if active_block == "DBAR":
+                    self._attach_bus_areas(system, components_by_block)
                 active_block = None
                 current_dbsh = None
                 continue
@@ -175,8 +182,17 @@ class AnaredeInfrasysParser:
             record = self._parse_record(
                 active_block, line, len(components_by_block[active_block]) + 1
             )
-            system.add_component(record)
             components_by_block[active_block].append(record)
+
+            # Keep group dictionaries internal; they are attached to ACBus records later.
+            if active_block == "DLIN":
+                arc = self._build_arc_from_dlin_record(record, len(components_by_block["DLIN"]))
+                setattr(record, "arc", arc)
+                system.add_component(arc)
+
+            if active_block not in BUS_INTERNAL_GROUP_BLOCKS and active_block != "DBAR":
+                if active_block != "DLIN" or not self._is_transformer_dlin_record(record):
+                    system.add_component(record)
 
             if active_block == "DLIN":
                 for derived in self._derive_transformer_records_from_line(
@@ -191,12 +207,101 @@ class AnaredeInfrasysParser:
         if title_lines:
             system.description = "\n".join(title_lines)
 
+        self._attach_bus_voltage_groups(components_by_block)
+
         return ParsedAnaredeSystem(
             source=source,
             system=system,
             components_by_block={k: v for k, v in components_by_block.items() if v},
             component_classes=self.component_classes,
         )
+
+    def _attach_bus_areas(
+        self, system: System, components_by_block: dict[str, list[AnaredeComponent]]
+    ) -> None:
+        buses = components_by_block.get("DBAR")
+        if not buses:
+            return
+
+        areas_by_key: dict[str, Area] = {}
+        for bus in buses:
+            area_value = getattr(bus, "area", None)
+            area_key = self._normalize_group_key(area_value)
+            if not area_key:
+                continue
+
+            area = areas_by_key.get(area_key)
+            if area is None:
+                area_number = int(float(area_key)) if self._looks_numeric(area_key) else None
+                area = Area(name=f"Area_{area_key}", area_number=area_number)
+                areas_by_key[area_key] = area
+                system.add_component(area)
+
+            setattr(bus, "area", area)
+            system.add_component(bus)
+
+    def _build_arc_from_dlin_record(self, line_record: AnaredeComponent, record_index: int) -> Arc:
+        from_bus = getattr(line_record, "from_bus", None)
+        to_bus = getattr(line_record, "to_bus", None)
+        return Arc(
+            name=f"Arc_{record_index}",
+            from_to=from_bus,
+            to_from=to_bus,
+        )
+
+    def _is_transformer_dlin_record(self, record: AnaredeComponent) -> bool:
+        values = self._extract_dlin_values(record)
+        return self._has_non_default_tap(values.get("tap")) or self._has_non_zero_angle(
+            values.get("phase_shift")
+        )
+
+    def _attach_bus_voltage_groups(
+        self, components_by_block: dict[str, list[AnaredeComponent]]
+    ) -> None:
+        buses = components_by_block.get("DBAR")
+        if not buses:
+            return
+
+        base_by_group = self._group_components_by_key(components_by_block.get("DGBT", []))
+        limit_by_group = self._group_components_by_key(components_by_block.get("DGLT", []))
+
+        for bus in buses:
+            base_key = self._normalize_group_key(getattr(bus, "voltage_base_group", None))
+            base_group = base_by_group.get(base_key)
+            setattr(bus, "voltage_base_group_data", base_group)
+            if base_group is not None:
+                setattr(bus, "base_voltage", getattr(base_group, "voltage", None))
+
+            limit_key = self._normalize_group_key(getattr(bus, "voltage_limit_group", None))
+            limit_group = limit_by_group.get(limit_key)
+            setattr(bus, "voltage_limit_group_data", limit_group)
+            if limit_group is not None:
+                setattr(
+                    bus,
+                    "voltage_limits",
+                    (
+                        getattr(limit_group, "minimum_voltage_limit", None),
+                        getattr(limit_group, "maximum_voltage_limit", None),
+                    ),
+                )
+
+    def _group_components_by_key(
+        self, components: list[AnaredeComponent]
+    ) -> dict[str, AnaredeComponent]:
+        grouped: dict[str, AnaredeComponent] = {}
+        for component in components:
+            key = self._normalize_group_key(getattr(component, "group", None))
+            if key:
+                grouped[key] = component
+        return grouped
+
+    @staticmethod
+    def _normalize_group_key(value: ParsedScalar) -> str:
+        if value is None:
+            return ""
+        if isinstance(value, float) and value.is_integer():
+            return str(int(value))
+        return str(value).strip().upper()
 
     @staticmethod
     def _read_pwf_text(path: Path) -> str:
@@ -215,7 +320,6 @@ class AnaredeInfrasysParser:
         record_data: dict[str, Any] = {
             "name": self._component_name(block, record_index, values),
             "record_index": record_index,
-            "raw_line": line.rstrip("\n"),
             **self._to_model_values(values),
         }
         return model(**record_data)
@@ -232,7 +336,6 @@ class AnaredeInfrasysParser:
         record_data: dict[str, Any] = {
             "name": self._component_name("DBSH_BANK", record_index, values),
             "record_index": record_index,
-            "raw_line": line.rstrip("\n"),
             **self._to_model_values(values),
         }
         return model(**record_data)
@@ -250,7 +353,6 @@ class AnaredeInfrasysParser:
             component = self._build_dlin_derived_record(
                 block="DLIN_TAP",
                 values=values,
-                raw_line=line_record.raw_line,
                 record_index=record_index,
             )
             components_by_block["DLIN_TAP"].append(component)
@@ -264,7 +366,6 @@ class AnaredeInfrasysParser:
             component = self._build_dlin_derived_record(
                 block="DLIN_PHASE_SHIFT",
                 values=values,
-                raw_line=line_record.raw_line,
                 record_index=record_index,
             )
             components_by_block["DLIN_PHASE_SHIFT"].append(component)
@@ -284,14 +385,12 @@ class AnaredeInfrasysParser:
         self,
         block: str,
         values: dict[str, ParsedScalar],
-        raw_line: str,
         record_index: int,
     ) -> AnaredeComponent:
         model = self.component_classes[block]
         record_data: dict[str, Any] = {
             "name": self._component_name(block, record_index, values),
             "record_index": record_index,
-            "raw_line": raw_line,
             **self._to_model_values(values),
         }
         return model(**record_data)
@@ -348,7 +447,6 @@ class AnaredeInfrasysParser:
             record_data: dict[str, Any] = {
                 "name": self._component_name(block, record_index, values),
                 "record_index": record_index,
-                "raw_line": line.rstrip("\n"),
                 **self._to_model_values(values),
             }
             records.append(model(**record_data))
@@ -444,7 +542,6 @@ class AnaredeInfrasysParser:
     def _component_name(
         self, block: str, record_index: int, values: Mapping[str, ParsedScalar]
     ) -> str:
-        class_name = self.component_classes[block].__name__
         for key in (
             "name",
             "anarede_name",
@@ -458,8 +555,8 @@ class AnaredeInfrasysParser:
             value = values.get(key)
             if value is not None and str(value).strip():
                 token = re.sub(r"\s+", "_", str(value).strip())
-                return f"{class_name}_{token}_{record_index}"
-        return f"{class_name}_{record_index}"
+                return f"{token}_{record_index}"
+        return f"{block}_{record_index}"
 
 
 def parse_anarede_system(

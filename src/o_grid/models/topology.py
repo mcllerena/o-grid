@@ -77,7 +77,7 @@ class Bus(Topology):
         int | None,
         Field(description="A unique bus identification number."),
     ] = None
-    bustype: Annotated[
+    bus_type: Annotated[
         int | str | None,
         Field(description="Type/category of bus."),
     ] = None
@@ -112,6 +112,21 @@ class Arc(Topology):
 
 class ACBus(Bus):
     """AC bus model."""
+
+    voltage_base_group_data: Annotated[
+        VoltageBaseGroup | None,
+        Field(
+            description=("Resolved voltage base group record associated with this bus."),
+            exclude=True,
+        ),
+    ] = None
+    voltage_limit_group_data: Annotated[
+        VoltageLimitGroup | None,
+        Field(
+            description=("Resolved voltage limit group record associated with this bus."),
+            exclude=True,
+        ),
+    ] = None
 
     active_generation: Annotated[
         int | float | str | None,
