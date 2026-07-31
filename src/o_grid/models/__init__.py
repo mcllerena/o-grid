@@ -19,8 +19,10 @@ from o_grid.models.branch import (
     MinMax,
     PhaseShiftingTransformer,
     SeriesCompensator,
+    SwitchDevice,
     TapChangingTransformer,
     TransferFunctionCircuit,
+    TransformerDevice,
 )
 from o_grid.models.case import CaseTitle
 from o_grid.models.control import (
@@ -108,6 +110,8 @@ BLOCK_BASE_CLASSES: dict[str, type[Component]] = {
     "DTPF_CIRC": TransferFunctionCircuit,
     "DLIN_TAP": LTCTransformer,
     "DLIN_PHASE_SHIFT": PhaseShiftingTransformer,
+    "DLIN_TRANSFORMER": TransformerDevice,
+    "DLIN_SWITCH": SwitchDevice,
 }
 
 __all__ = [
@@ -164,10 +168,12 @@ __all__ = [
     "SeriesCompensator",
     "ControllableSeriesCompensator",
     "ShuntBank",
+    "SwitchDevice",
     "TapTransformerControl",
     "LTCTransformer",
     "TapChangingTransformer",
     "Topology",
+    "TransformerDevice",
     "TransferFunctionCircuit",
     "TransferFunctionConstraint",
     "VoltageBaseGroup",

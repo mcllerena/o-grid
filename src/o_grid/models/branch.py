@@ -613,6 +613,229 @@ class PhaseShiftingTransformer(AnaredeComponent):
     ] = CircuitState.CLOSED
 
 
+class TransformerDevice(AnaredeComponent):
+    """Fixed-ratio transformer derived from a DLIN record with a tap but no tap range."""
+
+    ctap_option: CtapOption = False
+    flow_monitoring: FlowMonitoring = False
+    maneuverable: Annotated[
+        TransformerManeuverable | None,
+        Field(
+            description=(
+                "Exclusive field for transformers, used during the power-flow solution "
+                "when the AUTO option is used together with the CTAP option. S if the "
+                "transformer is maneuverable, N if it is not."
+            ),
+        ),
+    ] = TransformerManeuverable.MANEUVERABLE
+    controlled_bus: Annotated[
+        ACBus | None,
+        Field(
+            description=(
+                "In the case of transformer type circuits with automatic tap variation, "
+                "this field is for the number of the bus whose voltage magnitude should "
+                "be controlled."
+            ),
+        ),
+    ] = None
+    line_circuit: Annotated[
+        int | float | str | None,
+        Field(
+            description="Identification number of the parallel AC circuit.",
+        ),
+    ] = None
+    emergency_capacity: Annotated[
+        ApparentPower | None,
+        Field(
+            description=(
+                "Circuit loading capacity under emergency conditions for flow monitoring "
+                "purposes, in MVA."
+            ),
+            json_schema_extra={"units": "MVA"},
+        ),
+    ] = ApparentPower(99999.0, "MVA")
+    from_bus: Annotated[
+        int | float | str | None,
+        Field(
+            description=(
+                "Number of the bus at one end of the circuit as defined in the Number "
+                "field of the DBAR Execution Code."
+            ),
+        ),
+    ] = None
+    from_bus_opening: Annotated[
+        CircuitState | None,
+        Field(
+            description="L - Connected.\\nD - Disconnected",
+        ),
+    ] = CircuitState.CLOSED
+    normal_capacity: Annotated[
+        ApparentPower | None,
+        Field(
+            description=(
+                "Circuit loading capacity under normal conditions for flow monitoring "
+                "purposes, in MVA."
+            ),
+            json_schema_extra={"units": "MVA"},
+        ),
+    ] = ApparentPower(99999.0, "MVA")
+    number_of_taps: Annotated[
+        int | float | str | None,
+        Field(
+            description=(
+                "Number of positions of the variable tap transformer, including the "
+                "minimum tap and maximum tap."
+            ),
+        ),
+    ] = 33
+    owner: Annotated[
+        Area | None,
+        Field(
+            description=(
+                "Area that owns the transformer. This is resolved from the selected "
+                "terminal bus area during parsing."
+            ),
+        ),
+    ] = None
+    r: Annotated[
+        Percentage | None,
+        Field(description="Resistance of the branch, in %."),
+    ] = None
+    x: Annotated[
+        Percentage | None,
+        Field(description="Reactance of the branch, in %."),
+    ] = None
+    rating: Annotated[
+        ApparentPower | None,
+        Field(description="Thermal rating of the transformer, in MVA."),
+    ] = None
+    b: Annotated[FromToToFrom | None, Field(description="Shunt susceptance in MVAr")] = None
+    tap: Annotated[
+        PerUnit | None,
+        Field(
+            description=(
+                "Fixed tap value referred to the bus defined in the From Bus field, in "
+                "p.u. Implicit decimal point between columns 40 and 41."
+            ),
+            json_schema_extra={"units": "p.u."},
+        ),
+    ] = None
+    to_bus: Annotated[
+        int | float | str | None,
+        Field(
+            description=(
+                "Number of the bus at the other end of the circuit as defined in the "
+                "Number field of the DBAR Execution Code."
+            ),
+        ),
+    ] = None
+    to_bus_opening: Annotated[
+        CircuitState | None,
+        Field(
+            description="L - Connected.\\nD - Disconnected",
+        ),
+    ] = CircuitState.CLOSED
+
+
+class SwitchDevice(AnaredeComponent):
+    """Switch/breaker derived from a DLIN record with negligible series impedance.
+
+    ANAREDE models switching devices as AC circuits whose resistance, reactance and
+    susceptance are all at or below the ``ZMIN`` program constant (DCTE), with no tap
+    and no phase shift.
+    """
+
+    ctap_option: CtapOption = False
+    flow_monitoring: FlowMonitoring = False
+    controlled_bus: Annotated[
+        ACBus | None,
+        Field(
+            description=(
+                "Number of the bus whose voltage magnitude should be controlled, when "
+                "applicable."
+            ),
+        ),
+    ] = None
+    line_circuit: Annotated[
+        int | float | str | None,
+        Field(
+            description="Identification number of the parallel AC circuit.",
+        ),
+    ] = None
+    emergency_capacity: Annotated[
+        ApparentPower | None,
+        Field(
+            description=(
+                "Circuit loading capacity under emergency conditions for flow monitoring "
+                "purposes, in MVA."
+            ),
+            json_schema_extra={"units": "MVA"},
+        ),
+    ] = ApparentPower(99999.0, "MVA")
+    from_bus: Annotated[
+        int | float | str | None,
+        Field(
+            description=(
+                "Number of the bus at one end of the circuit as defined in the Number "
+                "field of the DBAR Execution Code."
+            ),
+        ),
+    ] = None
+    from_bus_opening: Annotated[
+        CircuitState | None,
+        Field(
+            description="L - Connected.\\nD - Disconnected",
+        ),
+    ] = CircuitState.CLOSED
+    normal_capacity: Annotated[
+        ApparentPower | None,
+        Field(
+            description=(
+                "Circuit loading capacity under normal conditions for flow monitoring "
+                "purposes, in MVA."
+            ),
+            json_schema_extra={"units": "MVA"},
+        ),
+    ] = ApparentPower(99999.0, "MVA")
+    owner: Annotated[
+        Area | None,
+        Field(
+            description=(
+                "Area that owns the switch. This is resolved from the selected terminal "
+                "bus area during parsing."
+            ),
+        ),
+    ] = None
+    r: Annotated[
+        Percentage | None,
+        Field(description="Resistance of the branch, in %."),
+    ] = None
+    x: Annotated[
+        Percentage | None,
+        Field(description="Reactance of the branch, in %."),
+    ] = None
+    rating: Annotated[
+        ApparentPower | None,
+        Field(description="Thermal rating of the switch, in MVA."),
+    ] = None
+    b: Annotated[FromToToFrom | None, Field(description="Shunt susceptance in MVAr")] = None
+    to_bus: Annotated[
+        int | float | str | None,
+        Field(
+            description=(
+                "Number of the bus at the other end of the circuit as defined in the "
+                "Number field of the DBAR Execution Code."
+            ),
+        ),
+    ] = None
+    to_bus_opening: Annotated[
+        CircuitState | None,
+        Field(
+            description="L - Connected.\\nD - Disconnected",
+        ),
+    ] = CircuitState.CLOSED
+
+
 class LineShunt(AnaredeComponent):
     """DSHL AC-circuit terminal shunt model."""
 

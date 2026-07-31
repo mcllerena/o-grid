@@ -201,7 +201,7 @@ class ProgramConstant(Component):
         value = self.value
         if value is None and mnemonic in PROGRAM_CONSTANT_DEFAULTS:
             value = PROGRAM_CONSTANT_DEFAULTS[mnemonic]
-        if isinstance(value, str):
+        if isinstance(value, str):  # pragma: no cover - pydantic coerces value before this runs
             stripped = value.strip()
             value = float(stripped) if stripped else None
 
@@ -211,7 +211,7 @@ class ProgramConstant(Component):
             return self
 
         quantity_type, unit_name = unit_spec
-        if value is None:
+        if value is None:  # pragma: no cover - every unit mnemonic has a default value
             object.__setattr__(self, "value", None)
             return self
 

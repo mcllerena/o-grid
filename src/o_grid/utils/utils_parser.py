@@ -318,6 +318,48 @@ def has_non_zero_angle(value: ParsedScalar) -> bool:
     return False
 
 
+def has_tap_value(value: ParsedScalar) -> bool:
+    """Return whether a DLIN tap field carries a value (fixed or automatic tap)."""
+    if value is None or value == "":
+        return False
+    if hasattr(value, "magnitude"):
+        value = get_magnitude(value)
+    if isinstance(value, str):
+        return bool(value.strip())
+    return True
+
+
+def has_tap_range(minimum: ParsedScalar, maximum: ParsedScalar) -> bool:
+    """Return whether a DLIN record defines an automatic tap range (LTC transformer)."""
+    return has_tap_value(minimum) or has_tap_value(maximum)
+
+
+def _abs_magnitude_or_zero(value: ParsedScalar) -> float:
+    """Return the absolute magnitude of a parsed scalar, or 0.0 when absent/invalid."""
+    if value is None or value == "":
+        return 0.0
+    if hasattr(value, "magnitude"):
+        value = get_magnitude(value)
+    try:
+        return abs(float(value))  # type: ignore[arg-type]
+    except (TypeError, ValueError):
+        return 0.0
+
+
+def is_switch_impedance(
+    resistance: ParsedScalar,
+    reactance: ParsedScalar,
+    susceptance: ParsedScalar,
+    threshold: float,
+) -> bool:
+    """Return whether a tapless DLIN record models a switch (|R|, |X|, |B| <= threshold)."""
+    return (
+        _abs_magnitude_or_zero(resistance) <= threshold
+        and _abs_magnitude_or_zero(reactance) <= threshold
+        and _abs_magnitude_or_zero(susceptance) <= threshold
+    )
+
+
 def repair_dbar_values(
     line: str, field_specs: dict[str, Any], values: dict[str, ParsedScalar]
 ) -> dict[str, ParsedScalar]:

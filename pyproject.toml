@@ -41,7 +41,7 @@ select = ["E", "F", "I", "UP"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "-v --cov=o_grid --cov-report=term-missing:skip-covered --cov-fail-under=95"
+addopts = "-v --cov=o_grid --cov-report=term-missing --cov-fail-under=95"
 
 [tool.ty.environment]
 python-version = "3.11"

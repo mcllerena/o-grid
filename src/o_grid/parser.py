@@ -44,8 +44,10 @@ from o_grid.utils.utils_parser import (
     coerce_circuit_number,
     component_name,
     default_dcli_circuit,
-    has_non_default_tap,
     has_non_zero_angle,
+    has_tap_range,
+    has_tap_value,
+    is_switch_impedance,
     load_mapping,
     looks_numeric,
     map_anarede_state_to_available,
@@ -71,8 +73,16 @@ from o_grid.utils.utils_parser import (
 MAPPING_PATH = Path(__file__).resolve().parent / "config" / "anarede_mapping.json"
 GEN_TYPE_MAPPING_PATH = Path(__file__).resolve().parent / "config" / "gen_type_mapping.json"
 
-DLIN_DERIVED_BLOCKS: tuple[str, ...] = ("DLIN_TAP", "DLIN_PHASE_SHIFT")
+DLIN_DERIVED_BLOCKS: tuple[str, ...] = (
+    "DLIN_TAP",
+    "DLIN_PHASE_SHIFT",
+    "DLIN_TRANSFORMER",
+    "DLIN_SWITCH",
+)
+DLIN_BRANCH_BLOCKS: tuple[str, ...] = ("DLIN", *DLIN_DERIVED_BLOCKS)
 BUS_INTERNAL_GROUP_BLOCKS: tuple[str, ...] = ("DGBT", "DGLT")
+SWITCH_IMPEDANCE_MNEMONIC: str = "ZMIN"
+DEFAULT_SWITCH_IMPEDANCE_THRESHOLD: float = 0.001
 
 
 @dataclass(slots=True)
@@ -174,6 +184,7 @@ class AnaredeInfrasysParser:
 
         active_block: str | None = None
         current_dbsh_parent_index: int | None = None
+        switch_threshold: float | None = None
 
         for line in lines:
             stripped = line.strip()
@@ -248,8 +259,14 @@ class AnaredeInfrasysParser:
                 arc = self._build_arc_from_dlin_record(record, len(components_by_block["DLIN"]))
                 setattr(record, "arc", arc)
                 self._add_component(system, arc)
-
-            if active_block not in BUS_INTERNAL_GROUP_BLOCKS and active_block not in (
+                if switch_threshold is None:
+                    switch_threshold = self._switch_impedance_threshold(components_by_block)
+                derived = self._derive_branch_record(record, components_by_block, switch_threshold)
+                # A plain transmission line keeps the ACLine record; every other branch
+                # type (OLTC, phase shifter, fixed transformer, switch) is represented by
+                # the derived component instead.
+                self._add_component(system, derived if derived is not None else record)
+            elif active_block not in BUS_INTERNAL_GROUP_BLOCKS and active_block not in (
                 "DBAR",
                 "DBSH",
                 "DELO",
@@ -257,15 +274,7 @@ class AnaredeInfrasysParser:
                 "DMTE",
                 "DTPF_CIRC",
             ):
-                if active_block != "DLIN" or not self._is_transformer_dlin_record(record):
-                    self._add_component(system, record)
-
-            if active_block == "DLIN":
-                for derived in self._derive_transformer_records_from_line(
-                    record,
-                    components_by_block,
-                ):
-                    self._add_component(system, derived)
+                self._add_component(system, record)
 
             if active_block == "DBSH":
                 current_dbsh_parent_index = len(components_by_block["DBSH"])

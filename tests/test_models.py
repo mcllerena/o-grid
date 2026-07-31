@@ -198,6 +198,64 @@ def test_bank_controller_control_type_enum_matches_mapping() -> None:
     )
 
 
+def test_bank_controller_coercion_fallback_branches() -> None:
+    assert BankController(control_mode=None).control_mode is ShuntControlMode.CONTINUOUS
+    assert BankController(control_mode="").control_mode is ShuntControlMode.CONTINUOUS
+    assert BankController(control_mode="CONTINUOUS").control_mode is ShuntControlMode.CONTINUOUS
+    assert BankController(control_type=None).control_type is (
+        BankControllerControlType.VOLTAGE_CONTROL_RANGE
+    )
+    assert BankController(control_type="VOLTAGE_LIMIT_VIOLATION_RANGE").control_type is (
+        BankControllerControlType.VOLTAGE_LIMIT_VIOLATION_RANGE
+    )
+    assert BankController(maximum_voltage="").maximum_voltage is None
+    assert BankController(minimum_voltage="not-a-number").minimum_voltage is None
+
+
+def test_converter_control_coercion_passthrough_branches() -> None:
+    from_enum = ConverterControl(
+        name="cc",
+        converter_control_type=ConverterControlType.CURRENT,
+        slack=None,
+    )
+    assert from_enum.converter_control_type is ConverterControlType.CURRENT
+    assert from_enum.slack is ConverterControlSlack.NORMAL
+    assert ConverterControl(name="cc", slack="N").slack is ConverterControlSlack.NORMAL
+    assert ConverterControl._numeric_or_none("inf") == math.inf
+    assert ConverterControl._numeric_or_none("5.0") == 5.0
+    assert ConverterControl._numeric_or_none("abc") is None
+    assert ConverterControl._numeric_or_none("   ") is None
+
+
+def test_converter_station_mode_passthrough_branch() -> None:
+    station = ConverterStation(name="cs", mode=ConverterMode.RECTIFIER)
+    assert station.mode is ConverterMode.RECTIFIER
+
+
+def test_controllable_series_compensator_none_specified_value() -> None:
+    csc = ControllableSeriesCompensator(name="csc", specified_value=None)
+    assert csc.specified_value is None
+
+
+def test_acbus_bustype_member_name_coercion() -> None:
+    bus = ACBus(number=1, name="Bus-1", bustype="PV")
+    assert bus.bustype is ACBusTypes.PV
+    assert ACBus(number=2, name="Bus-2", bustype="   ").bustype is ACBusTypes.PQ
+
+
+def test_dcbus_type_string_dict_coercion() -> None:
+    reference = DCBus(name="dc-str-one", type="1")
+    no_voltage = DCBus(name="dc-str-zero", type="0")
+    fallback = DCBus(name="dc-str-other", type="9")
+    assert reference.type is DCBusType.REFERENCE
+    assert no_voltage.type is DCBusType.NO_VOLTAGE
+    assert fallback.type is DCBusType.NO_VOLTAGE
+
+
+def test_apparent_power_repr() -> None:
+    assert repr(ApparentPower(100.0, "MVA")) == "<Quantity(100.0, 'MVA')>"
+
+
 def test_converter_control_enums_and_units_match_dccv_mapping() -> None:
     converter = ConverterControl(
         converter_control_type="P",

@@ -59,7 +59,14 @@ from o_grid.units import (
     Resistance,
     Voltage,
 )
-from o_grid.utils.utils_parser import has_non_default_tap
+from o_grid.utils.utils_parser import has_non_default_tap, has_non_zero_angle
+
+
+def test_tap_and_angle_helpers_handle_edge_values() -> None:
+    assert has_non_default_tap("   ") is False
+    assert has_non_default_tap(object()) is False
+    assert has_non_zero_angle("   ") is False
+    assert has_non_zero_angle(object()) is False
 
 
 def test_parser_attach_bus_areas_and_build_arc() -> None:
