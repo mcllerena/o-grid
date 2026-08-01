@@ -181,6 +181,7 @@ def build_component_results(
         source_path=str(parsed.source),
         solver=result.solver,
         solver_mode=_solver_mode(result.solver, result.fallback_used),
+        method=_solver_method(result.solver),
         converged=result.converged,
         diverged=result.diverged,
         iterations=result.iterations,
@@ -673,3 +674,12 @@ def _solver_mode(solver: str, fallback_used: bool = False) -> str:
             return "sparse fast-decoupled solve with Newton-Raphson fallback"
         return "sparse factorized fast-decoupled solve"
     return solver
+
+
+def _solver_method(solver: str) -> str:
+    """Return the solving class name reported as the summary ``Method`` row."""
+    return {
+        "newton-raphson": "NewtonRaphsonPowerFlow",
+        "fast-decoupled": "FastDecoupledPowerFlow",
+        "optimization": "OptimizationACPowerFlow",
+    }.get(solver, solver)

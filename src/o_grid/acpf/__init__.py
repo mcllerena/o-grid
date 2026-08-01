@@ -15,6 +15,12 @@ from o_grid.acpf.models import (
     SwitchDeviceResults,
     TransformerResults,
 )
+from o_grid.acpf.optimization import (
+    OptimizationACPowerFlow,
+    build_optimization_model,
+    solution_metrics,
+    solve_optimization_model,
+)
 from o_grid.acpf.results import (
     ACPowerFlowResult,
     BranchPowerFlowResult,
@@ -41,6 +47,7 @@ __all__ = [
     "IterationPowerFlowResult",
     "NewtonRaphsonPowerFlow",
     "LTCTransformerResults",
+    "OptimizationACPowerFlow",
     "PhaseShiftingTransformerResults",
     "PowerFlowSolver",
     "PowerFlowRun",
@@ -50,4 +57,7 @@ __all__ = [
     "StaticVARCompensatorResults",
     "SwitchDeviceResults",
     "TransformerResults",
+    "build_optimization_model",
+    "solve_optimization_model",
+    "solution_metrics",
 ]

@@ -1,0 +1,386 @@
+---
+title: Optimization-based AC power flow
+description: The optimization-based AC power-flow solver of o-grid — full NLP formulation (sets, parameters, variables, constraints, objective), how it converges, and its differences with Newton-Raphson and Fast-Decoupled.
+head: []
+slug: 0.1.0/explanation/optimization-acpf
+---
+
+The optimization-based AC power-flow solver poses the power flow as a
+**nonlinear program (NLP)** and solves it with Pyomo + Ipopt, as an alternative
+to the direct (equation-based) Newton-Raphson and Fast-Decoupled methods.
+Instead of iterating on the power-mismatch equations, it writes the balance
+residuals as **decision variables**, bounds them by the declared convergence
+tolerances, and minimizes a weighted least-squares objective.
+
+The implementation lives in
+[`src/o_grid/acpf/optimization.py`](https://github.com/mcllerena/o-grid/blob/main/src/o_grid/acpf/optimization.py).
+All quantities are per-unit on the case base `BASE` (MVA) unless noted
+otherwise.
+
+## Why an optimization formulation
+
+* **A solution is always reported.** If the exact power balance is
+  unattainable, Ipopt returns the closest feasible operating point instead of
+  failing.
+* **Convergence is a constraint, not a side effect.** Per-bus residual
+  tolerance constraints *enforce* the same threshold the direct solvers only
+  check afterwards.
+* **Controls are part of the optimization.** SVC droop equations, Q-limited
+  generators, and soft voltage/angle limits are variables and constraints, so
+  no outer discrete control loop is needed.
+
+## Sets, parameters and variables
+
+### Sets
+
+| Set | Index | Meaning |
+| --- | --- | --- |
+| $\mathcal{B}$ (`BUS`) | $i$ | All buses of the reduced case |
+| $\mathcal{Q}$ (`QPV`) | $i$ | Bounded-Q generator (PV) buses |
+| $\mathcal{L}$ (`BRANCH`) | $\ell$ | All branches |
+| $\mathcal{S}$ (`SVC`) | $s$ | Static VAR compensators |
+
+The bus type code $t_i \in \{\mathrm{SLACK}, \mathrm{PV}, \mathrm{PQ}\}$ is
+mapped from the ANAREDE `DBAR` kind: `REF`/`SLACK` → `SLACK`, `PV` → `PV`,
+everything else → `PQ`.
+
+### Parameters
+
+| Parameter | Meaning |
+| --- | --- |
+| `base_mva` | System base power $S_{base}$ |
+| `angle_limit` | $\theta^{max} = \pi/2$ rad |
+| `active_tolerance`, `reactive_tolerance`, `control_tolerance` | $\varepsilon_P, \varepsilon_Q, \varepsilon_C$ (p.u., from `TEPA`/`TEPR` ÷ $S_{base}$) |
+| `vm_min`, `vm_max` | $V_i^{min}$, $V_i^{max}$ operational voltage limits |
+| `b_shunt` | $b^{sh}_i$ bus shunt susceptance |
+| `p_spec` | $P_i^{sp} = (P_{g,i} - P_{l,i})/S_{base}$ |
+| `q_spec` | $Q_i^{sp}$ (type dependent, see §4) |
+| `svc_bus`, `svc_ctrl_bus` | SVC bus $b(s)$ and controlled bus $c(s)$ |
+| `svc_q_initial/min/max`, `svc_slope`, `svc_vref` | SVC reactive range, droop slope $X_s$, reference voltage |
+| `branch_yff_g/b`, `branch_yft_g/b`, `branch_ytf_g/b`, `branch_ytt_g/b` | Branch admittance terms |
+| `weight_*` | Objective weights (§6) |
+
+### Variables
+
+| Variable | Bounds | Meaning |
+| --- | --- | --- |
+| $V_i$ (`vm`) | $[V^{min,b}_i, V^{max,b}_i]$ | Voltage magnitude (p.u.) |
+| $\theta_i$ (`va`) | $[-\pi/2, +\pi/2]$ | Voltage angle (rad) |
+| $q^{g}_{i}$ (`qg_qpv`, $i \in \mathcal{Q}$) | $[Q^{min}_i, Q^{max}_i]/S_{base}$ | Bounded generator reactive output |
+| $p^{+}_i, p^{-}_i$, $q^{+}_i, q^{-}_i$ | $\ge 0$ | Balance residual slacks |
+| $v^{up}_i, v^{lo}_i$, $a^{up}_i, a^{lo}_i$ | $\ge 0$ | Voltage / angle-limit slacks |
+| $q^{s}_s$ (`qsvc`) | voltage-scaled reactive range | SVC reactive output |
+| $r^{+}_s, r^{-}_s$ | $\ge 0$ | SVC droop residual slacks |
+
+The voltage bounds depend on `strict_voltage_limits`:
+
+$$
+\text{strict:}\ \left[\max(0.4, V^{min}_i),\ \min(2.0, V^{max}_i)\right],
+\qquad
+\text{relaxed:}\ \left[\max(0.4, 0.8\,V^{min}_i),\ \min(2.0, \max(1.5\,V^{max}_i, 1.2))\right].
+$$
+
+## Branch admittances
+
+For a branch with series impedance $z = r + jx$ and half-line charging:
+
+$$
+y = g + jb, \quad g = \frac{r}{r^2+x^2}, \quad b = -\frac{x}{r^2+x^2}, \quad
+b^{self} = b + \frac{b_{chg}}{2}.
+$$
+
+With the complex tap $t = a e^{j\phi}$, the $\Pi$-model terms are the real and
+imaginary parts of
+
+$$
+Y_{ff} = \frac{y + j\,b_{chg}/2}{|t|^2}, \quad
+Y_{tt} = y + j\,b_{chg}/2, \quad
+Y_{ft} = -\frac{y}{\bar t}, \quad
+Y_{tf} = -\frac{y}{t},
+$$
+
+precomputed per branch as the `branch_y*` parameters.
+
+## Calculated bus injections
+
+$$
+P^{calc}_i = V_i^2 Y^{g}_{ii} +
+\sum_{k \sim i} V_i V_k \left(Y^{g}_{ik}\cos(\theta_i - \theta_k) +
+Y^{b}_{ik}\sin(\theta_i - \theta_k)\right),
+$$
+
+$$
+Q^{calc}_i = -b^{sh}_i V_i^2 -
+\sum_{k \sim i} \left[V_i^2 Y^{b}_{ii} -
+V_i V_k \left(Y^{g}_{ik}\sin(\theta_i - \theta_k) - Y^{b}_{ik}\cos(\theta_i - \theta_k)\right)\right].
+$$
+
+These are the polar power-flow equations written branch by branch.
+
+## Constraints
+
+### Power balances
+
+At every non-slack bus:
+
+$$
+P_i^{sp} - P_i^{calc} = p^{+}_i - p^{-}_i, \qquad i \notin \mathrm{SLACK}.
+$$
+
+Slack buses have no active equation: their unmodeled injection absorbs the
+system losses. The reactive balance holds at every `PQ` and every bounded-Q
+`PV` (`QPV`) bus:
+
+$$
+Q_i^{sp} + [i \in \mathcal{Q}]\, q^{g}_i + \sum_{s: b(s)=i} q^{s}_s - Q_i^{calc} = q^{+}_i - q^{-}_i,
+$$
+
+with $Q_i^{sp} = (Q_{g,i} - Q_{svc,i}^{init} - Q_{l,i})/S_{base}$ for non-`QPV`
+and $Q_i^{sp} = -Q_{l,i}/S_{base}$ for `QPV` buses.
+
+### Residual tolerances (per-bus and aggregate)
+
+$$
+p^{+}_i + p^{-}_i \le \varepsilon_P \ (i \notin \mathrm{SLACK}), \qquad
+q^{+}_i + q^{-}_i \le \varepsilon_Q \ (i \in \mathrm{PQ} \cup \mathcal{Q}),
+$$
+
+$$
+-\varepsilon_P \le \sum_{i \notin \mathrm{SLACK}} (p^{+}_i - p^{-}_i) \le \varepsilon_P, \qquad
+-\varepsilon_Q \le \sum_{i \in \mathrm{PQ}\cup\mathcal{Q}} (q^{+}_i - q^{-}_i) \le \varepsilon_Q.
+$$
+
+The aggregate constraints rule out a systematic drift where every bus carries a
+small residual of the same sign.
+
+### Voltage and angle limits (soft)
+
+$$
+V_i \le V_i^{max} + v^{up}_i, \quad V_i \ge V_i^{min} - v^{lo}_i,
+\qquad
+\theta_i \le \frac{\pi}{2} + a^{up}_i, \quad \theta_i \ge -\frac{\pi}{2} - a^{lo}_i.
+$$
+
+The slacks are driven to zero by the objective with large weights, so
+violations are allowed only when unavoidable.
+
+### Static VAR compensators
+
+Voltage-dependent reactive limits and the droop control law:
+
+$$
+q^{s,min}_s V_{c(s)}^{2} \le q^{s}_s \le q^{s,max}_s V_{c(s)}^{2},
+$$
+
+$$
+V_{c(s)} - V^{ref}_s + q^{s}_s \frac{X_s}{V_{b(s)}} = r^{+}_s - r^{-}_s
+\quad \text{(mode I)},
+\qquad
+V_{c(s)} - V^{ref}_s + q^{s}_s X_s = r^{+}_s - r^{-}_s
+\quad \text{(other modes)},
+$$
+
+$$
+r^{+}_s + r^{-}_s \le \varepsilon_C.
+$$
+
+Zero-slope SVCs skip the droop constraint (constant $Q$).
+
+## Objective function
+
+$$
+\min \sum_{i\in\mathcal{B}}\left[(p^{+}_i)^2 + (p^{-}_i)^2 + (q^{+}_i)^2 + (q^{-}_i)^2\right]
++ w_{svc} \sum_{s\in\mathcal{S}}\left[(r^{+}_s)^2 + (r^{-}_s)^2\right]
+$$
+
+$$
++ w_{vl} \sum_{i\in\mathcal{B}}\left[(v^{up}_i)^2 + (v^{lo}_i)^2\right]
++ w_v \sum_{i\in\mathcal{B}}(V_i - V_i^{0})^2
++ w_{al} \sum_{i\in\mathcal{B}}\left[(a^{up}_i)^2 + (a^{lo}_i)^2\right]
++ w_a \sum_{i\in\mathcal{B}}(\theta_i - \theta_i^{0})^2
+$$
+
+$$
++ \sum_{i\in\mathcal{Q}}(q^{g}_i - q^{g,0}_i)^2,
+$$
+
+with $w_v = w_a = 1$, $w_{vl} = w_{svc} = 100$, $w_{al} = 10^4$. The first block
+drives the balance to zero; the regularization terms anchor the state to the
+parsed operating point, guaranteeing a well-posed descent direction and picking
+the converged solution closest to the input.
+
+### Objective-function options
+
+`build_optimization_model` and `OptimizationACPowerFlow` accept an
+`objective_function` selector:
+
+| Mode | Model | Use when |
+| --- | --- | --- |
+| `minimize_residuals` (default) | Weighted least-squares objective above | General use |
+| `zero_function` | Exact power balance: balance residual slacks fixed to 0 and their tolerance rows deactivated, SVC droop and voltage/angle limits kept soft in the weighted objective | Checking whether the power-flow equations admit an exact solution |
+| `squared_generation` | `zero_function` plus free slack generation with a quadratic objective | Minimal-redispatch studies |
+
+In `zero_function` mode only the active and reactive balance residual slacks
+(`p_slack_pos/neg`, `q_slack_pos/neg`) are fixed at zero and the per-bus and
+aggregate tolerance rows are deactivated, so the power balances hold as hard
+equalities: $P_i^{spec} = P_i^{calc}$ and $Q_i^{spec} = Q_i^{calc}$ for every
+non-slack bus. The SVC droop controllers keep their control-tolerance
+constraint and the voltage/angle limits stay soft, both weighted in the
+objective. Those are control targets and operational bounds rather than
+physical equations, so leaving them relaxed keeps the exact-balance model
+feasible on cases that only converge inside a tolerance band.
+
+`squared_generation` builds on that and adds at each slack bus a nonnegative
+variable $p^{s}_i \ge 0$ (`pg_slack`), turning the active balance into the exact
+equality $p^{s}_i - P_{l,i}/S_{base} - P_i^{calc} = 0$, so $p^{s}_i$ equals the
+dispatched slack generation; the objective adds $\sum_{i}(p^{s}_i)^2$ to the
+weighted residual terms — the minimal-norm slack redispatch. This mirrors the
+strict-power-flow formulation of the `power-simulator` reference
+implementation.
+
+## Fixed variables and initialization
+
+Before solving:
+
+* **Slack buses**: $V_i$ and $\theta_i$ fixed (the reference).
+* **Non-QPV `PV` buses** (when `strict_voltage_limits = False`): $V_i$ fixed.
+* **`QPV` buses**: $V_i$ free, reactive generation from the bounded variable
+  $q^{g}_i$ — no discrete `PV → PQ` switch needed.
+
+All other $V_i$ stay free. Seeds are clipped into the variable bounds, and every
+slack variable is initialized from the residual of the seeded state, so Ipopt
+typically converges in a handful of iterations.
+
+## Solving with Ipopt
+
+`solve_optimization_model` uses `max_iter = 30`, `max_cpu_time = 300`,
+`tol = 10^{-8}`, `acceptable_tol = 10^{-6}`, `acceptable_iter = 3`, and
+`mu_strategy = adaptive`; `print_level = 5` is set only when
+`print_iterations = True`. The number of Ipopt iterations is parsed from the
+logfile (`Number of Iterations`), and the run is classified as:
+
+* **converged** — Ipopt terminates `optimal`/`locallyOptimal`/`feasible` and
+  `solution_metrics` reports every residual within tolerance;
+* **diverged** — Ipopt terminates `infeasible`/`infeasibleOrUnbounded`/
+  `unbounded`/`error`;
+* otherwise **did not converge** (e.g. iteration budget exhausted).
+
+A non-converged run is logged as
+`Optimization AC power flow is <state> after N iteration(s); max mismatch ...`,
+where `<state>` follows the Ipopt termination condition: `infeasible`,
+`unbounded`, or `not converged` (e.g. when the iteration budget is exhausted).
+
+`solution_metrics` recomputes the residuals from the power-balance equations
+rather than from the slack variables, so the report stays meaningful even in the
+`zero_function`/`squared_generation` modes where the balance slacks are fixed at
+zero. It reports `max_p`, `max_q`, `max_svc` (slack buses excluded from the
+maxima, mirroring the Newton mismatch), `max_p_slack`, `max_q_slack`,
+`aggregate_p`, `aggregate_q`, and the overall `converged` flag.
+
+## Why the formulation converges
+
+1. **Feasibility is always bounded.** The residual-tolerance and soft-limit
+   constraints keep Ipopt inside a compact box; the barrier method cannot
+   "walk off" as a Newton iteration can.
+2. **The objective guides it to the physical solution.** Minimizing the squared
+   balance slacks drives $\Delta P, \Delta Q \to 0$ where possible, and the
+   aggregate constraints rule out systematic drift.
+3. **Controls are algebraic constraints.** SVC droop and Q-limits are solved
+   simultaneously with the network, avoiding the outer-loop re-solve failures
+   of the direct solvers.
+4. **Convergence is self-reported.** An optimal termination satisfies the
+   declared tolerance *by construction*; `solution_metrics` double-checks the
+   final state.
+
+## Special device modeling: LCC, CSC, and switches
+
+### HVDC links (LCC)
+
+HVDC links enter as **fixed AC injections**, not NLP variables. At case
+construction the rectifier bus gets `active_load += P_rec` and
+`reactive_load += Q_rec`, the inverter bus gets `active_generation += P_inv` and
+`reactive_load += Q_inv`, folded into `p_spec`/`q_spec`. The DC pattern comes
+from the LCC operating point, with pole current $I_{dc} = P_{dc}/V_{dc}^{ref}$
+and losses $\Delta P = I_{dc}^2 R_{dc}$:
+
+$$
+\text{rectifier slack:}\quad
+P_{rec} = P_{dc} + \Delta P,\quad
+P_{inv} = P_{dc},\quad
+V_{dc,rec} = V_{dc,inv} + I_{dc} R_{dc},
+$$
+
+$$
+\text{inverter slack:}\quad
+P_{rec} = P_{dc},\quad
+P_{inv} = \max(0,\, P_{dc} - \Delta P),\quad
+V_{dc,inv} = \max(0,\, V_{dc,rec} - I_{dc} R_{dc}),
+$$
+
+and terminal reactive powers $Q_{rec} = P_{rec}\tan(\alpha + \mu_{rec}/2)$ and
+$Q_{inv} = P_{inv}\tan(\gamma + \mu_{inv}/2)$. The optimization solver does not
+run the damped LCC outer loop of the direct solvers; after the solve
+`refresh_lcc_reporting_state` recomputes the DC voltages and overlap angles from
+the accepted AC solution.
+
+### Controllable series compensators (CSC)
+
+Active CSCs are applied statically before the model is built: the percent
+reactance is converted to per-unit $x_{csc} = X_{\%}\cdot 10^{-2}$ and added to
+a matching `(from, to, circuit)` branch (or its reversed pair), or stamped as a
+standalone zero-resistance branch when no branch matches. The compensated
+impedance is what enters the branch admittances used by the calculated
+injections.
+
+### Switches and jumper buses
+
+The solver operates on the **reduced** network: `reduce_closed_switches`
+contracts every `is_switch` branch, any branch with
+$|r + jx| \le 2.000001\times 10^{-4}$ p.u. (no tap/phase shift), and
+low-impedance jumper branches ($\le 1.05\times 10^{-3}$ p.u.) that share a
+voltage group and carry flow above $1.25\times$ rating. Each group keeps the
+highest-priority representative (REF/SLACK > PV > PQ, then highest external
+degree); member generation, load, shunt, and Q-limits are summed onto it. After
+Ipopt converges, `expand_voltage` and `sync_control_state` restore the
+full-network state.
+
+## Comparison with Newton-Raphson and Fast-Decoupled
+
+| Aspect | Newton-Raphson | Fast-Decoupled | Optimization (Ipopt) |
+| --- | --- | --- | --- |
+| Model | Square equations | Square, decoupled | NLP: residuals + constraints |
+| Iteration | Full Jacobian per step | Constant $\mathbf{B}', \mathbf{B}''$ | Interior-point barrier steps |
+| Linear algebra | Sparse LU per iteration | Sparse LU once | Sparse system per barrier step |
+| Initial guess | Critical | Critical | Important but regularized |
+| Convergence check | Post-hoc $\le \varepsilon$ | Post-hoc $\le \varepsilon$ | Enforced by constraints |
+| SVC droop | Outer-loop update | Outer-loop update | NLP equality constraint |
+| Q-limits | `QLIM` `PV→PQ` switch | `QLIM` `PV→PQ` switch | Bounded variable, no switch |
+| If it fails | Diverged / no convergence | Newton fallback | Feasible point + residuals |
+| Typical cost | Medium | Lowest | Highest |
+
+All three share the case construction, the switch/jumper reduction, and the
+result reporting pipeline; the optimization solver swaps the iteration for a
+single NLP solve.
+
+## When optimization converges where direct methods struggle
+
+* **Poor or flat initial guesses** — regularization and the barrier method
+  tolerate bad starts.
+* **Overloaded / near voltage-collapse cases** — a feasible point with
+  soft-limit slacks is returned instead of a diverging iteration.
+* **Many active SVC droop controllers** — all droop equations solve
+  simultaneously.
+* **Q-limited generators on weak buses** — no discrete re-typing needed.
+* **Stiff or ill-conditioned regions** — the barrier globalization keeps
+  progressing within the box bounds.
+
+Conversely, it requires the `ipopt` executable, is the slowest of the three,
+and its solution is only as converged as the declared tolerances — residuals
+can sit at the tolerance bounds in cases where a direct solver reaches
+machine-precision balance. Fast-Decoupled (with Newton fallback) remains the
+default fast path for large healthy cases.
+
+## Next steps
+
+- Review the [power system models reference](/reference/models/).
+- Learn the parsing pipeline in [parser architecture](/explanation/parser-architecture/).

@@ -6,7 +6,7 @@ import pytest
 from openpyxl import load_workbook
 
 from o_grid import ExportSolution
-from o_grid.acpf import NewtonRaphsonPowerFlow
+from o_grid.acpf import NewtonRaphsonPowerFlow, OptimizationACPowerFlow
 from o_grid.exporter import SHEET_HEADERS, _svc_state
 from o_grid.parser import AnaredeInfrasysParser
 
@@ -52,8 +52,9 @@ def test_export_solution_writes_reference_excel_schema(tmp_path: Path) -> None:
         sheet = workbook[sheet_name]
         assert tuple(cell.value for cell in sheet[1]) == expected_headers
         assert sheet.freeze_panes == "A2"
-    assert workbook["Summary"]["B4"].value is True
     summary = dict(workbook["Summary"].values)
+    assert summary["Method"] == "NewtonRaphsonPowerFlow"
+    assert summary["Converged"] is True
     assert summary["Buses"] == 9
     assert summary["Buses After Reduction"] <= summary["Buses"]
     assert summary["Lines After Reduction"] <= summary["Lines"]
@@ -89,3 +90,16 @@ def test_export_solution_rejects_unknown_format(tmp_path: Path) -> None:
 
     with pytest.raises(ValueError, match="Unsupported solution export format"):
         ExportSolution(system=solved, format="csv", output_path=tmp_path / "solution.csv")
+
+
+def test_export_summary_reports_optimization_method(tmp_path: Path) -> None:
+    parsed = AnaredeInfrasysParser().parse(DATA / "d_9nodes.pwf")
+    solved = OptimizationACPowerFlow(parsed.system)
+    output_path = tmp_path / "solution.xlsx"
+
+    ExportSolution(system=solved, format="excel", output_path=output_path)
+
+    workbook = load_workbook(output_path, data_only=True)
+    summary = dict(workbook["Summary"].values)
+    assert summary["Method"] == "OptimizationACPowerFlow"
+    assert summary["Converged"] is True

@@ -45,6 +45,8 @@ class PowerFlowSolver:
         max_iterations: int = 30,
         max_control_passes: int = 12,
         print_iterations: bool = False,
+        objective_function: str = "minimize_residuals",
+        strict_voltage_limits: bool = False,
     ) -> Self | System:
         instance = super().__new__(cls)
         if system is None:
@@ -53,6 +55,8 @@ class PowerFlowSolver:
         instance.max_iterations = max_iterations
         instance.max_control_passes = max_control_passes
         instance.print_iterations = print_iterations
+        instance.objective_function = objective_function
+        instance.strict_voltage_limits = strict_voltage_limits
         return instance.run(system).system
 
     def __init__(

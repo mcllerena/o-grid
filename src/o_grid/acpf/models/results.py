@@ -14,6 +14,7 @@ class StatisticResultsInformation(Component):
     source_path: str
     solver: str
     solver_mode: str
+    method: str = ""
     converged: bool
     diverged: bool
     iterations: int

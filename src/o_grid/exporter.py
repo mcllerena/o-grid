@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any
 
 from infrasys import System
+from loguru import logger
 from openpyxl import Workbook
 from openpyxl.cell.cell import Cell
 
@@ -39,6 +40,7 @@ class ExportSolution:
         self.output_path = Path(output_path)
         self.output_path.parent.mkdir(parents=True, exist_ok=True)
         _write_excel(results, self.output_path)
+        logger.info("ExportSolution saved on {}", self.output_path)
 
 
 def export_rows(rows: list[dict[str, object]], separator: str = DEFAULT_SEPARATOR) -> str:
@@ -71,6 +73,7 @@ def _workbook_rows(results: PowerFlowResults, output_path: Path) -> dict[str, Sh
     summary = (
         ("Case", information.source_path),
         ("Workbook", str(output_path)),
+        ("Method", information.method or information.solver),
         ("Converged", information.converged),
         ("Iterations", information.iterations),
         ("Max Mismatch (pu)", information.max_mismatch_pu),

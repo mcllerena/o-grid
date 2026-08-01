@@ -58,6 +58,7 @@ export default defineConfig({
           label: "Explanation",
           items: [
             { label: "Parser architecture", link: "/explanation/parser-architecture/" },
+            { label: "Optimization-based AC power flow", link: "/explanation/optimization-acpf/" },
           ],
         },
       ],

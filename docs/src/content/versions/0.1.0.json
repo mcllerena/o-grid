@@ -40,6 +40,10 @@
         {
           "label": "Parser architecture",
           "link": "/explanation/parser-architecture/"
+        },
+        {
+          "label": "Optimization-based AC power flow",
+          "link": "/explanation/optimization-acpf/"
         }
       ],
       "label": "Explanation"
