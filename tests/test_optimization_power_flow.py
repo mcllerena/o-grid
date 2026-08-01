@@ -193,7 +193,11 @@ def test_optimization_model_zero_function_is_exact_feasibility() -> None:
     assert metrics["max_p"] <= 1.0e-9
     assert metrics["max_q"] <= 1.0e-9
     assert pyo.value(model.p_slack_pos[model.BUS.first()]) == 0.0
-    assert pyo.value(model.objective) > 0.0
+    assert pyo.value(model.objective) == 0.0
+    assert model.voltage_upper_limit.active is False
+    assert model.voltage_lower_limit.active is False
+    assert model.angle_upper_limit.active is False
+    assert model.angle_lower_limit.active is False
 
 
 def test_optimization_model_squared_generation_redispatches_slack() -> None:

@@ -58,6 +58,7 @@ OBJECTIVE_WEIGHT_VOLTAGE = 1.0
 OBJECTIVE_WEIGHT_VOLTAGE_LIMITS = 100.0
 OBJECTIVE_WEIGHT_ANGLE = 1.0
 OBJECTIVE_WEIGHT_ANGLE_LIMITS = 1.0e4
+OBJECTIVE_WEIGHT_LTC = 0.01
 OBJECTIVE_WEIGHT_SVC = 100.0
 
 VALID_OBJECTIVE_FUNCTIONS = ("minimize_residuals", "zero_function", "squared_generation")
@@ -109,6 +110,15 @@ def _bounded_voltage_seed(bus: BusData, strict: bool) -> float:
     return min(max(bus.voltage, lower), upper)
 
 
+def _is_ltc_branch(branch_index: int, branch: object) -> bool:
+    return (
+        getattr(branch, "controlled_bus", None) is not None
+        and getattr(branch, "minimum_tap", 0.0) > 0.0
+        and getattr(branch, "maximum_tap", 0.0) > getattr(branch, "minimum_tap", 0.0)
+        and abs(getattr(branch, "phase_shift", 0.0)) <= TOLERANCE
+    )
+
+
 def _set_signed_slack(positive_var, negative_var, residual: float) -> None:
     positive_var.set_value(max(0.0, residual), skip_validation=True)
     negative_var.set_value(max(0.0, -residual), skip_validation=True)
@@ -142,6 +152,40 @@ def _apply_zero_residuals(model: pyo.ConcreteModel) -> None:
         "aggregate_active_residual_lower",
         "aggregate_reactive_residual_upper",
         "aggregate_reactive_residual_lower",
+    ):
+        getattr(model, component_name).deactivate()
+
+
+def _apply_exact_power_flow(model: pyo.ConcreteModel) -> None:
+    """Enforce the AC power-flow equations exactly and relax operational limits.
+
+    The power-balance slacks are already fixed at zero by
+    :func:`_apply_zero_residuals`.  This helper makes the controller equations
+    (SVC droop and, when present, LTC voltage control) exact by fixing their
+    residual slacks at zero, and deactivates the voltage and angle limit rows
+    since an AC power flow reports operational limits instead of enforcing
+    them.  The limit slacks are pinned to zero so the deactivated rows carry
+    no degrees of freedom.
+    """
+    for component_name in ("svc_residual_pos", "svc_residual_neg"):
+        component = getattr(model, component_name)
+        for index in component:
+            component[index].fix(0.0)
+    for component_name in ("ltc_residual_pos", "ltc_residual_neg"):
+        component = getattr(model, component_name, None)
+        if component is None:
+            continue
+        for index in component:
+            component[index].fix(0.0)
+    for component_name in ("v_upper_slack", "v_lower_slack", "a_upper_slack", "a_lower_slack"):
+        component = getattr(model, component_name)
+        for index in component:
+            component[index].fix(0.0)
+    for component_name in (
+        "voltage_upper_limit",
+        "voltage_lower_limit",
+        "angle_upper_limit",
+        "angle_lower_limit",
     ):
         getattr(model, component_name).deactivate()
 
@@ -199,6 +243,9 @@ def build_optimization_model(
     qlim_enabled: bool = False,
     strict_voltage_limits: bool = False,
     objective_function: str = "minimize_residuals",
+    optimize_ltc_taps: bool = False,
+    optimize_ltc_controls: bool = False,
+    enforce_shunt_deadbands: bool = False,
 ) -> pyo.ConcreteModel:
     """Build and initialize the Pyomo AC power-flow optimization model.
 
@@ -209,16 +256,17 @@ def build_optimization_model(
       negative slacks are bounded by the per-bus tolerances, and the objective
       minimizes the weighted sum of squared slacks plus a small regularization
       toward the input state.
-    * ``zero_function`` -- the pure feasibility formulation.  Every residual
-      slack is fixed at zero and the tolerance rows are deactivated, so the
-      balance, limit, and SVC droop equations hold exactly and the objective
-      is identically zero.  An operating point exists only if the hard system
-      is feasible.
-    * ``squared_generation`` -- same exact equations as ``zero_function``, but
-      reference-bus active generation is a free variable and the objective
-      minimizes the sum of squared active generation, selecting the feasible
-      point with minimum generation (equivalently minimum losses for a fixed
-      load).
+    * ``zero_function`` -- the classic AC power flow.  The active and reactive
+      power-balance equations and the SVC/LTC controller equations are enforced
+      exactly (their residual slacks are fixed at zero) while the operational
+      voltage and angle limits are relaxed, so the objective is identically
+      zero and Ipopt performs a pure feasibility solve of the power-flow
+      equations.  An operating point exists only if the power-flow equations
+      admit one.
+    * ``squared_generation`` -- exact power balance with free reference-bus
+      active generation and an objective that minimizes the sum of squared
+      active generation, selecting the feasible point with minimum generation
+      (equivalently minimum losses for a fixed load).
     """
     if objective_function not in VALID_OBJECTIVE_FUNCTIONS:
         raise ValueError(
@@ -258,6 +306,7 @@ def build_optimization_model(
     model_any.weight_voltage_limits = pyo.Param(initialize=OBJECTIVE_WEIGHT_VOLTAGE_LIMITS)
     model_any.weight_angle = pyo.Param(initialize=OBJECTIVE_WEIGHT_ANGLE)
     model_any.weight_angle_limits = pyo.Param(initialize=OBJECTIVE_WEIGHT_ANGLE_LIMITS)
+    model_any.weight_ltc = pyo.Param(initialize=OBJECTIVE_WEIGHT_LTC)
     model_any.weight_svc = pyo.Param(initialize=OBJECTIVE_WEIGHT_SVC)
 
     model_any.bus_type = pyo.Param(
@@ -374,6 +423,96 @@ def build_optimization_model(
     model_any.svc_residual_pos = pyo.Var(model_any.SVC, within=pyo.NonNegativeReals, initialize=0.0)
     model_any.svc_residual_neg = pyo.Var(model_any.SVC, within=pyo.NonNegativeReals, initialize=0.0)
 
+    shunt_ids = list(range(len(case.shunt_controls or [])))
+    shunt_bus = {}
+    shunt_ctrl_bus = {}
+    shunt_q_initial = {}
+    shunt_q_min = {}
+    shunt_q_max = {}
+    shunt_vmin = {}
+    shunt_vmax = {}
+    shunt_is_fixed = {}
+    for index, shunt in enumerate(case.shunt_controls or []):
+        shunt_bus[index] = shunt.bus
+        shunt_ctrl_bus[index] = shunt.controlled_bus
+        shunt_initial = shunt.reactive_power / base_mva
+        shunt_q_initial[index] = shunt_initial
+        shunt_q_min[index] = shunt.minimum_reactive_power / base_mva - shunt_initial
+        shunt_q_max[index] = shunt.maximum_reactive_power / base_mva - shunt_initial
+        shunt_vmin[index] = shunt.minimum_voltage
+        shunt_vmax[index] = shunt.maximum_voltage
+        shunt_is_fixed[index] = shunt.fixed or shunt.maximum_voltage <= shunt.minimum_voltage
+    model_any.SHUNT = pyo.Set(initialize=shunt_ids, ordered=True)
+    model_any.shunt_bus = pyo.Param(model_any.SHUNT, initialize=shunt_bus)
+    model_any.shunt_ctrl_bus = pyo.Param(model_any.SHUNT, initialize=shunt_ctrl_bus)
+    model_any.shunt_q_initial = pyo.Param(model_any.SHUNT, initialize=shunt_q_initial)
+    model_any.shunt_q_min = pyo.Param(model_any.SHUNT, initialize=shunt_q_min)
+    model_any.shunt_q_max = pyo.Param(model_any.SHUNT, initialize=shunt_q_max)
+    model_any.shunt_vmin = pyo.Param(model_any.SHUNT, initialize=shunt_vmin)
+    model_any.shunt_vmax = pyo.Param(model_any.SHUNT, initialize=shunt_vmax)
+    model_any.qshunt = pyo.Var(
+        model_any.SHUNT,
+        initialize={index: 0.0 for index in shunt_ids},
+        bounds=lambda m, index: (shunt_q_min[index], shunt_q_max[index]),
+        within=pyo.Reals,
+    )
+
+    def shunt_voltage_lower_rule(m: Any, index: int):
+        if shunt_is_fixed[index] or shunt_vmax[index] <= shunt_vmin[index]:
+            return pyo.Constraint.Skip
+        return m.vm[int(_value_or_default(m.shunt_ctrl_bus[index]))] >= m.shunt_vmin[index]
+
+    def shunt_voltage_upper_rule(m: Any, index: int):
+        if shunt_is_fixed[index] or shunt_vmax[index] <= shunt_vmin[index]:
+            return pyo.Constraint.Skip
+        return m.vm[int(_value_or_default(m.shunt_ctrl_bus[index]))] <= m.shunt_vmax[index]
+
+    if enforce_shunt_deadbands:
+        model_any.shunt_voltage_lower = pyo.Constraint(
+            model_any.SHUNT, rule=shunt_voltage_lower_rule
+        )
+        model_any.shunt_voltage_upper = pyo.Constraint(
+            model_any.SHUNT, rule=shunt_voltage_upper_rule
+        )
+
+    ltc_ids = [index for index, branch in enumerate(branches) if _is_ltc_branch(index, branch)]
+    ltc_bus = {}
+    ltc_ctrl_bus = {}
+    ltc_tap_initial = {}
+    ltc_tap_min = {}
+    ltc_tap_max = {}
+    ltc_v_target = {}
+    for index, branch in enumerate(branches):
+        if index not in ltc_ids:
+            continue
+        ltc_bus[index] = branch.from_bus
+        ltc_ctrl_bus[index] = int(branch.controlled_bus or branch.from_bus)
+        ltc_tap_initial[index] = branch.tap
+        ltc_tap_min[index] = branch.minimum_tap
+        ltc_tap_max[index] = branch.maximum_tap
+        ltc_v_target[index] = branch.target_voltage
+    model_any.LTC = pyo.Set(initialize=ltc_ids, ordered=True)
+    model_any.ltc_bus = pyo.Param(model_any.LTC, initialize=ltc_bus)
+    model_any.ltc_ctrl_bus = pyo.Param(model_any.LTC, initialize=ltc_ctrl_bus)
+    model_any.ltc_tap_initial = pyo.Param(model_any.LTC, initialize=ltc_tap_initial)
+    model_any.ltc_tap_min = pyo.Param(model_any.LTC, initialize=ltc_tap_min)
+    model_any.ltc_tap_max = pyo.Param(model_any.LTC, initialize=ltc_tap_max)
+    model_any.ltc_v_target = pyo.Param(model_any.LTC, initialize=ltc_v_target)
+    if optimize_ltc_taps:
+        model_any.tap = pyo.Var(
+            model_any.LTC,
+            initialize=ltc_tap_initial,
+            bounds=lambda m, index: (ltc_tap_min[index], ltc_tap_max[index]),
+            within=pyo.PositiveReals,
+        )
+    if optimize_ltc_controls:
+        model_any.ltc_residual_pos = pyo.Var(
+            model_any.LTC, within=pyo.NonNegativeReals, initialize=0.0
+        )
+        model_any.ltc_residual_neg = pyo.Var(
+            model_any.LTC, within=pyo.NonNegativeReals, initialize=0.0
+        )
+
     branch_g = {}
     branch_b = {}
     branch_b_self = {}
@@ -431,18 +570,32 @@ def build_optimization_model(
     svcs_by_bus: dict[int, list[int]] = defaultdict(list)
     for index in svc_ids:
         svcs_by_bus[svc_bus[index]].append(index)
+    shunts_by_bus: dict[int, list[int]] = defaultdict(list)
+    for index in shunt_ids:
+        shunts_by_bus[shunt_bus[index]].append(index)
+    ltc_ids_set = set(ltc_ids)
+
+    def _branch_tap(m: Any, branch_index: int):
+        if optimize_ltc_taps and branch_index in ltc_ids_set:
+            return m.tap[branch_index]
+        return branch_tap[branch_index]
 
     def p_calc(m: Any, bus: int):
         expr = 0.0
         for other, branch_index, from_side in injections.get(bus, []):
+            tap = _branch_tap(m, branch_index)
+            conductance = branch_g[branch_index]
+            susceptance = branch_b[branch_index]
+            cos_shift = branch_cos_shift[branch_index]
+            sin_shift = branch_sin_shift[branch_index]
             if from_side:
-                self_g = m.branch_yff_g[branch_index]
-                mutual_g = m.branch_yft_g[branch_index]
-                mutual_b = m.branch_yft_b[branch_index]
+                self_g = conductance / (tap * tap)
+                mutual_g = (-conductance * cos_shift + susceptance * sin_shift) / tap
+                mutual_b = (-conductance * sin_shift - susceptance * cos_shift) / tap
             else:
-                self_g = m.branch_ytt_g[branch_index]
-                mutual_g = m.branch_ytf_g[branch_index]
-                mutual_b = m.branch_ytf_b[branch_index]
+                self_g = conductance
+                mutual_g = (-conductance * cos_shift - susceptance * sin_shift) / tap
+                mutual_b = (conductance * sin_shift - susceptance * cos_shift) / tap
             delta = m.va[bus] - m.va[other]
             expr += m.vm[bus] ** 2 * self_g
             expr += (
@@ -453,14 +606,19 @@ def build_optimization_model(
     def q_calc(m: Any, bus: int):
         expr = -m.b_shunt[bus] * m.vm[bus] ** 2
         for other, branch_index, from_side in injections.get(bus, []):
+            tap = _branch_tap(m, branch_index)
+            conductance = branch_g[branch_index]
+            susceptance = branch_b[branch_index]
+            self_b = branch_b_self[branch_index]
+            cos_shift = branch_cos_shift[branch_index]
+            sin_shift = branch_sin_shift[branch_index]
             if from_side:
-                self_b = m.branch_yff_b[branch_index]
-                mutual_g = m.branch_yft_g[branch_index]
-                mutual_b = m.branch_yft_b[branch_index]
+                self_b = self_b / (tap * tap)
+                mutual_g = (-conductance * cos_shift + susceptance * sin_shift) / tap
+                mutual_b = (-conductance * sin_shift - susceptance * cos_shift) / tap
             else:
-                self_b = m.branch_ytt_b[branch_index]
-                mutual_g = m.branch_ytf_g[branch_index]
-                mutual_b = m.branch_ytf_b[branch_index]
+                mutual_g = (-conductance * cos_shift - susceptance * sin_shift) / tap
+                mutual_b = (conductance * sin_shift - susceptance * cos_shift) / tap
             delta = m.va[bus] - m.va[other]
             expr -= m.vm[bus] ** 2 * self_b
             expr += (
@@ -500,6 +658,8 @@ def build_optimization_model(
             q_spec = q_spec + m.qg_qpv[bus]
         for svc_index in svcs_by_bus.get(bus, []):
             q_spec = q_spec + m.qsvc[svc_index]
+        for shunt_index in shunts_by_bus.get(bus, []):
+            q_spec = q_spec + m.qshunt[shunt_index] * m.vm[bus] ** 2
         return q_spec - m.calculated_q_injection[bus] == m.q_slack_pos[bus] - m.q_slack_neg[bus]
 
     model_any.active_power_balance = pyo.Constraint(model_any.BUS, rule=p_balance_rule)
@@ -613,6 +773,21 @@ def build_optimization_model(
         ),
     )
 
+    def ltc_voltage_rule(m: Any, index: int):
+        return (
+            m.vm[int(_value_or_default(m.ltc_ctrl_bus[index]))] - m.ltc_v_target[index]
+            == m.ltc_residual_pos[index] - m.ltc_residual_neg[index]
+        )
+
+    def ltc_residual_tolerance_rule(m: Any, index: int):
+        return m.ltc_residual_pos[index] + m.ltc_residual_neg[index] <= m.control_tolerance
+
+    if optimize_ltc_controls:
+        model_any.ltc_voltage_control = pyo.Constraint(model_any.LTC, rule=ltc_voltage_rule)
+        model_any.ltc_residual_tolerance = pyo.Constraint(
+            model_any.LTC, rule=ltc_residual_tolerance_rule
+        )
+
     def objective_rule(m: Any):
         power_slacks = sum(
             m.p_slack_pos[bus] ** 2
@@ -624,6 +799,12 @@ def build_optimization_model(
         svc_slacks = sum(
             m.svc_residual_pos[index] ** 2 + m.svc_residual_neg[index] ** 2 for index in m.SVC
         )
+        if optimize_ltc_controls:
+            ltc_slacks = sum(
+                m.ltc_residual_pos[index] ** 2 + m.ltc_residual_neg[index] ** 2 for index in m.LTC
+            )
+        else:
+            ltc_slacks = 0.0
         voltage_limit_slacks = sum(
             m.v_upper_slack[bus] ** 2 + m.v_lower_slack[bus] ** 2 for bus in m.BUS
         )
@@ -632,16 +813,24 @@ def build_optimization_model(
             m.a_upper_slack[bus] ** 2 + m.a_lower_slack[bus] ** 2 for bus in m.BUS
         )
         angle_regularization = sum((m.va[bus] - va_seed[bus]) ** 2 for bus in m.BUS)
+        if optimize_ltc_taps:
+            ltc_regularization = sum(
+                (m.tap[index] - ltc_tap_initial[index]) ** 2 for index in m.LTC
+            )
+        else:
+            ltc_regularization = 0.0
         reactive_generation_regularization = sum(
             (m.qg_qpv[bus] - qg_initial[bus]) ** 2 for bus in m.QPV
         )
         return (
             power_slacks
             + m.weight_svc * svc_slacks
+            + 100.0 * ltc_slacks
             + m.weight_voltage_limits * voltage_limit_slacks
             + m.weight_voltage * voltage_regularization
             + m.weight_angle_limits * angle_limit_slacks
             + m.weight_angle * angle_regularization
+            + m.weight_ltc * ltc_regularization
             + reactive_generation_regularization
         )
 
@@ -732,12 +921,26 @@ def build_optimization_model(
             model_any.svc_residual_neg[index],
             residual,
         )
+    for index, shunt in enumerate(case.shunt_controls or []):
+        if shunt_is_fixed[index]:
+            cast(Any, model_any.qshunt[index]).fix(0.0)
+        else:
+            cast(Any, model_any.qshunt[index]).set_value(0.0, skip_validation=True)
+    for index in ltc_ids:
+        if not optimize_ltc_controls:
+            break
+        _set_signed_slack(
+            model_any.ltc_residual_pos[index],
+            model_any.ltc_residual_neg[index],
+            vm_seed[ltc_ctrl_bus[index]] - ltc_v_target[index],
+        )
 
     if objective_function == "minimize_residuals":
-        model.objective = pyo.Objective(rule=objective_rule, sense=pyo.minimize)
+        model_any.objective = pyo.Objective(rule=objective_rule, sense=pyo.minimize)
     elif objective_function == "zero_function":
         _apply_zero_residuals(model)
-        model_any.objective = pyo.Objective(rule=objective_rule, sense=pyo.minimize)
+        _apply_exact_power_flow(model)
+        model_any.objective = pyo.Objective(expr=0.0, sense=pyo.minimize)
     elif objective_function == "squared_generation":
         _apply_zero_residuals(model)
         _apply_slack_generation_redispatch(model, case, bus_by_id, p_seed)
@@ -748,6 +951,26 @@ def build_optimization_model(
         )
     model_any._objective_function = objective_function
     return model
+
+
+def _sync_optimization_control_state(model: pyo.ConcreteModel, case: PowerFlowCase) -> None:
+    """Copy solved optimization control variables back into the numerical case."""
+    model_any = cast(Any, model)
+    buses_by_number = {bus.number: bus for bus in case.buses}
+    for index in getattr(model_any, "SHUNT", []):
+        if not hasattr(model_any, "qshunt"):
+            break
+        shunt = (case.shunt_controls or [])[index]
+        delta = _value_or_default(model_any.qshunt[index])
+        if abs(delta) <= TOLERANCE:
+            continue
+        buses_by_number[shunt.bus].shunt_susceptance += delta
+        shunt.reactive_power += delta * case.base_mva
+    for index in getattr(model_any, "LTC", []):
+        if not hasattr(model_any, "tap"):
+            break
+        branch = case.branches[index]
+        branch.tap = _value_or_default(model_any.tap[index], branch.tap)
 
 
 def solution_metrics(model: pyo.ConcreteModel) -> dict[str, float | bool]:
@@ -765,6 +988,11 @@ def solution_metrics(model: pyo.ConcreteModel) -> dict[str, float | bool]:
     svcs_by_bus: dict[int, list[int]] = {}
     for index in model_any.SVC:
         svcs_by_bus.setdefault(int(_value_or_default(model_any.svc_bus[index])), []).append(index)
+    shunts_by_bus: dict[int, list[int]] = {}
+    for index in model_any.SHUNT:
+        shunts_by_bus.setdefault(int(_value_or_default(model_any.shunt_bus[index])), []).append(
+            index
+        )
     slack_buses = [bus.number for bus in case.buses if _bus_type_code(bus.kind) == SLACK]
     active_residual_buses = [bus.number for bus in case.buses if _bus_type_code(bus.kind) != SLACK]
     reactive_residual_buses = [
@@ -779,6 +1007,11 @@ def solution_metrics(model: pyo.ConcreteModel) -> dict[str, float | bool]:
             expr += _value_or_default(model_any.qg_qpv[bus])
         for index in svcs_by_bus.get(bus, []):
             expr += _value_or_default(model_any.qsvc[index])
+        for index in shunts_by_bus.get(bus, []):
+            expr += (
+                _value_or_default(model_any.qshunt[index])
+                * _value_or_default(model_any.vm[bus]) ** 2
+            )
         return expr - _value_or_default(model_any.calculated_q_injection[bus])
 
     max_p = 0.0
@@ -915,12 +1148,12 @@ class OptimizationACPowerFlow(PowerFlowSolver):
 
     * ``minimize_residuals`` -- weighted least-squares feasibility restoration
       (soft balance, limit, and SVC droop constraints with bounded slacks).
-    * ``zero_function`` -- exact power balance: the active and reactive
-      residual slacks are fixed at zero so ``P_spec = P_calc`` and
-      ``Q_spec = Q_calc`` hold as hard equalities, while the SVC droop and the
-      voltage/angle limits stay soft (weighted in the objective).
-    * ``squared_generation`` -- ``zero_function`` plus reference-bus generation
-      redispatched to minimize the sum of squared active generation.
+    * ``zero_function`` -- classic AC power flow: the power-balance and
+      controller equations hold as hard equalities and the objective is
+      identically zero, so Ipopt performs a pure feasibility solve.
+    * ``squared_generation`` -- exact power balance with reference-bus
+      generation redispatched to minimize the sum of squared active
+      generation.
     """
 
     solver_name: ClassVar[str] = "optimization"
@@ -935,6 +1168,9 @@ class OptimizationACPowerFlow(PowerFlowSolver):
         print_iterations: bool = False,
         strict_voltage_limits: bool = False,
         objective_function: str = "minimize_residuals",
+        optimize_ltc_taps: bool = False,
+        optimize_ltc_controls: bool = False,
+        enforce_shunt_deadbands: bool = False,
     ) -> None:
         if objective_function not in VALID_OBJECTIVE_FUNCTIONS:
             raise ValueError(
@@ -951,6 +1187,9 @@ class OptimizationACPowerFlow(PowerFlowSolver):
         )
         self.strict_voltage_limits = strict_voltage_limits
         self.objective_function = objective_function
+        self.optimize_ltc_taps = optimize_ltc_taps
+        self.optimize_ltc_controls = optimize_ltc_controls
+        self.enforce_shunt_deadbands = enforce_shunt_deadbands
 
     def run(
         self,
@@ -985,6 +1224,9 @@ class OptimizationACPowerFlow(PowerFlowSolver):
             qlim_enabled="QLIM" in settings.options,
             strict_voltage_limits=getattr(self, "strict_voltage_limits", False),
             objective_function=getattr(self, "objective_function", "minimize_residuals"),
+            optimize_ltc_taps=getattr(self, "optimize_ltc_taps", False),
+            optimize_ltc_controls=getattr(self, "optimize_ltc_controls", False),
+            enforce_shunt_deadbands=getattr(self, "enforce_shunt_deadbands", False),
         )
         results, solver_log, ipopt_iterations = solve_optimization_model(
             model,
@@ -1026,6 +1268,7 @@ class OptimizationACPowerFlow(PowerFlowSolver):
             [vm[bus.number] * np.exp(1j * va[bus.number]) for bus in numerical_case.buses],
             dtype=np.complex128,
         )
+        _sync_optimization_control_state(model, numerical_case)
         refresh_lcc_reporting_state(numerical_case, reduced_voltage)
         reduction.sync_control_state(case)
         expanded_voltage = reduction.expand_voltage(reduced_voltage)

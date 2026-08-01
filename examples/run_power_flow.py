@@ -11,7 +11,7 @@ from o_grid.acpf import NewtonRaphsonPowerFlow, OptimizationACPowerFlow  # noqa:
 from o_grid.system import AnaredeSystem
 
 # Parse PWF case and load infrasys system
-sys_name = "CASO_FINAL_EQV2020"
+sys_name = "LEN_A_4_2020_SECO_2023VM_SE_EXP_N"
 DATA_PATH = Path(f"tests/data/pwf/{sys_name}.pwf")
 
 parse_config = AnaredeConfig(
@@ -36,8 +36,8 @@ parsed_system = AnaredeParser.from_context(parse_context).run().system
 
 opt_pf = OptimizationACPowerFlow(
     system=parsed_system,
-    objective_function="minimize_residuals",
-    max_iterations=30,
+    objective_function="zero_function",
+    max_iterations=100,
     print_iterations=True,
 )
 assert isinstance(opt_pf, AnaredeSystem)
