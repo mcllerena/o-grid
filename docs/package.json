@@ -1,12 +1,4 @@
 {
-  "name": "o-grid-docs",
-  "private": true,
-  "type": "module",
-  "scripts": {
-    "dev": "astro dev",
-    "build": "astro build",
-    "preview": "astro preview"
-  },
   "dependencies": {
     "@astrojs/starlight": "^0.39.3",
     "astro": "^6.4.4",
@@ -20,5 +12,13 @@
   },
   "devDependencies": {
     "playwright": "^1.61.1"
-  }
+  },
+  "name": "o-grid-docs",
+  "private": true,
+  "scripts": {
+    "build": "astro build",
+    "dev": "astro dev",
+    "preview": "astro preview"
+  },
+  "type": "module"
 }

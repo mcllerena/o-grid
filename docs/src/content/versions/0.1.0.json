@@ -1,25 +1,24 @@
 {
   "sidebar": [
     {
-      "label": "Start here",
       "items": [
         {
           "label": "Introduction",
           "link": "/"
         }
-      ]
+      ],
+      "label": "Start here"
     },
     {
-      "label": "Tutorials",
       "items": [
         {
           "label": "Write your first ANAREDE parser",
           "link": "/tutorials/write-a-parser/"
         }
-      ]
+      ],
+      "label": "Tutorials"
     },
     {
-      "label": "Reference",
       "items": [
         {
           "label": "ANAREDE blocks",
@@ -29,16 +28,17 @@
           "label": "Power system models",
           "link": "/reference/models/"
         }
-      ]
+      ],
+      "label": "Reference"
     },
     {
-      "label": "Explanation",
       "items": [
         {
           "label": "Parser architecture",
           "link": "/explanation/parser-architecture/"
         }
-      ]
+      ],
+      "label": "Explanation"
     }
   ]
 }

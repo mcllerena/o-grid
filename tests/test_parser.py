@@ -37,9 +37,11 @@ from o_grid.models import (
     PhaseShiftingTransformer,
     ProgramConstant,
     ShuntBank,
+    SwitchDevice,
     TapChangingTransformer,
     TapTransformerControl,
     TransferFunctionCircuit,
+    TransformerDevice,
     TransformerManeuverable,
     VoltageBaseGroup,
     VoltageLimitGroup,
@@ -59,7 +61,13 @@ from o_grid.units import (
     Resistance,
     Voltage,
 )
-from o_grid.utils.utils_parser import has_non_default_tap, has_non_zero_angle
+from o_grid.utils.utils_parser import (
+    has_non_default_tap,
+    has_non_zero_angle,
+    has_tap_range,
+    has_tap_value,
+    is_switch_impedance,
+)
 
 
 def test_tap_and_angle_helpers_handle_edge_values() -> None:
@@ -107,7 +115,7 @@ def test_parse_anarede_d9nodes_to_infrasys(data_folder: Path) -> None:
     assert issubclass(ac_line_type, ACLine)
 
     assert len(list(parsed.system.get_components(ac_bus_type))) == 9
-    assert len(list(parsed.system.get_components(ac_line_type))) == 10
+    assert len(list(parsed.system.get_components(ac_line_type))) == 8
     assert len(list(parsed.system.get_components(Area))) == 1
     assert len(list(parsed.system.get_components(Arc))) == 10
     arcs = list(parsed.system.get_components(Arc))
@@ -118,6 +126,9 @@ def test_parse_anarede_d9nodes_to_infrasys(data_folder: Path) -> None:
     assert len(list(parsed.system.get_components(parsed.component_classes["DGBT"]))) == 0
     assert len(list(parsed.system.get_components(parsed.component_classes["DGLT"]))) == 0
     assert len(list(parsed.system.get_components(parsed.component_classes["DLIN_TAP"]))) == 0
+    assert (
+        len(list(parsed.system.get_components(parsed.component_classes["DLIN_TRANSFORMER"]))) == 2
+    )
 
     buses = parsed.components_by_block["DBAR"]
     assert all(isinstance(bus, ACBus) for bus in buses)
@@ -267,13 +278,31 @@ def test_parse_anarede_derives_tap_changers_from_dlin(data_folder: Path) -> None
     expected_tap_count = sum(
         1
         for rec in dlin_records
-        if has_non_default_tap(getattr(rec, "ext", {}).get("pwf_values", {}).get("tap"))
+        if has_tap_range(
+            getattr(rec, "ext", {}).get("pwf_values", {}).get("tap_minimum"),
+            getattr(rec, "ext", {}).get("pwf_values", {}).get("tap_maximum"),
+        )
+    )
+    expected_transformer_count = sum(
+        1
+        for rec in dlin_records
+        if not has_tap_range(
+            getattr(rec, "ext", {}).get("pwf_values", {}).get("tap_minimum"),
+            getattr(rec, "ext", {}).get("pwf_values", {}).get("tap_maximum"),
+        )
+        and not has_non_zero_angle(getattr(rec, "ext", {}).get("pwf_values", {}).get("phase_shift"))
+        and has_tap_value(getattr(rec, "ext", {}).get("pwf_values", {}).get("tap"))
     )
 
     assert expected_tap_count > 0
     assert "DLIN_TAP" in parsed.components_by_block
     assert len(parsed.components_by_block["DLIN_TAP"]) == expected_tap_count
     assert issubclass(parsed.component_classes["DLIN_TAP"], TapChangingTransformer)
+
+    assert expected_transformer_count > 0
+    assert "DLIN_TRANSFORMER" in parsed.components_by_block
+    assert len(parsed.components_by_block["DLIN_TRANSFORMER"]) == expected_transformer_count
+    assert issubclass(parsed.component_classes["DLIN_TRANSFORMER"], TransformerDevice)
 
     tap_transformer = parsed.components_by_block["DLIN_TAP"][0]
     assert isinstance(tap_transformer.controlled_bus, ACBus)
@@ -321,6 +350,52 @@ def test_parse_anarede_derives_phase_shifter_from_dlin_angle(tmp_path: Path) -> 
     assert issubclass(parsed.component_classes["DLIN_PHASE_SHIFT"], PhaseShiftingTransformer)
 
 
+def test_parse_anarede_derives_switch_from_zero_impedance(tmp_path: Path) -> None:
+    pwf = tmp_path / "switch_case.pwf"
+
+    line = [" "] * 80
+    line[0:5] = list("    1")
+    line[10:15] = list("    2")
+    dlin_line = "".join(line)
+
+    pwf.write_text(
+        "\n".join(
+            [
+                "TITU",
+                "Switch Test",
+                "99999",
+                "DLIN",
+                dlin_line,
+                "99999",
+                "FIM",
+                "",
+            ]
+        ),
+        encoding="cp1252",
+    )
+
+    parsed = parse_anarede_system(pwf, system_name="switch-demo")
+
+    assert "DLIN_SWITCH" in parsed.components_by_block
+    assert len(parsed.components_by_block["DLIN_SWITCH"]) == 1
+    assert issubclass(parsed.component_classes["DLIN_SWITCH"], SwitchDevice)
+    switch = parsed.components_by_block["DLIN_SWITCH"][0]
+    assert not hasattr(switch, "tap")
+
+
+def test_switch_impedance_helpers() -> None:
+    assert has_tap_value("1.") is True
+    assert has_tap_value("   ") is False
+    assert has_tap_value(None) is False
+    assert has_tap_value(1.0) is True
+    assert has_tap_range("", "1.10") is True
+    assert has_tap_range("", "") is False
+    assert is_switch_impedance(0.0, 0.0, 0.0, 0.001) is True
+    assert is_switch_impedance(0.0005, 0.0005, 0.0005, 0.001) is True
+    assert is_switch_impedance(0.0, 0.001, 0.958, 0.001) is False
+    assert is_switch_impedance("0.0", "0.0", "0.0", 0.001) is True
+
+
 def test_parse_anarede_derives_maneuverable_flag_on_transformer(tmp_path: Path) -> None:
     pwf = tmp_path / "maneuverable_case.pwf"
 
@@ -349,8 +424,8 @@ def test_parse_anarede_derives_maneuverable_flag_on_transformer(tmp_path: Path) 
 
     parsed = parse_anarede_system(pwf, system_name="maneuverable-demo")
 
-    assert "DLIN_TAP" in parsed.components_by_block
-    tap_transformer = parsed.components_by_block["DLIN_TAP"][0]
+    assert "DLIN_TRANSFORMER" in parsed.components_by_block
+    tap_transformer = parsed.components_by_block["DLIN_TRANSFORMER"][0]
     assert tap_transformer.maneuverable is TransformerManeuverable.NON_MANEUVERABLE
 
     base_line = parsed.components_by_block["DLIN"][0]

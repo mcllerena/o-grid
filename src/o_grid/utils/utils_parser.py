@@ -319,31 +319,36 @@ def has_non_zero_angle(value: ParsedScalar) -> bool:
 
 
 def has_tap_value(value: ParsedScalar) -> bool:
-    """Return whether a DLIN tap field carries a value (fixed or automatic tap)."""
-    if value is None or value == "":
+    """Return whether a DLIN tap field carries any value (even the fixed 1.0 ratio)."""
+    if value is None:
         return False
     if hasattr(value, "magnitude"):
-        value = get_magnitude(value)
+        return True
+    if isinstance(value, (int, float)):
+        return True
     if isinstance(value, str):
         return bool(value.strip())
-    return True
+    return False
 
 
 def has_tap_range(minimum: ParsedScalar, maximum: ParsedScalar) -> bool:
-    """Return whether a DLIN record defines an automatic tap range (LTC transformer)."""
+    """Return whether a DLIN record defines a tap range (min or max present)."""
     return has_tap_value(minimum) or has_tap_value(maximum)
 
 
 def _abs_magnitude_or_zero(value: ParsedScalar) -> float:
-    """Return the absolute magnitude of a parsed scalar, or 0.0 when absent/invalid."""
+    """Return the absolute numeric magnitude of a scalar, or 0.0 when unavailable."""
     if value is None or value == "":
         return 0.0
     if hasattr(value, "magnitude"):
         value = get_magnitude(value)
-    try:
-        return abs(float(value))  # type: ignore[arg-type]
-    except (TypeError, ValueError):
-        return 0.0
+    if isinstance(value, (int, float)):
+        return abs(float(value))
+    if isinstance(value, str):
+        stripped = value.strip()
+        if stripped and looks_numeric(stripped):
+            return abs(float(stripped))
+    return 0.0
 
 
 def is_switch_impedance(
@@ -352,7 +357,7 @@ def is_switch_impedance(
     susceptance: ParsedScalar,
     threshold: float,
 ) -> bool:
-    """Return whether a tapless DLIN record models a switch (|R|, |X|, |B| <= threshold)."""
+    """Return whether a DLIN branch has switch-level (near-zero) impedance and shunt."""
     return (
         _abs_magnitude_or_zero(resistance) <= threshold
         and _abs_magnitude_or_zero(reactance) <= threshold

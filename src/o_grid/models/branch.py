@@ -614,7 +614,7 @@ class PhaseShiftingTransformer(AnaredeComponent):
 
 
 class TransformerDevice(AnaredeComponent):
-    """Fixed-ratio transformer derived from a DLIN record with a tap but no tap range."""
+    """Fixed-tap transformer derived from a line tap value without an automatic range."""
 
     ctap_option: CtapOption = False
     flow_monitoring: FlowMonitoring = False
@@ -692,8 +692,8 @@ class TransformerDevice(AnaredeComponent):
         Area | None,
         Field(
             description=(
-                "Area that owns the transformer. This is resolved from the selected "
-                "terminal bus area during parsing."
+                "Area that owns the line. This is resolved from the selected terminal "
+                "bus area during parsing."
             ),
         ),
     ] = None
@@ -707,15 +707,16 @@ class TransformerDevice(AnaredeComponent):
     ] = None
     rating: Annotated[
         ApparentPower | None,
-        Field(description="Thermal rating of the transformer, in MVA."),
+        Field(description="Thermal rating of the line, in MVA."),
     ] = None
     b: Annotated[FromToToFrom | None, Field(description="Shunt susceptance in MVAr")] = None
     tap: Annotated[
         PerUnit | None,
         Field(
             description=(
-                "Fixed tap value referred to the bus defined in the From Bus field, in "
-                "p.u. Implicit decimal point between columns 40 and 41."
+                "Tap value referred to the bus defined in the From Bus field, in p.u., "
+                "for fixed tap transformers. Implicit decimal point between columns 40 "
+                "and 41."
             ),
             json_schema_extra={"units": "p.u."},
         ),
@@ -738,12 +739,7 @@ class TransformerDevice(AnaredeComponent):
 
 
 class SwitchDevice(AnaredeComponent):
-    """Switch/breaker derived from a DLIN record with negligible series impedance.
-
-    ANAREDE models switching devices as AC circuits whose resistance, reactance and
-    susceptance are all at or below the ``ZMIN`` program constant (DCTE), with no tap
-    and no phase shift.
-    """
+    """Switch/breaker branch derived from a line with near-zero impedance."""
 
     ctap_option: CtapOption = False
     flow_monitoring: FlowMonitoring = False
@@ -751,8 +747,9 @@ class SwitchDevice(AnaredeComponent):
         ACBus | None,
         Field(
             description=(
-                "Number of the bus whose voltage magnitude should be controlled, when "
-                "applicable."
+                "In the case of transformer type circuits with automatic tap variation, "
+                "this field is for the number of the bus whose voltage magnitude should "
+                "be controlled."
             ),
         ),
     ] = None
@@ -801,7 +798,7 @@ class SwitchDevice(AnaredeComponent):
         Area | None,
         Field(
             description=(
-                "Area that owns the switch. This is resolved from the selected terminal "
+                "Area that owns the line. This is resolved from the selected terminal "
                 "bus area during parsing."
             ),
         ),
@@ -816,7 +813,7 @@ class SwitchDevice(AnaredeComponent):
     ] = None
     rating: Annotated[
         ApparentPower | None,
-        Field(description="Thermal rating of the switch, in MVA."),
+        Field(description="Thermal rating of the line, in MVA."),
     ] = None
     b: Annotated[FromToToFrom | None, Field(description="Shunt susceptance in MVAr")] = None
     to_bus: Annotated[

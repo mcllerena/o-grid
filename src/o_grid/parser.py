@@ -259,12 +259,14 @@ class AnaredeInfrasysParser:
                 arc = self._build_arc_from_dlin_record(record, len(components_by_block["DLIN"]))
                 setattr(record, "arc", arc)
                 self._add_component(system, arc)
+
                 if switch_threshold is None:
                     switch_threshold = self._switch_impedance_threshold(components_by_block)
-                derived = self._derive_branch_record(record, components_by_block, switch_threshold)
-                # A plain transmission line keeps the ACLine record; every other branch
-                # type (OLTC, phase shifter, fixed transformer, switch) is represented by
-                # the derived component instead.
+                derived = self._derive_branch_record(
+                    record,
+                    components_by_block,
+                    switch_threshold,
+                )
                 self._add_component(system, derived if derived is not None else record)
             elif active_block not in BUS_INTERNAL_GROUP_BLOCKS and active_block not in (
                 "DBAR",
@@ -386,7 +388,7 @@ class AnaredeInfrasysParser:
             return
 
         buses_by_number = {normalize_group_key(getattr(bus, "number", None)): bus for bus in buses}
-        for block in ("DLIN", "DLIN_TAP", "DLIN_PHASE_SHIFT"):
+        for block in DLIN_BRANCH_BLOCKS:
             for line in components_by_block.get(block, []):
                 line_ext = getattr(line, "ext", None)
                 if not isinstance(line_ext, dict):
@@ -500,7 +502,7 @@ class AnaredeInfrasysParser:
         if not selected:
             return
 
-        for block in ("DLIN", "DLIN_TAP", "DLIN_PHASE_SHIFT"):
+        for block in DLIN_BRANCH_BLOCKS:
             for branch in components_by_block.get(block, []):
                 from_key = self._branch_bus_key(getattr(branch, "from_bus", None))
                 to_key = self._branch_bus_key(getattr(branch, "to_bus", None))
@@ -530,7 +532,7 @@ class AnaredeInfrasysParser:
         if not selected:
             return
 
-        for block in ("DLIN", "DLIN_TAP", "DLIN_PHASE_SHIFT"):
+        for block in DLIN_BRANCH_BLOCKS:
             for branch in components_by_block.get(block, []):
                 from_key = self._branch_bus_key(getattr(branch, "from_bus", None))
                 to_key = self._branch_bus_key(getattr(branch, "to_bus", None))
@@ -935,7 +937,7 @@ class AnaredeInfrasysParser:
         self,
         components_by_block: dict[str, list[Component]],
     ) -> None:
-        for block in ("DLIN", "DLIN_TAP", "DLIN_PHASE_SHIFT"):
+        for block in DLIN_BRANCH_BLOCKS:
             for line in components_by_block.get(block, []):
                 from_bus = getattr(line, "from_bus", None)
                 to_bus = getattr(line, "to_bus", None)
@@ -954,11 +956,66 @@ class AnaredeInfrasysParser:
                     tokens.append(circuit)
                 object.__setattr__(line, "name", "_".join(tokens))
 
-    def _is_transformer_dlin_record(self, record: AnaredeComponent) -> bool:
-        values = self._extract_dlin_values(record)
-        return has_non_default_tap(values.get("tap")) or has_non_zero_angle(
-            values.get("phase_shift")
+    def _switch_impedance_threshold(
+        self,
+        components_by_block: dict[str, list[Component]],
+    ) -> float:
+        for constant in components_by_block.get("DCTE", []):
+            mnemonic = getattr(constant, "mnemonic", None)
+            if mnemonic is None or str(mnemonic).strip().upper() != SWITCH_IMPEDANCE_MNEMONIC:
+                continue
+            value = getattr(constant, "value", None)
+            if value is None:
+                continue
+            try:
+                return abs(float(get_magnitude(value)))
+            except (TypeError, ValueError):
+                return DEFAULT_SWITCH_IMPEDANCE_THRESHOLD
+        return DEFAULT_SWITCH_IMPEDANCE_THRESHOLD
+
+    def _classify_dlin_record(
+        self,
+        values: dict[str, ParsedScalar],
+        switch_threshold: float,
+    ) -> str | None:
+        """Return the derived branch block for a DLIN record, or None for a plain line.
+
+        Priority mirrors ANAREDE/Organon: an automatic tap range wins over a phase
+        shift, which wins over a fixed tap, which wins over a switch classification.
+        """
+        if has_tap_range(values.get("tap_minimum"), values.get("tap_maximum")):
+            return "DLIN_TAP" if "DLIN_TAP" in self.component_classes else None
+        if has_non_zero_angle(values.get("phase_shift")):
+            return "DLIN_PHASE_SHIFT" if "DLIN_PHASE_SHIFT" in self.component_classes else None
+        if has_tap_value(values.get("tap")):
+            return "DLIN_TRANSFORMER" if "DLIN_TRANSFORMER" in self.component_classes else None
+        if is_switch_impedance(
+            values.get("resistance"),
+            values.get("reactance"),
+            values.get("susceptance"),
+            switch_threshold,
+        ):
+            return "DLIN_SWITCH" if "DLIN_SWITCH" in self.component_classes else None
+        return None
+
+    def _derive_branch_record(
+        self,
+        line_record: AnaredeComponent,
+        components_by_block: dict[str, list[Component]],
+        switch_threshold: float,
+    ) -> Component | None:
+        values = self._extract_dlin_values(line_record)
+        block = self._classify_dlin_record(values, switch_threshold)
+        if block is None:
+            return None
+        record_index = len(components_by_block[block]) + 1
+        component = self._build_dlin_derived_record(
+            block=block,
+            values=values,
+            record_index=record_index,
         )
+        components_by_block[block].append(component)
+        return component
 
     def _attach_bus_voltage_groups(self, components_by_block: dict[str, list[Component]]) -> None:
         buses = components_by_block.get("DBAR")
@@ -1109,39 +1166,6 @@ class AnaredeInfrasysParser:
         attach_raw_component_metadata(component, line, raw_values)
         return component
 
-    def _derive_transformer_records_from_line(
-        self,
-        line_record: AnaredeComponent,
-        components_by_block: dict[str, list[Component]],
-    ) -> list[Component]:
-        values = self._extract_dlin_values(line_record)
-        records: list[Component] = []
-
-        if has_non_default_tap(values.get("tap")) and "DLIN_TAP" in self.component_classes:
-            record_index = len(components_by_block["DLIN_TAP"]) + 1
-            component = self._build_dlin_derived_record(
-                block="DLIN_TAP",
-                values=values,
-                record_index=record_index,
-            )
-            components_by_block["DLIN_TAP"].append(component)
-            records.append(component)
-
-        if (
-            has_non_zero_angle(values.get("phase_shift"))
-            and "DLIN_PHASE_SHIFT" in self.component_classes
-        ):
-            record_index = len(components_by_block["DLIN_PHASE_SHIFT"]) + 1
-            component = self._build_dlin_derived_record(
-                block="DLIN_PHASE_SHIFT",
-                values=values,
-                record_index=record_index,
-            )
-            components_by_block["DLIN_PHASE_SHIFT"].append(component)
-            records.append(component)
-
-        return records
-
     def _extract_dlin_values(self, line_record: AnaredeComponent) -> dict[str, ParsedScalar]:
         dlin_fields = self.mapping.get("DLIN", {}).get("fields", {})
         raw_values = line_record.ext.get("pwf_values", {})
@@ -1194,7 +1218,7 @@ class AnaredeInfrasysParser:
         self,
         components_by_block: dict[str, list[Component]],
     ) -> None:
-        for block in ("DLIN", "DLIN_TAP", "DLIN_PHASE_SHIFT"):
+        for block in DLIN_BRANCH_BLOCKS:
             for component in components_by_block.get(block, []):
                 component_ext = getattr(component, "ext", None)
                 if not isinstance(component_ext, dict):
