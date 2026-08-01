@@ -81,36 +81,36 @@
 \section{Introduction}
 
 
-Power flow analysis is a fundamental process in power systems operations and planning, since it provides the steady-state voltages, 
-angles, and power injections used in security assessment and grid studies \cite{ref1}. For many years, this process has been solved mainly 
-with Newton Raphson and Fast Decoupled methods, which offer good computational performance for conventional AC networks. As modern grids evolve, 
-however, the modeling scope has expanded beyond the traditional AC setting. The growing integration of FACTS devices and HVDC systems introduces 
+Power flow analysis is a fundamental process in power systems operations and planning, since it provides the steady-state voltages,
+angles, and power injections used in security assessment and grid studies \cite{ref1}. For many years, this process has been solved mainly
+with Newton Raphson and Fast Decoupled methods, which offer good computational performance for conventional AC networks. As modern grids evolve,
+however, the modeling scope has expanded beyond the traditional AC setting. The growing integration of FACTS devices and HVDC systems introduces
 high nonlinearities, which increases the complexity of the power flow problem \cite{ref2}.
-In hybrid AC/DC systems, representations are separated into sequential and integrated formulations. Sequential methods solve AC and DC 
-subsystems separately and exchange boundary values until convergence \cite{ref3}. This structure reduces matrix size per iteration and is 
-attractive for large systems, but convergence can be weak in stressed or poorly conditioned cases, especially when many controls and limits 
+In hybrid AC/DC systems, representations are separated into sequential and integrated formulations. Sequential methods solve AC and DC
+subsystems separately and exchange boundary values until convergence \cite{ref3}. This structure reduces matrix size per iteration and is
+attractive for large systems, but convergence can be weak in stressed or poorly conditioned cases, especially when many controls and limits
 are active \cite{ref4}.
 
-Integrated methods solve AC and DC equations together in a single model, which improves consistency between network states and converter 
-controls \cite{ref5}. In this same approach, FACTS devices can also be embedded in the power flow equations through steady-state 
+Integrated methods solve AC and DC equations together in a single model, which improves consistency between network states and converter
+controls \cite{ref5}. In this same approach, FACTS devices can also be embedded in the power flow equations through steady-state
 injection-based representations, enabling their control actions and limits to be handled within the unified network solution \cite{ref6}.
 
-To increase robustness, recent studies have moved toward NLP solvers to address this issues. Compared with traditional approaches, 
-NLP formulations are more flexible for adding limits and control equations. A common approach is the use of soft constraints with 
-slack variables and penalty terms, which helps maintain convergence when strict feasibility is hard to satisfy in stressed operating 
+To increase robustness, recent studies have moved toward NLP solvers to address this issues. Compared with traditional approaches,
+NLP formulations are more flexible for adding limits and control equations. A common approach is the use of soft constraints with
+slack variables and penalty terms, which helps maintain convergence when strict feasibility is hard to satisfy in stressed operating
 conditions \cite{ref7}.
 
 Even with these advances, there are still few studies applying this level of detailed modeling to very large systems
-such as the BIPS. This motivates the present work, an integrated optimization-based AC/DC power flow model with detailed 
-LCC-HVDC and FACTS representation, solved simultaneously and validated at both equivalent and full BIPS scale. The goal 
+such as the BIPS. This motivates the present work, an integrated optimization-based AC/DC power flow model with detailed
+LCC-HVDC and FACTS representation, solved simultaneously and validated at both equivalent and full BIPS scale. The goal
 is to combine modeling realism with robust convergence for practical large-scale studies. The main contributions are summarized as follows:
 
 (i) Development and open-source implementation of an integrated nonlinear AC/DC power flow model that explicitly represents
- FACTS and LCC-HVDC steady-state systems behavior, solved with the Ipopt solver \cite{ref8} in a single NLP framework with 
+ FACTS and LCC-HVDC steady-state systems behavior, solved with the Ipopt solver \cite{ref8} in a single NLP framework with
  set controls and constraints to model real system operations.
 
-(ii) Validation of the proposed model with the Anarede software, a Brazilian power system analysis tool \cite{ref9}, 
-using both a system equivalent and the large-scale BIPS model, showing numerically consistent operating points and robust 
+(ii) Validation of the proposed model with the Anarede software, a Brazilian power system analysis tool \cite{ref9},
+using both a system equivalent and the large-scale BIPS model, showing numerically consistent operating points and robust
 convergence for large-scale cases.
 
 (iii) Reproducible scalability, stressed-condition, and direct solver comparisons that distinguish accepted termination and
@@ -142,8 +142,8 @@ the schedule are regularized. The weights $w_c$, $w_l$, and $w_r$ set the relati
 % ====================================================================================================================================
 \subsection{Optimization-based AC Power Flow}
 \label{sec:OB-ACPF}
-In the present work, a power balance formulation in polar coordinates is adopted. The resulting steady-state equality constraints for active 
-and reactive power balance use compact aggregated terms to represent network injections. For every bus $i \in \mathcal{N}$, where $\mathcal{N}$ 
+In the present work, a power balance formulation in polar coordinates is adopted. The resulting steady-state equality constraints for active
+and reactive power balance use compact aggregated terms to represent network injections. For every bus $i \in \mathcal{N}$, where $\mathcal{N}$
 represents the set of all system buses, these terms are defined as:
 \begin{align}
 	P_i^{\ell} & := \sum_{(k,i,j)\in\mathcal{L}_i^{out}} p^{fr}_{kij} + \sum_{(k,j,i)\in\mathcal{L}_i^{in}}  p^{to}_{kji},   \\
@@ -176,17 +176,17 @@ The branch active and reactive flows, $p_{ij}$ and $q_{ij}$, between terminal bu
 	       & \quad + \frac{v_i v_{j}}{t_{ij}} \big( g_{ij}\sin(\theta_{ij}+\phi_{ij}) - b_{ij}\cos(\theta_{ij}+\phi_{ij}) \big).
 	\label{eq:power_flow_4}
 \end{align}
-The transformer tap ratios ($t_{ij}$) and phase shifts ($\phi_{ij}$) in (\ref{eq:power_flow_3}) and (\ref{eq:power_flow_4}) are modeled as 
-fixed parameters read from the input data. These values represent fixed-tap transformers or on-load tap changers whose operating points are 
-defined before solving the power flow. Bus shunt elements are explicitly represented in the nodal balances in (\ref{eq:power_flow_1}) 
-and (\ref{eq:power_flow_2}) through $g_i^{sh}$ and $b_i^{sh}$, while line shunt effects are included in the branch-flow terms. To preserve 
+The transformer tap ratios ($t_{ij}$) and phase shifts ($\phi_{ij}$) in (\ref{eq:power_flow_3}) and (\ref{eq:power_flow_4}) are modeled as
+fixed parameters read from the input data. These values represent fixed-tap transformers or on-load tap changers whose operating points are
+defined before solving the power flow. Bus shunt elements are explicitly represented in the nodal balances in (\ref{eq:power_flow_1})
+and (\ref{eq:power_flow_2}) through $g_i^{sh}$ and $b_i^{sh}$, while line shunt effects are included in the branch-flow terms. To preserve
 the behavior of a conventional power flow, selected state variables are fixed according to bus type by setting equal lower and upper bounds at
 their specified values.
 % ====================================================================================================================================
 \subsection{Thyristor Controlled Series Capacitor (TCSC)}
-The impact of these devices on steady-state operation has been extensively documented, highlighting their capacity to control the power transfer 
-on the line by acting on the terminal voltage magnitudes, the phase angles, or the line reactance \cite{ref12}. In this work, the TCSC is modeled 
-operating exclusively in constant reactance control mode. For each device $m \in \mathcal{C}$ connected between terminal buses $i$ and $j$, 
+The impact of these devices on steady-state operation has been extensively documented, highlighting their capacity to control the power transfer
+on the line by acting on the terminal voltage magnitudes, the phase angles, or the line reactance \cite{ref12}. In this work, the TCSC is modeled
+operating exclusively in constant reactance control mode. For each device $m \in \mathcal{C}$ connected between terminal buses $i$ and $j$,
 the active and reactive power expressions can be written as:
 \begin{align}
 	\label{eq:csc_p}
@@ -194,15 +194,15 @@ the active and reactive power expressions can be written as:
 	\label{eq:csc_q}
 	q_{m}^{csc} & = \frac{v_i^2}{x^e_{m}} - \frac{v_i v_j}{x^e_{m}} \cos(\theta_{i} - \theta_{j}), \quad \forall m \in \mathcal{C},
 \end{align}
-where $v_i$ and $v_j$ are the terminal voltage magnitudes, $(\theta_i - \theta_j)$ is the phase angle difference, and $x^e_{m}$ is the device 
-specified reactance. These power transfer terms, $p_m^{csc}$ and $q_m^{csc}$, are added to the nodal power balance equations \eqref{eq:power_flow_1} 
+where $v_i$ and $v_j$ are the terminal voltage magnitudes, $(\theta_i - \theta_j)$ is the phase angle difference, and $x^e_{m}$ is the device
+specified reactance. These power transfer terms, $p_m^{csc}$ and $q_m^{csc}$, are added to the nodal power balance equations \eqref{eq:power_flow_1}
 and \eqref{eq:power_flow_2}, respectively.
 % ====================================================================================================================================
 \subsection{Static VAR Compensator (SVC)}
-The reactive power injected or absorbed by the SVC is represented by a piecewise-linear function that captures both the control mode and the 
-specific operating region of the device, these configurations are shown in Figure \ref{fig:svc_configurations}. Depending on whether the 
-SVC $s \in \mathcal{S}$ is operating in reactive power control ($c^{svc}_{s}=0$) or injected current control ($c^{svc}_{s}=1$), different 
-expressions are applied to characterize the interaction with the AC network, as defined in the Anarede functional specifications \cite{ref12}. 
+The reactive power injected or absorbed by the SVC is represented by a piecewise-linear function that captures both the control mode and the
+specific operating region of the device, these configurations are shown in Figure \ref{fig:svc_configurations}. Depending on whether the
+SVC $s \in \mathcal{S}$ is operating in reactive power control ($c^{svc}_{s}=0$) or injected current control ($c^{svc}_{s}=1$), different
+expressions are applied to characterize the interaction with the AC network, as defined in the Anarede functional specifications \cite{ref12}.
 The reactive power injection $q^{svc}_s$ is formulated as follows:
 \begin{gather}
 	\label{eq:svc_logic}
@@ -215,10 +215,10 @@ The reactive power injection $q^{svc}_s$ is formulated as follows:
 	\end{cases} \nonumber \\
 	\forall s \in \mathcal{S},
 \end{gather}
-where $m^{ctrl}_s$ represents the control slope (droop) of the compensator, and $r^{gn}_s$ is a region indicator variable identifying if the 
-device has reached its inductive ($+1$) or capacitive ($-1$) susceptance limits. In this formulation, $v^{ref}_s$ is the target control reference 
-voltage for the specified bus, $v^{svc}_s$ is the voltage at the controlled bus where the SVC is connected, $v^t_s$ represents the terminal voltage 
-of the SVC device, and $q^{\min}_s, q^{\max}_s$ are the minimum inductive and maximum capacitive reactive power operation limits of the compensator, 
+where $m^{ctrl}_s$ represents the control slope (droop) of the compensator, and $r^{gn}_s$ is a region indicator variable identifying if the
+device has reached its inductive ($+1$) or capacitive ($-1$) susceptance limits. In this formulation, $v^{ref}_s$ is the target control reference
+voltage for the specified bus, $v^{svc}_s$ is the voltage at the controlled bus where the SVC is connected, $v^t_s$ represents the terminal voltage
+of the SVC device, and $q^{\min}_s, q^{\max}_s$ are the minimum inductive and maximum capacitive reactive power operation limits of the compensator,
 respectively.
 \begin{figure}[!htbp]
 	\centering
@@ -239,25 +239,25 @@ respectively.
 % ====================================================================================================================================
 \vspace{-0.6cm}
 \subsection{Line-Commutated Converter (LCC)}
-The steady-state modeling of LCC-HVDC systems used in this work follows classical converter relationships, including converter-side voltages, 
-current, control angles, and commutation effects \cite{ref13,ref14}. These relationships provide the analytical basis for representing rectifier 
+The steady-state modeling of LCC-HVDC systems used in this work follows classical converter relationships, including converter-side voltages,
+current, control angles, and commutation effects \cite{ref13,ref14}. These relationships provide the analytical basis for representing rectifier
 and inverter operation in AC/DC power flow studies as shown in Fig. \ref{fig:lcc_configuration}.
-The LCC system is modeled using a unified set of equations for both rectifier ($k=r$) and inverter ($k=i$) terminals \cite{ref15}. For each 
-pole $h \in \mathcal{H}$, where $\mathcal{H}$ represents the set of all active DC poles, the DC voltage $V^{dc,h}_k$ is expressed as the ideal 
+The LCC system is modeled using a unified set of equations for both rectifier ($k=r$) and inverter ($k=i$) terminals \cite{ref15}. For each
+pole $h \in \mathcal{H}$, where $\mathcal{H}$ represents the set of all active DC poles, the DC voltage $V^{dc,h}_k$ is expressed as the ideal
 no-load voltage term plus the commutation reactance drop:
 \begin{align}
 	\label{eq:vdc_universal}
 	V^{dc,h}_k = N^h_k \left(\frac{3 \sqrt{2}}{\pi}\frac{a^h_k V^{ac,h}_k}{T^h_k} \cos{\theta^h_k} + s_k\frac{3 X^{h}_k}{\pi} I^{dc,h}_k\right), \nonumber \\
 	\forall h \in \mathcal{H}, \, k \in \{r,i\},
 \end{align}
-where $s_r=-1$ for the rectifier and $s_i=+1$ for the inverter, which physically accounts for the polarity change and internal voltage drop across 
-the bridges under commutation. The parameter $\theta^h_k$ denotes the operational control angle mapped to each terminal mode; 
-specifically, $\theta^h_r = \alpha^h_r$ represents the firing delay angle for the rectifier, whereas $\theta^h_i = \gamma^h_i$ represents 
-the minimum extinction angle for the inverter. Furthermore, $N^h_k$ is the number of bridges that the converter station possesses for pole $h$ 
-at terminal $k$, $a^h_k$ is the transformer ratio, $T^h_k$ is the tap ratio, $X^h_k$ is the commutation reactance, and $I^{dc,h}_k$ is the DC 
+where $s_r=-1$ for the rectifier and $s_i=+1$ for the inverter, which physically accounts for the polarity change and internal voltage drop across
+the bridges under commutation. The parameter $\theta^h_k$ denotes the operational control angle mapped to each terminal mode;
+specifically, $\theta^h_r = \alpha^h_r$ represents the firing delay angle for the rectifier, whereas $\theta^h_i = \gamma^h_i$ represents
+the minimum extinction angle for the inverter. Furthermore, $N^h_k$ is the number of bridges that the converter station possesses for pole $h$
+at terminal $k$, $a^h_k$ is the transformer ratio, $T^h_k$ is the tap ratio, $X^h_k$ is the commutation reactance, and $I^{dc,h}_k$ is the DC
 current flowing through the link.
 
-The commutation process induces a phase displacement between the AC voltage and fundamental AC current. The corresponding overlap angle $\mu^h_k$ 
+The commutation process induces a phase displacement between the AC voltage and fundamental AC current. The corresponding overlap angle $\mu^h_k$
 and power factor angle $\phi^h_k$ for each pole $h \in \mathcal{H}$ and terminal $k \in \{r,i\}$ are governed by:
 \begin{align}
 	\label{eq:overlap_angle_fix}
@@ -268,20 +268,20 @@ and power factor angle $\phi^h_k$ for each pole $h \in \mathcal{H}$ and terminal
 	{\cos(2\theta^h_k)-\cos(2\theta^h_k+2\mu^h_k)}
 	\right).
 \end{align}
-To guarantee mathematical and physical consistency within the NLP optimization framework, the argument of the inverse cosine in 
-\eqref{eq:overlap_angle_fix} is strictly constrained to the domain $[-1, 1]$, preventing non-convergence during high DC current or depressed 
+To guarantee mathematical and physical consistency within the NLP optimization framework, the argument of the inverse cosine in
+\eqref{eq:overlap_angle_fix} is strictly constrained to the domain $[-1, 1]$, preventing non-convergence during high DC current or depressed
 AC voltage states.
 
-The \textit{RMS} AC current $I^{ac,h}_k$ at the converter transformer is proportional to the DC current, while the reactive power 
+The \textit{RMS} AC current $I^{ac,h}_k$ at the converter transformer is proportional to the DC current, while the reactive power
 variable $Q^{ac,h}_k$ at the AC interface is derived for all $h \in \mathcal{H}$ and $k \in \{r,i\}$ as follows:
 \begin{align}
 	I^{ac,h}_k & = \frac{\sqrt{6}}{\pi}N^h_k I^{dc,h}_k, \label{eq:iac_rms}                        \\
 	Q^{ac,h}_k & = \sqrt{3}\, I^{ac,h}_k (a^h_k V^{ac,h}_k / T^h_k)\sin\phi^h_k. \label{eq:hvdc_q}
 \end{align}
-In the nodal balance, the active power terms $P^{ac,h}_{r}$ and $P^{ac,h}_{i}$ are treated as fixed setpoints specified by the system data models, 
-representing a withdrawal at the rectifier bus and an injection at the inverter bus, respectively. Conversely, because line-commutated converters 
-inherently consume reactive power regardless of power flow direction, both $Q^{ac,h}_{r}$ and $Q^{ac,h}_{i}$ are modeled strictly as reactive power 
-withdrawals. These variables are directly integrated into the nodal power balance equations \eqref{eq:power_flow_1} and \eqref{eq:power_flow_2}. Finally, 
+In the nodal balance, the active power terms $P^{ac,h}_{r}$ and $P^{ac,h}_{i}$ are treated as fixed setpoints specified by the system data models,
+representing a withdrawal at the rectifier bus and an injection at the inverter bus, respectively. Conversely, because line-commutated converters
+inherently consume reactive power regardless of power flow direction, both $Q^{ac,h}_{r}$ and $Q^{ac,h}_{i}$ are modeled strictly as reactive power
+withdrawals. These variables are directly integrated into the nodal power balance equations \eqref{eq:power_flow_1} and \eqref{eq:power_flow_2}. Finally,
 operational feasibility and equipment limits are enforced across all components by:
 \begin{align}
 	T^{\min,h}_k      & \leq T^h_k \leq T^{\max,h}_k, \quad \forall h \in \mathcal{H}, \, k\in\{r,i\}, \\
@@ -298,13 +298,13 @@ operational feasibility and equipment limits are enforced across all components 
 % ====================================================================================================================================
 \section{Simulation Process}
 
-The proposed model is implemented in Python using the Pyomo optimization framework and solved via the Ipopt solver. The simulation starts by 
-parsing Anarede files (.pwf) into a readable open-source format (.dat), followed by the execution of the AC/DC power flow model. The post-optimization 
-phase involves verifying SVC operational status; if reactive power limits are violated, the algorithm iteratively adjusts setpoints according to the 
-control logic defined in \eqref{eq:svc_logic} and solves the system again. This ensures that the final operating point is physically feasible and is 
-within the device saturation limits. Validation is then performed by comparing the proposed model results against Anarede. Numerical differences are 
-expected, since the software uses Newton Raphson based algorithms. These differences are particularly evident near operational boundaries, such as 
-converter transformer tap limits or maximum firing angles ($\alpha_{max}, \gamma_{max}$), where the two solvers may converge on different but equally 
+The proposed model is implemented in Python using the Pyomo optimization framework and solved via the Ipopt solver. The simulation starts by
+parsing Anarede files (.pwf) into a readable open-source format (.dat), followed by the execution of the AC/DC power flow model. The post-optimization
+phase involves verifying SVC operational status; if reactive power limits are violated, the algorithm iteratively adjusts setpoints according to the
+control logic defined in \eqref{eq:svc_logic} and solves the system again. This ensures that the final operating point is physically feasible and is
+within the device saturation limits. Validation is then performed by comparing the proposed model results against Anarede. Numerical differences are
+expected, since the software uses Newton Raphson based algorithms. These differences are particularly evident near operational boundaries, such as
+converter transformer tap limits or maximum firing angles ($\alpha_{max}, \gamma_{max}$), where the two solvers may converge on different but equally
 feasible points.
 
 \begin{algorithm}[!t]
@@ -336,14 +336,14 @@ feasible points.
 % \caption{BIPS transmission network.}
 % \label{fig:bips_transmission_network}
 % \end{figure}
-% \FloatBarrier   
+% \FloatBarrier
 
 \section{Numerical Results}
 
 \subsection{BIPS Data Model}
 
-The data model used to represent the BIPS transmission network, as seen in Figure \ref{fig:bips_transmission_network}, consists of 7308 buses, 
-6477 lines, 3861 two-winding transformers, 68 CSCs, 44 SVCs, 321 line shunts, 1961 bus/line capacitor/reactor banks, 1299 generators and 
+The data model used to represent the BIPS transmission network, as seen in Figure \ref{fig:bips_transmission_network}, consists of 7308 buses,
+6477 lines, 3861 two-winding transformers, 68 CSCs, 44 SVCs, 321 line shunts, 1961 bus/line capacitor/reactor banks, 1299 generators and
 2736 loads. The operating snapshots are based on cases released by the Brazilian Independent System Operator \cite{ref16}.
 
 \begin{table}[htb]
@@ -368,20 +368,20 @@ The data model used to represent the BIPS transmission network, as seen in Figur
 	\end{tabular}
 \end{table}
 
-As part of this study, the main LCC-HVDC corridors currently relevant to BIPS operation are explicitly modeled. These include the Itaipu 
-link (Foz do Igua\c{c}u--Ibi\'una), the Madeira complex (Santo Ant\^onio--Araraquara, ABB and Areva bipoles), and the Belo Monte transmission 
-link (Xingu--Estreito and Xingu--Terminal Rio). In total, the implemented set comprises 12 poles organized as three major LCC schemes: four poles 
-at 600~kV for Foz/Ibi\'una, four poles at 600~kV for Santo Ant\^onio/Araraquara, and four poles at 800~kV for the Xingu corridors, with nominal pole 
+As part of this study, the main LCC-HVDC corridors currently relevant to BIPS operation are explicitly modeled. These include the Itaipu
+link (Foz do Igua\c{c}u--Ibi\'una), the Madeira complex (Santo Ant\^onio--Araraquara, ABB and Areva bipoles), and the Belo Monte transmission
+link (Xingu--Estreito and Xingu--Terminal Rio). In total, the implemented set comprises 12 poles organized as three major LCC schemes: four poles
+at 600~kV for Foz/Ibi\'una, four poles at 600~kV for Santo Ant\^onio/Araraquara, and four poles at 800~kV for the Xingu corridors, with nominal pole
 powers in the range of approximately 1566--2000~MW. Their representative operating settings are summarized in Table~\ref{tab:summary_lcc_links}.
 
 \subsection{Model Validation}
-To validate the proposed AC/DC power flow model, the corresponding analysis is performed on the equivalent BIPS model focusing on the point-to-point 
-DC configuration on the LCC-HVDC links described on Table \ref{tab:summary_lcc_links}. Using a flat start configuration on the AC side, and keeping 
-DC voltage constant on one of each converter stations, the results for the equivalent BIPS are shown in Fig.~\ref{fig:equivalent_bips_model_ac_components} 
+To validate the proposed AC/DC power flow model, the corresponding analysis is performed on the equivalent BIPS model focusing on the point-to-point
+DC configuration on the LCC-HVDC links described on Table \ref{tab:summary_lcc_links}. Using a flat start configuration on the AC side, and keeping
+DC voltage constant on one of each converter stations, the results for the equivalent BIPS are shown in Fig.~\ref{fig:equivalent_bips_model_ac_components}
 and Fig.~\ref{fig:equivalent_bips_model_dc_components}, respectively.
 
-It can be observed that the proposed AC/DC power flow model tracks the AC voltage magnitudes, phase angles, generator active and reactive power outputs, 
-branch flows, and the control setpoints of the FACTS and LCC-HVDC devices across the equivalent and full BIPS network. To quantify the similarity between 
+It can be observed that the proposed AC/DC power flow model tracks the AC voltage magnitudes, phase angles, generator active and reactive power outputs,
+branch flows, and the control setpoints of the FACTS and LCC-HVDC devices across the equivalent and full BIPS network. To quantify the similarity between
 the proposed AC/DC model and Anarede, an $R^2$ coefficient of determination was applied across the validation datasets, confirming a high fit on the results.
 
 % ====================================================================================
@@ -398,15 +398,15 @@ the proposed AC/DC model and Anarede, an $R^2$ coefficient of determination was 
 	\label{fig:equivalent_bips_model_ac_components}
 \end{figure}
 
-The mismatches observed when comparing the results with Anarede are primarily driven by differences in core modeling approaches and power flow 
-assumptions. Because a NLP problem of this scale possesses multiple local solutions, the solver successfully converges to a physically feasible 
+The mismatches observed when comparing the results with Anarede are primarily driven by differences in core modeling approaches and power flow
+assumptions. Because a NLP problem of this scale possesses multiple local solutions, the solver successfully converges to a physically feasible
 operating point around the feasible set.
 
-Furthermore, minor variations in the converter firing ($\alpha$) and extinction ($\gamma$) angles are expected. While the acceptable operational 
-limits for these angles typically span from 5° to 90°, in steady-state operation it is preferred to have small angle values for safe operation and 
-to avoid commutation failure as shown in Table \ref{tab:summary_lcc_links}; in this simulation, the control angles variation was in a range from 15° 
-to 23°. Because these parameters are handled within an optimization framework, the solver's primary objective is to ensure they converge within 
-coherent operational boundaries rather than matching the exact value. Specifically, the NLP formulation evaluates these variables from a system-wide 
+Furthermore, minor variations in the converter firing ($\alpha$) and extinction ($\gamma$) angles are expected. While the acceptable operational
+limits for these angles typically span from 5° to 90°, in steady-state operation it is preferred to have small angle values for safe operation and
+to avoid commutation failure as shown in Table \ref{tab:summary_lcc_links}; in this simulation, the control angles variation was in a range from 15°
+to 23°. Because these parameters are handled within an optimization framework, the solver's primary objective is to ensure they converge within
+coherent operational boundaries rather than matching the exact value. Specifically, the NLP formulation evaluates these variables from a system-wide
 perspective, balancing active and reactive power constraints across the entire network and optimizing the control angles to achieve a feasible solution.
 
 % ====================================================================================
@@ -422,14 +422,14 @@ perspective, balancing active and reactive power constraints across the entire n
 	\label{fig:equivalent_bips_model_dc_components}
 \end{figure}
 
-Unlike the active power results, reactive power are highly sensitive to small network modeling variations. In the proposed formulation, the 
-transformer model is simplified by applying a tap ratio configuration directly to the power flow equations. The bus and line shunts are directly 
-added into the bus susceptance ($B$) values. These simplified representations can modify the localized reactive power distribution across the 
+Unlike the active power results, reactive power are highly sensitive to small network modeling variations. In the proposed formulation, the
+transformer model is simplified by applying a tap ratio configuration directly to the power flow equations. The bus and line shunts are directly
+added into the bus susceptance ($B$) values. These simplified representations can modify the localized reactive power distribution across the
 network. Consequently, mismatches can be observed when comparing the results with a commercial software like Anarede.
 
-To evaluate the performance and scalability of the proposed AC/DC power flow model, the 7308-bus BIPS model was simulated under a normal steady-state 
-operation mode for the LCC-HVDC. The resulting power flow profiles demonstrate that the active and reactive generator outputs, AC bus voltage magnitudes 
-and phase angles, FACTS and LCC-HVDC terminal parameters are kept within their operational boundaries. These profiles are observed 
+To evaluate the performance and scalability of the proposed AC/DC power flow model, the 7308-bus BIPS model was simulated under a normal steady-state
+operation mode for the LCC-HVDC. The resulting power flow profiles demonstrate that the active and reactive generator outputs, AC bus voltage magnitudes
+and phase angles, FACTS and LCC-HVDC terminal parameters are kept within their operational boundaries. These profiles are observed
 in Fig.~\ref{fig:bus_validation} and Fig.~\ref{fig:branch_validation}.
 
 % ====================================================================================
@@ -443,10 +443,10 @@ in Fig.~\ref{fig:bus_validation} and Fig.~\ref{fig:branch_validation}.
 	\caption{AC/DC power flow results for buses and generators.}
 	\label{fig:bus_validation}
 \end{figure}
-To support the heavy transmission conditions of high active power flows transmitted over the long-distance LCC-HVDC systems, the 
-converter transformer tap positions are controlled within an physical range of $0.9$ to $1.2$. Keeping the tap ratios in this range 
-is important in normal operating mode, as they adjust the AC side voltage to minimize the converter firing angles ($\alpha$) and extinction 
-angles ($\gamma$), directly minimizing the high reactive power demand consumed by the converter stations, as can be seen in 
+To support the heavy transmission conditions of high active power flows transmitted over the long-distance LCC-HVDC systems, the
+converter transformer tap positions are controlled within an physical range of $0.9$ to $1.2$. Keeping the tap ratios in this range
+is important in normal operating mode, as they adjust the AC side voltage to minimize the converter firing angles ($\alpha$) and extinction
+angles ($\gamma$), directly minimizing the high reactive power demand consumed by the converter stations, as can be seen in
 Fig.~\ref{fig:bips_model_ac_components}.
 % ====================================================================================
 % UNIFIED FIGURE 3: BRANCH & SVC VALIDATION
@@ -459,11 +459,11 @@ Fig.~\ref{fig:bips_model_ac_components}.
 	\caption{AC/DC power flow results for branches and FACTS devices.}
 	\label{fig:branch_validation}
 \end{figure}
-Additionally, the highly meshed nature of the BIPS requires active and reactive flow control via FACTS devices, without them the system would 
-not converge to a feasible point. The proposed model incorporates these formulations into the nodal power balance equations. The active and 
-reactive power through the CSC is controlled by active ($P_{csc}$) and reactive ($Q_{csc}$) flow constraints, which adjust them based on the 
-equivalent series reactance ($X_{esp}$). Voltage support and reactive power control are enforced at SVC buses. The model implements piecewise 
-voltage control constraints that govern the reactive power injection ($Q_c$) based on localized voltage deviations ($V - V_0$) and slope 
+Additionally, the highly meshed nature of the BIPS requires active and reactive flow control via FACTS devices, without them the system would
+not converge to a feasible point. The proposed model incorporates these formulations into the nodal power balance equations. The active and
+reactive power through the CSC is controlled by active ($P_{csc}$) and reactive ($Q_{csc}$) flow constraints, which adjust them based on the
+equivalent series reactance ($X_{esp}$). Voltage support and reactive power control are enforced at SVC buses. The model implements piecewise
+voltage control constraints that govern the reactive power injection ($Q_c$) based on localized voltage deviations ($V - V_0$) and slope
 characteristics ($I_{ncl}$), accounting for physical operating limits ($Q_{cn}, Q_{cm}$).
 % ====================================================================================
 % UNIFIED FIGURE 4: FULL BIPS DC COMPONENTS
@@ -622,5 +622,3 @@ compatible AC-only cases.
 \endgroup
 
 \end{document}
-
-

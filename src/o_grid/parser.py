@@ -94,6 +94,18 @@ class ParsedAnaredeSystem:
     components_by_block: dict[str, list[Component]]
     component_classes: dict[str, type[Component]]
 
+    @classmethod
+    def from_system(cls, system: System) -> ParsedAnaredeSystem:
+        """Recover parser context retained by an ``AnaredeSystem``."""
+        if not isinstance(system, AnaredeSystem) or system._anarede_source is None:
+            raise TypeError("The infrasys system was not built by AnaredeParser")
+        return cls(
+            source=system._anarede_source,
+            system=system,
+            components_by_block=system._components_by_block,
+            component_classes=system._component_classes,
+        )
+
 
 class AnaredeInfrasysParser:
     """Parse ANAREDE `.pwf` files and populate an infrasys `System`."""
@@ -305,10 +317,12 @@ class AnaredeInfrasysParser:
         total = sum(1 for _ in system._component_mgr.iter_all())
         logger.success("Successfully parsed {} component(s).", total)
 
+        populated_components = {k: v for k, v in components_by_block.items() if v}
+        system.attach_parse_context(source, populated_components, self.component_classes)
         return ParsedAnaredeSystem(
             source=source,
             system=system,
-            components_by_block={k: v for k, v in components_by_block.items() if v},
+            components_by_block=populated_components,
             component_classes=self.component_classes,
         )
 

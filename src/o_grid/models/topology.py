@@ -218,6 +218,22 @@ class ACBus(Bus):
             json_schema_extra={"units": "p.u."},
         ),
     ] = PerUnit(1.0, "pu")
+    solved_voltage: Annotated[
+        PerUnit | None,
+        Field(description="Solved AC voltage magnitude in p.u."),
+    ] = None
+    solved_angle: Annotated[
+        Angle | None,
+        Field(description="Solved AC voltage angle in degrees."),
+    ] = None
+    active_power_injection: Annotated[
+        ActivePower | None,
+        Field(description="Solved net active-power injection in MW."),
+    ] = None
+    reactive_power_injection: Annotated[
+        ReactivePower | None,
+        Field(description="Solved net reactive-power injection in MVAr."),
+    ] = None
     voltage_base_group: Annotated[
         VoltageBaseGroup | int | float | str | None,
         Field(

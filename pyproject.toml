@@ -16,10 +16,12 @@ maintainers = [
 dependencies = [
   "infrasys>=1.2.0,<2.0.0",
   "loguru>=0.7.3,<1.0.0",
+  "numpy>=2.0",
   "pydantic>=2.11.0,<3.0.0",
   "pyomo>=6.10.1",
   "r2x-core>=0.4.0,<1.0.0",
   "rust-ok>=0.3.0,<1.0.0",
+  "scipy>=1.14",
 ]
 
 [dependency-groups]

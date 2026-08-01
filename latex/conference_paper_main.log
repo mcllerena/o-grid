@@ -245,7 +245,7 @@ e \nobreakspace #2}\ifdim \wd \@tempboxa >\hsize \setbox \@tempboxa \hbox {\nor
 malfont \footnotesize {#1.}\nobreakspace \nobreakspace }\parbox [t]{\hsize }{\n
 ormalfont \footnotesize \noindent \unhbox \@tempboxa #2}\else \ifCLASSOPTIONcon
 ference \hbox to\hsize {\normalfont \footnotesize \hfil \box \@tempboxa \hfil }
-\else \hbox to\hsize {\normalfont \footnotesize \box \@tempboxa \hfil }\fi \fi 
+\else \hbox to\hsize {\normalfont \footnotesize \box \@tempboxa \hfil }\fi \fi
 \fi  on input line 1175.
 )
 \c@KVtest=\count286
@@ -478,7 +478,7 @@ ic file (type pdf)
 Package pdftex.def Info: img/LENA_CASO_FINAL_EQV2020_DC_Full_branch_flow_active
 _reactive.pdf  used on input line 395.
 (pdftex.def)             Requested size: 239.39923pt x 115.91444pt.
-<img/LENA_CASO_FINAL_EQV2020_DC_Full_csc_svc_results.pdf, id=42, 726.19952pt x 
+<img/LENA_CASO_FINAL_EQV2020_DC_Full_csc_svc_results.pdf, id=42, 726.19952pt x
 273.56363pt>
 File: img/LENA_CASO_FINAL_EQV2020_DC_Full_csc_svc_results.pdf Graphic file (typ
 e pdf)
@@ -494,7 +494,7 @@ File: ts1ptm.fd 2001/06/04 font definitions for TS1/ptm.
 )
 <img/LENA_CASO_FINAL_EQV2020_DC_Full_hvdc_reactive_power.pdf, id=43, 706.28197p
 t x 202.356pt>
-File: img/LENA_CASO_FINAL_EQV2020_DC_Full_hvdc_reactive_power.pdf Graphic file 
+File: img/LENA_CASO_FINAL_EQV2020_DC_Full_hvdc_reactive_power.pdf Graphic file
 (type pdf)
 <use img/LENA_CASO_FINAL_EQV2020_DC_Full_hvdc_reactive_power.pdf>
 Package pdftex.def Info: img/LENA_CASO_FINAL_EQV2020_DC_Full_hvdc_reactive_powe
@@ -526,7 +526,7 @@ angle.pdf  used on input line 441.
 (pdftex.def)             Requested size: 239.39923pt x 80.59453pt.
 <img/LEN_A_4_2020_SECO_2023VM_SE_EXP_N_4DC_generation_scatter.pdf, id=47, 708.2
 4597pt x 238.43779pt>
-File: img/LEN_A_4_2020_SECO_2023VM_SE_EXP_N_4DC_generation_scatter.pdf Graphic 
+File: img/LEN_A_4_2020_SECO_2023VM_SE_EXP_N_4DC_generation_scatter.pdf Graphic
 file (type pdf)
 <use img/LEN_A_4_2020_SECO_2023VM_SE_EXP_N_4DC_generation_scatter.pdf>
 Package pdftex.def Info: img/LEN_A_4_2020_SECO_2023VM_SE_EXP_N_4DC_generation_s
@@ -548,7 +548,7 @@ ile (type pdf)
 Package pdftex.def Info: img/LEN_A_4_2020_SECO_2023VM_SE_EXP_N_4DC_dcsc_dcer_sc
 atter.pdf  used on input line 458.
 (pdftex.def)             Requested size: 239.39923pt x 61.7187pt.
-<img/LEN_A_4_2020_SECO_2023VM_SE_EXP_N_DC_Full_hvdc_reactive_power.pdf, id=50, 
+<img/LEN_A_4_2020_SECO_2023VM_SE_EXP_N_DC_Full_hvdc_reactive_power.pdf, id=50,
 706.28197pt x 202.356pt>
 File: img/LEN_A_4_2020_SECO_2023VM_SE_EXP_N_DC_Full_hvdc_reactive_power.pdf Gra
 phic file (type pdf)
@@ -558,7 +558,7 @@ ctive_power.pdf  used on input line 474.
 (pdftex.def)             Requested size: 239.39923pt x 68.59016pt.
 <img/LEN_A_4_2020_SECO_2023VM_SE_EXP_N_DC_Full_hvdc_commutation_angle.pdf, id=5
 1, 706.28197pt x 202.356pt>
-File: img/LEN_A_4_2020_SECO_2023VM_SE_EXP_N_DC_Full_hvdc_commutation_angle.pdf 
+File: img/LEN_A_4_2020_SECO_2023VM_SE_EXP_N_DC_Full_hvdc_commutation_angle.pdf
 Graphic file (type pdf)
 <use img/LEN_A_4_2020_SECO_2023VM_SE_EXP_N_DC_Full_hvdc_commutation_angle.pdf>
 Package pdftex.def Info: img/LEN_A_4_2020_SECO_2023VM_SE_EXP_N_DC_Full_hvdc_com
@@ -590,7 +590,7 @@ ull_hvdc_transformer_tap.pdf>] [7] (conference_paper_main.aux)
 LaTeX2e <2023-11-01> patch level 1
 L3 programming layer <2024-01-04>
  ***********
- ) 
+ )
 Here is how much of TeX's memory you used:
  6060 strings out of 474486
  114330 string characters out of 5743755
@@ -629,4 +629,3 @@ PDF statistics:
  353 PDF objects out of 1000 (max. 8388607)
  0 named destinations out of 1000 (max. 500000)
  91 words of extra memory for PDF output out of 10000 (max. 10000000)
-
