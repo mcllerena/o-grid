@@ -21,8 +21,8 @@ from o_grid.acpf import (
     StatisticResultsInformation,
     SwitchDeviceResults,
 )
-from o_grid.acpf.models import build_power_flow_case
-from o_grid.models import ACBus
+from o_grid.acpf.models import build_power_flow_case, build_power_flow_settings
+from o_grid.models import ACBus, ACLine
 from o_grid.parser import AnaredeInfrasysParser
 from o_grid.system import AnaredeSystem
 
@@ -211,6 +211,16 @@ def test_build_power_flow_case_uses_system_components() -> None:
     assert case.base_mva == 100.0
 
 
+def test_build_power_flow_case_excludes_unavailable_infrasys_branches() -> None:
+    parsed = AnaredeInfrasysParser().parse(DATA / "d_9nodes.pwf")
+    line = next(iter(parsed.system.get_components(ACLine)))
+    line.available = False
+
+    case = build_power_flow_case(parsed)
+
+    assert len(case.branches) == 9
+
+
 @pytest.mark.parametrize(
     ("solver_type", "solver_name"),
     [
@@ -226,7 +236,11 @@ def test_python_solver_updates_parsed_system(solver_type, solver_name: str) -> N
     assert run.result.converged is True
     assert run.result.solver == solver_name
     assert run.result.max_mismatch is not None
-    assert run.result.max_mismatch <= 1e-6
+    settings = build_power_flow_settings(parsed)
+    assert settings.active_tolerance == pytest.approx(0.001)
+    assert settings.reactive_tolerance == pytest.approx(0.001)
+    assert settings.control_tolerance == pytest.approx(0.005)
+    assert run.result.max_mismatch <= max(settings.active_tolerance, settings.reactive_tolerance)
     assert run.result.iteration_trace
     assert run.result.iteration_trace[-1].iteration == run.result.iterations
     assert len(run.result.buses) == 9
@@ -246,6 +260,11 @@ def test_newton_raphson_constructor_returns_solved_infrasys_system(capsys) -> No
     assert solved.power_flow_results is not None
     results = solved.power_flow_results
     assert results.information.converged is True
+    assert results.information.bus_count == 9
+    assert results.information.bus_count_after_reduction == 9
+    assert results.information.branch_count == 10
+    assert results.information.branch_count_after_reduction == 10
+    assert not any(item.collapsed for item in results.ac_buses)
     assert results.information.solver == "newton-raphson"
     assert len(results.ac_buses) == 9
     assert len(results.ac_lines) == 8
@@ -286,7 +305,17 @@ def test_solver_prints_and_retains_requested_report(capsys) -> None:
     output = capsys.readouterr().out
     assert run.stdout == output.rstrip()
     assert "Iteration-by-iteration convergence trace (Newton-Raphson)" in output
+    assert "Base solve" in output
+    assert "[Base solve accepted]" in output
     assert "Converged: yes" not in output
+
+
+def test_solver_defaults_to_thirty_iterations() -> None:
+    solver = NewtonRaphsonPowerFlow()
+
+    assert isinstance(solver, NewtonRaphsonPowerFlow)
+    assert solver.max_iterations == 30
+    assert solver.max_control_passes == 12
 
 
 @pytest.mark.parametrize(
@@ -334,25 +363,85 @@ def test_workbook_results_cover_ltc_svc_and_dc_components(capsys) -> None:
     assert solved.power_flow_results is not None
     results = solved.power_flow_results
     assert results.information.converged is True
+    assert results.information.bus_count == 247
+    assert results.information.bus_count_after_reduction < results.information.bus_count
+    assert results.information.branch_count_after_reduction < results.information.branch_count
+    assert any(item.collapsed for item in results.ac_buses)
+    assert all(
+        item.representative_bus != item.bus_number for item in results.ac_buses if item.collapsed
+    )
+    assert len(results.generators) == 56
+    assert len(results.transformers) == 302
     assert len(results.ltc_transformers) == 12
     assert len(results.static_var_compensators) == 6
-    assert len(results.dc_lines) == 14
+    assert len(results.dc_lines) == 28
     assert all(item.target_voltage_pu is not None for item in results.ltc_transformers)
+    assert results.generators[0].generator_type == "Nuclear"
+    assert results.generators[0].reserve_mw == pytest.approx(
+        results.generators[0].maximum_active_generation_mw
+        - results.generators[0].active_generation_mw
+    )
+    branch_rows = [
+        *results.ac_lines,
+        *results.transformers,
+        *results.ltc_transformers,
+        *results.phase_shifting_transformers,
+        *results.controllable_series_compensators,
+    ]
+    assert all(0.0 <= item.power_factor_from <= 1.0 for item in branch_rows)
+    assert all(0.0 <= item.power_factor_to <= 1.0 for item in branch_rows)
+    assert all(item.reactive_type_from in {"Cap", "Ind", "-"} for item in branch_rows)
+    assert all(item.reactive_type_to in {"Cap", "Ind", "-"} for item in branch_rows)
     assert all(item.bus_name for item in results.static_var_compensators)
-    assert any(item.active_power_mw is not None for item in results.dc_lines)
+    assert sum(item.converter_type == "Rectifier" for item in results.dc_lines) == 14
+    assert sum(item.converter_type == "Inverter" for item in results.dc_lines) == 14
+    assert all(item.bus_name for item in results.dc_lines)
+    assert all(item.loss_mw is not None for item in results.dc_lines)
+    assert all(item.dc_voltage_kv is not None for item in results.dc_lines)
+    assert all(item.dc_current_pu is not None for item in results.dc_lines)
+    assert all(item.dc_current_a is not None for item in results.dc_lines)
+    assert all(item.firing_angle_deg is not None for item in results.dc_lines)
+    assert all(item.overlap_angle_deg is not None for item in results.dc_lines)
+    assert any((item.overlap_angle_deg or 0.0) > 0.0 for item in results.dc_lines)
+    assert all(item.tap_pu is not None for item in results.dc_lines)
+    assert sum(item.control_mode == "Slack" for item in results.dc_lines) == 14
+    assert sum(item.control_mode == "Power" for item in results.dc_lines) == 14
     assert len(list(solved.get_components(LTCTransformerResults))) == 12
     assert len(list(solved.get_components(StaticVARCompensatorResults))) == 6
-    assert len(list(solved.get_components(DCLineResults))) == 14
+    assert len(list(solved.get_components(DCLineResults))) == 28
+    assert results.information.dc_line_count == 14
     information = results.information
     assert information.solver_mode == "sparse direct full Newton solve"
-    assert information.convergence_tolerance_pu == pytest.approx(1e-6)
-    assert information.scheduled_generation_mw == pytest.approx(110099.870)
-    assert information.solved_generation_mw == pytest.approx(110070.697, abs=1e-3)
+    settings = build_power_flow_settings(parsed)
+    assert information.convergence_tolerance_pu == pytest.approx(
+        min(settings.active_tolerance, settings.reactive_tolerance)
+    )
+    assert information.scheduled_generation_mw == pytest.approx(110098.618, abs=1e-3)
+    assert information.solved_generation_mw == pytest.approx(110110.238, abs=1e-3)
     assert information.total_load_mw == pytest.approx(109228.117)
-    assert information.branch_active_losses_mw == pytest.approx(842.580, abs=1e-3)
+    assert information.branch_active_losses_mw == pytest.approx(882.121, abs=1e-3)
 
     solved.info()
     output = capsys.readouterr().out
     assert "Statistic Results Information" in output
     assert "Estimated dense matrix memory" in output
     assert "Voltage upper violations" in output
+
+
+def test_dccv_rectifier_slack_balances_dc_losses() -> None:
+    parsed = AnaredeInfrasysParser().parse(DATA / "CASO_FINAL_EQV2020.pwf")
+    controls = parsed.components_by_block["DCCV"]
+    controls[0].ext["pwf_values"]["slack"] = "F"
+    controls[1].ext["pwf_values"]["slack"] = "N"
+
+    case = build_power_flow_case(parsed)
+    assert case.lccs is not None
+    lcc = case.lccs[0]
+    loss_mw = lcc.current_ka**2 * lcc.rdc_ohm
+
+    assert lcc.rectifier_slack is True
+    assert lcc.inverter_slack is False
+    assert lcc.rectifier_control_mode == "Slack"
+    assert lcc.inverter_control_mode == "Power"
+    assert lcc.vdc_rectifier_kv == pytest.approx(lcc.vdc_inverter_kv + lcc.current_ka * lcc.rdc_ohm)
+    assert lcc.p_rectifier_mw == pytest.approx(lcc.p_inverter_mw + loss_mw)

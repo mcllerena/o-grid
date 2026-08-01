@@ -49,6 +49,7 @@ class ACPowerFlowResult(BaseModel):
     diverged: bool
     iterations: int
     max_mismatch: float | None
+    fallback_used: bool = False
     base_mva: float
     iteration_trace: list[IterationPowerFlowResult]
     buses: list[BusPowerFlowResult]

@@ -5,6 +5,7 @@ from o_grid.acpf.models import (
     ACLineResults,
     ControllableSeriesCompensatorResults,
     DCLineResults,
+    GeneratorResults,
     LTCTransformerResults,
     PhaseShiftingTransformerResults,
     PowerFlowResults,
@@ -12,6 +13,7 @@ from o_grid.acpf.models import (
     StaticVARCompensatorResults,
     StatisticResultsInformation,
     SwitchDeviceResults,
+    TransformerResults,
 )
 from o_grid.acpf.results import (
     ACPowerFlowResult,
@@ -35,6 +37,7 @@ __all__ = [
     "FastDecoupledPowerFlow",
     "ControllableSeriesCompensatorResults",
     "DCLineResults",
+    "GeneratorResults",
     "IterationPowerFlowResult",
     "NewtonRaphsonPowerFlow",
     "LTCTransformerResults",
@@ -46,4 +49,5 @@ __all__ = [
     "StatisticResultsInformation",
     "StaticVARCompensatorResults",
     "SwitchDeviceResults",
+    "TransformerResults",
 ]

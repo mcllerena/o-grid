@@ -6,6 +6,7 @@ from o_grid.acpf import (
     ControllableSeriesCompensatorResults,
     DCLineResults,
     FastDecoupledPowerFlow,
+    GeneratorResults,
     LTCTransformerResults,
     NewtonRaphsonPowerFlow,
     PhaseShiftingTransformerResults,
@@ -14,8 +15,9 @@ from o_grid.acpf import (
     StaticVARCompensatorResults,
     StatisticResultsInformation,
     SwitchDeviceResults,
+    TransformerResults,
 )
-from o_grid.exporter import export_rows
+from o_grid.exporter import ExportSolution, export_rows
 from o_grid.parser import (
     AnaredeInfrasysParser,
     ParsedAnaredeSystem,
@@ -33,7 +35,9 @@ __all__ = [
     "AnaredeParser",
     "ControllableSeriesCompensatorResults",
     "DCLineResults",
+    "ExportSolution",
     "FastDecoupledPowerFlow",
+    "GeneratorResults",
     "LTCTransformerResults",
     "NewtonRaphsonPowerFlow",
     "ParsedAnaredeSystem",
@@ -43,6 +47,7 @@ __all__ = [
     "StatisticResultsInformation",
     "StaticVARCompensatorResults",
     "SwitchDeviceResults",
+    "TransformerResults",
     "export_rows",
     "parse_anarede_system",
     "parse_rows",

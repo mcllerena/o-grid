@@ -44,6 +44,7 @@ export default defineConfig({
           label: "Tutorials",
           items: [
             { label: "Write your first ANAREDE parser", link: "/tutorials/write-a-parser/" },
+            { label: "Run an AC power flow", link: "/tutorials/run-power-flow/" },
           ],
         },
         {

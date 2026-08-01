@@ -30,6 +30,9 @@ class StatisticResultsInformation(Component):
     branch_active_losses_mw: float
     power_balance_mw: float
     bus_count: int
+    bus_count_after_reduction: int
+    branch_count: int
+    branch_count_after_reduction: int
     ac_line_count: int
     ltc_count: int
     phase_shifting_transformer_count: int
@@ -68,6 +71,20 @@ class ACBusResults(Component):
     collapsed: bool
 
 
+class GeneratorResults(Component):
+    """Solved generator output, technology, limits, and reserve."""
+
+    bus_number: int
+    bus_name: str
+    generator_type: str
+    active_generation_mw: float
+    reactive_generation_mvar: float
+    maximum_active_generation_mw: float | None
+    reserve_mw: float | None
+    voltage_pu: float
+    angle_deg: float
+
+
 class ACLineResults(Component):
     """Solved fields corresponding to the workbook Lines sheet."""
 
@@ -85,6 +102,36 @@ class ACLineResults(Component):
     reactive_from_mvar: float
     active_to_mw: float
     reactive_to_mvar: float
+    power_factor_from: float
+    reactive_type_from: str
+    power_factor_to: float
+    reactive_type_to: str
+    loading_percent: float
+    active_loss_mw: float
+    reactive_loss_mvar: float
+    violation: bool
+
+
+class TransformerResults(Component):
+    """Solved fields for fixed-ratio transformers."""
+
+    device_number: int
+    from_bus: int
+    to_bus: int
+    circuit: int
+    resistance_pu: float
+    reactance_pu: float
+    tap_pu: float
+    phase_shift_deg: float
+    rating_mva: float
+    active_from_mw: float
+    reactive_from_mvar: float
+    active_to_mw: float
+    reactive_to_mvar: float
+    power_factor_from: float
+    reactive_type_from: str
+    power_factor_to: float
+    reactive_type_to: str
     loading_percent: float
     active_loss_mw: float
     reactive_loss_mvar: float
@@ -107,6 +154,10 @@ class LTCTransformerResults(Component):
     reactive_from_mvar: float
     active_to_mw: float
     reactive_to_mvar: float
+    power_factor_from: float
+    reactive_type_from: str
+    power_factor_to: float
+    reactive_type_to: str
 
 
 class PhaseShiftingTransformerResults(Component):
@@ -125,6 +176,10 @@ class PhaseShiftingTransformerResults(Component):
     reactive_from_mvar: float
     active_to_mw: float
     reactive_to_mvar: float
+    power_factor_from: float
+    reactive_type_from: str
+    power_factor_to: float
+    reactive_type_to: str
 
 
 class SwitchDeviceResults(Component):
@@ -138,6 +193,10 @@ class SwitchDeviceResults(Component):
     reactive_from_mvar: float
     active_to_mw: float
     reactive_to_mvar: float
+    power_factor_from: float
+    reactive_type_from: str
+    power_factor_to: float
+    reactive_type_to: str
     loading_percent: float
     active_loss_mw: float
     reactive_loss_mvar: float
@@ -179,6 +238,10 @@ class ControllableSeriesCompensatorResults(Component):
     reactive_from_mvar: float
     active_to_mw: float
     reactive_to_mvar: float
+    power_factor_from: float
+    reactive_type_from: str
+    power_factor_to: float
+    reactive_type_to: str
     status: str
 
 
@@ -207,7 +270,9 @@ class DCLineResults(Component):
 ResultComponent = (
     StatisticResultsInformation
     | ACBusResults
+    | GeneratorResults
     | ACLineResults
+    | TransformerResults
     | LTCTransformerResults
     | PhaseShiftingTransformerResults
     | SwitchDeviceResults
@@ -222,7 +287,9 @@ class PowerFlowResults(BaseModel):
 
     information: StatisticResultsInformation
     ac_buses: list[ACBusResults] = Field(default_factory=list)
+    generators: list[GeneratorResults] = Field(default_factory=list)
     ac_lines: list[ACLineResults] = Field(default_factory=list)
+    transformers: list[TransformerResults] = Field(default_factory=list)
     ltc_transformers: list[LTCTransformerResults] = Field(default_factory=list)
     phase_shifting_transformers: list[PhaseShiftingTransformerResults] = Field(default_factory=list)
     switch_devices: list[SwitchDeviceResults] = Field(default_factory=list)
@@ -237,7 +304,9 @@ class PowerFlowResults(BaseModel):
         return [
             self.information,
             *self.ac_buses,
+            *self.generators,
             *self.ac_lines,
+            *self.transformers,
             *self.ltc_transformers,
             *self.phase_shifting_transformers,
             *self.switch_devices,
@@ -250,7 +319,9 @@ class PowerFlowResults(BaseModel):
 RESULT_COMPONENT_TYPES = (
     StatisticResultsInformation,
     ACBusResults,
+    GeneratorResults,
     ACLineResults,
+    TransformerResults,
     LTCTransformerResults,
     PhaseShiftingTransformerResults,
     SwitchDeviceResults,

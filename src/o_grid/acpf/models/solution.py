@@ -16,4 +16,5 @@ class NumericalSolution:
     diverged: bool = False
     iterations: int = 0
     max_mismatch: float | None = None
+    fallback_used: bool = False
     trace: list[IterationPowerFlowResult] = field(default_factory=list)

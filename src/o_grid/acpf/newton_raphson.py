@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
+
 import numpy as np
 from scipy.sparse import csc_matrix, diags, hstack, vstack
 from scipy.sparse.linalg import MatrixRankWarning, spsolve
@@ -17,12 +19,30 @@ def solve_newton_raphson(
     *,
     tolerance: float,
     max_iterations: int,
+    initial_voltage: np.ndarray | None = None,
+    iteration_callback: Callable[[IterationPowerFlowResult], None] | None = None,
 ) -> NumericalSolution:
     """Solve an AC case with a sparse polar-coordinate Newton-Raphson method."""
-    voltage = case.initial_voltage.copy()
+    voltage = case.initial_voltage.copy() if initial_voltage is None else initial_voltage.copy()
     specified = case.specified_power
     pq = case.pq_indices
     pv_pq = np.concatenate((case.pv_indices, pq))
+    if initial_voltage is None and max_iterations > 0:
+        parsed_seed = _warm_start_angles(ybus, voltage, specified, pv_pq, pq)
+        flat_seed = _warm_start_angles(
+            ybus,
+            np.abs(voltage).astype(np.complex128),
+            specified,
+            pv_pq,
+            pq,
+        )
+        parsed_residual = _maximum_absolute(
+            specified.real[pv_pq] - calculate_power(ybus, parsed_seed).real[pv_pq]
+        )
+        flat_residual = _maximum_absolute(
+            specified.real[pv_pq] - calculate_power(ybus, flat_seed).real[pv_pq]
+        )
+        voltage = flat_seed if flat_residual < parsed_residual else parsed_seed
     trace: list[IterationPowerFlowResult] = []
 
     for iteration in range(max_iterations + 1):
@@ -35,7 +55,9 @@ def solve_newton_raphson(
         max_residual = _maximum_absolute(mismatch)
 
         if max_residual <= tolerance:
-            trace.append(_trace(iteration, max_dp, max_dq, max_residual, 0.0))
+            _append_trace(
+                trace, _trace(iteration, max_dp, max_dq, max_residual, 0.0), iteration_callback
+            )
             return NumericalSolution(
                 voltage=voltage,
                 converged=True,
@@ -44,7 +66,9 @@ def solve_newton_raphson(
                 trace=trace,
             )
         if iteration == max_iterations:
-            trace.append(_trace(iteration, max_dp, max_dq, max_residual, 0.0))
+            _append_trace(
+                trace, _trace(iteration, max_dp, max_dq, max_residual, 0.0), iteration_callback
+            )
             break
 
         jacobian = _build_jacobian(ybus, voltage, pv_pq, pq)
@@ -52,25 +76,31 @@ def solve_newton_raphson(
             with np.errstate(all="raise"):
                 step = np.asarray(spsolve(jacobian, mismatch), dtype=float)
         except (MatrixRankWarning, FloatingPointError, RuntimeError, ValueError):
+            item = _trace(iteration, max_dp, max_dq, max_residual, 0.0)
+            _append_trace(trace, item, iteration_callback)
             return NumericalSolution(
                 voltage=voltage,
                 diverged=True,
                 iterations=iteration,
                 max_mismatch=max_residual,
-                trace=[*trace, _trace(iteration, max_dp, max_dq, max_residual, 0.0)],
+                trace=trace,
             )
         if not np.all(np.isfinite(step)):
+            item = _trace(iteration, max_dp, max_dq, max_residual, 0.0)
+            _append_trace(trace, item, iteration_callback)
             return NumericalSolution(
                 voltage=voltage,
                 diverged=True,
                 iterations=iteration,
                 max_mismatch=max_residual,
-                trace=[*trace, _trace(iteration, max_dp, max_dq, max_residual, 0.0)],
+                trace=trace,
             )
 
         voltage, scale = _line_search(case, ybus, voltage, specified, pv_pq, pq, step, max_residual)
         max_step = _maximum_absolute(scale * step)
-        trace.append(_trace(iteration, max_dp, max_dq, max_residual, max_step))
+        _append_trace(
+            trace, _trace(iteration, max_dp, max_dq, max_residual, max_step), iteration_callback
+        )
         magnitudes = np.abs(voltage)
         if np.any(magnitudes < 0.4) or np.any(magnitudes > 2.0):
             return NumericalSolution(
@@ -130,7 +160,8 @@ def _line_search(
     magnitude = np.abs(voltage)
     angle_count = len(pv_pq)
     scale = 1.0
-    for _ in range(12):
+    trial = voltage
+    for _ in range(16):
         trial_angle = angle.copy()
         trial_magnitude = magnitude.copy()
         trial_angle[pv_pq] += scale * step[:angle_count]
@@ -145,10 +176,51 @@ def _line_search(
         mismatch = np.concatenate(
             ((specified.real - calculated.real)[pv_pq], (specified.imag - calculated.imag)[pq])
         )
-        if _maximum_absolute(mismatch) < current_residual or scale <= 1e-4:
+        if _maximum_absolute(mismatch) <= current_residual or scale < 1e-4:
             return trial, scale
         scale *= 0.5
-    return voltage, 0.0
+    return trial, scale
+
+
+def _warm_start_angles(
+    ybus: csc_matrix,
+    voltage: np.ndarray,
+    specified: np.ndarray,
+    pv_pq: np.ndarray,
+    pq: np.ndarray,
+) -> np.ndarray:
+    if not pv_pq.size:
+        return voltage
+    for _ in range(24):
+        calculated = calculate_power(ybus, voltage)
+        mismatch = specified.real[pv_pq] - calculated.real[pv_pq]
+        if _maximum_absolute(mismatch) <= 0.1:
+            break
+        jacobian = _build_jacobian(ybus, voltage, pv_pq, pq)[: len(pv_pq), : len(pv_pq)]
+        try:
+            step = np.asarray(spsolve(jacobian, mismatch), dtype=float)
+        except (MatrixRankWarning, FloatingPointError, RuntimeError, ValueError):
+            break
+        if not np.all(np.isfinite(step)):
+            break
+        angle = np.angle(voltage)
+        magnitude = np.abs(voltage)
+        current_norm = float(np.linalg.norm(mismatch))
+        accepted = False
+        scale = 1.0
+        for _ in range(8):
+            trial_angle = angle.copy()
+            trial_angle[pv_pq] += scale * step
+            trial = magnitude * np.exp(1j * trial_angle)
+            trial_mismatch = specified.real[pv_pq] - calculate_power(ybus, trial).real[pv_pq]
+            if float(np.linalg.norm(trial_mismatch)) < current_norm:
+                voltage = trial
+                accepted = True
+                break
+            scale *= 0.5
+        if not accepted:
+            break
+    return voltage
 
 
 def _trace(
@@ -162,6 +234,16 @@ def _trace(
         max_residual=max_residual,
         max_step=max_step,
     )
+
+
+def _append_trace(
+    trace: list[IterationPowerFlowResult],
+    item: IterationPowerFlowResult,
+    callback: Callable[[IterationPowerFlowResult], None] | None,
+) -> None:
+    trace.append(item)
+    if callback is not None:
+        callback(item)
 
 
 def _maximum_absolute(values: np.ndarray) -> float:

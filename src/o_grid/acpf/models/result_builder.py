@@ -3,22 +3,26 @@
 from __future__ import annotations
 
 import math
+import re
 from collections.abc import Iterable, Mapping
 from typing import TypedDict
 
 from o_grid.acpf.models.case import PowerFlowCase
-from o_grid.acpf.models.lcc import build_lcc_injections
+from o_grid.acpf.models.lcc import LCCData
+from o_grid.acpf.models.network_reduction import ReducedPowerFlowCase
 from o_grid.acpf.models.results import (
     ACBusResults,
     ACLineResults,
     ControllableSeriesCompensatorResults,
     DCLineResults,
+    GeneratorResults,
     LTCTransformerResults,
     PhaseShiftingTransformerResults,
     PowerFlowResults,
     StaticVARCompensatorResults,
     StatisticResultsInformation,
     SwitchDeviceResults,
+    TransformerResults,
 )
 from o_grid.acpf.results import ACPowerFlowResult, BranchPowerFlowResult, BusPowerFlowResult
 from o_grid.parser import ParsedAnaredeSystem
@@ -30,6 +34,10 @@ class TerminalFlowValues(TypedDict):
     reactive_from_mvar: float
     active_to_mw: float
     reactive_to_mvar: float
+    power_factor_from: float
+    reactive_type_from: str
+    power_factor_to: float
+    reactive_type_to: str
 
 
 class LineFlowValues(TerminalFlowValues):
@@ -43,12 +51,18 @@ def build_component_results(
     case: PowerFlowCase,
     result: ACPowerFlowResult,
     *,
+    reduction: ReducedPowerFlowCase | None = None,
     tolerance: float = 1e-6,
 ) -> PowerFlowResults:
     """Construct workbook-aligned result components for the solved system."""
     solved_buses = {bus.id: bus for bus in result.buses}
     bus_data = {bus.number: bus for bus in case.buses}
     branch_results = {_branch_key(branch): branch for branch in result.branches}
+    representative_buses = (
+        reduction.representative_buses(case)
+        if reduction is not None
+        else {bus.number: bus.number for bus in case.buses}
+    )
 
     ac_buses = []
     for component in parsed.components_by_block.get("DBAR", []):
@@ -84,8 +98,8 @@ def build_component_results(
                 minimum_voltage_pu=data.minimum_voltage,
                 maximum_voltage_pu=data.maximum_voltage,
                 violation=violation,
-                representative_bus=number,
-                collapsed=False,
+                representative_bus=representative_buses[number],
+                collapsed=representative_buses[number] != number,
             )
         )
 
@@ -96,6 +110,7 @@ def build_component_results(
         }
         for block in ("DLIN_TAP", "DLIN_PHASE_SHIFT", "DLIN_TRANSFORMER", "DLIN_SWITCH")
     }
+    generators = _build_generator_results(parsed.components_by_block.get("DGER", []), ac_buses)
     ac_lines = []
     line_number = 0
     for component in parsed.components_by_block.get("DLIN", []):
@@ -120,7 +135,7 @@ def build_component_results(
                 * 0.01,
                 reactance_pu=_magnitude(getattr(component, "x", None), values.get("reactance", 0.0))
                 * 0.01,
-                charging_pu=float(values.get("susceptance") or 0.0) * 0.01,
+                charging_pu=float(values.get("susceptance") or 0.0) / result.base_mva,
                 tap_pu=float(values.get("tap") or 1.0),
                 phase_shift_deg=float(values.get("phase_shift") or 0.0),
                 rating_mva=_magnitude(
@@ -135,6 +150,9 @@ def build_component_results(
     ltc_transformers = _build_ltc_results(
         parsed.components_by_block.get("DLIN_TAP", []), branch_results, solved_buses
     )
+    transformers = _build_transformer_results(
+        parsed.components_by_block.get("DLIN_TRANSFORMER", []), branch_results
+    )
     phase_shifting_transformers = _build_phase_shifting_results(
         parsed.components_by_block.get("DLIN_PHASE_SHIFT", []), branch_results
     )
@@ -145,7 +163,13 @@ def build_component_results(
     controllable_series_compensators = _build_csc_results(
         parsed.components_by_block.get("DCSC", []), branch_results
     )
-    dc_lines = _build_dc_results(parsed, solved_buses)
+    original_bus_names = {
+        _number(getattr(component, "number", 0)): str(
+            _pwf_values(component).get("name") or getattr(component, "name", "")
+        )
+        for component in parsed.components_by_block.get("DBAR", [])
+    }
+    dc_lines = _build_dc_results(case.lccs or [], ac_buses, original_bus_names)
 
     state_count = len(case.pv_indices) + 2 * len(case.pq_indices)
     scheduled_generation = sum(bus.active_generation for bus in case.buses)
@@ -156,7 +180,7 @@ def build_component_results(
         name=f"{result.solver}-results",
         source_path=str(parsed.source),
         solver=result.solver,
-        solver_mode=_solver_mode(result.solver),
+        solver_mode=_solver_mode(result.solver, result.fallback_used),
         converged=result.converged,
         diverged=result.diverged,
         iterations=result.iterations,
@@ -173,22 +197,33 @@ def build_component_results(
         branch_active_losses_mw=branch_active_losses,
         power_balance_mw=solved_generation - total_load - branch_active_losses,
         bus_count=len(ac_buses),
+        bus_count_after_reduction=(len(reduction.case.buses) if reduction else len(case.buses)),
+        branch_count=len(case.branches),
+        branch_count_after_reduction=(
+            len(reduction.case.branches) if reduction else len(case.branches)
+        ),
         ac_line_count=len(ac_lines),
         ltc_count=len(ltc_transformers),
         phase_shifting_transformer_count=len(phase_shifting_transformers),
         switch_count=len(switch_devices),
-        dc_line_count=len(dc_lines),
+        dc_line_count=len(case.lccs or []),
         static_var_compensator_count=len(static_var_compensators),
         controllable_series_compensator_count=len(controllable_series_compensators),
-        voltage_upper_violations=sum(bus.violation == "upper" for bus in ac_buses),
-        voltage_lower_violations=sum(bus.violation == "lower" for bus in ac_buses),
+        voltage_upper_violations=sum(
+            bus.violation == "upper" and not bus.collapsed for bus in ac_buses
+        ),
+        voltage_lower_violations=sum(
+            bus.violation == "lower" and not bus.collapsed for bus in ac_buses
+        ),
         line_flow_overloads=sum(line.violation for line in ac_lines),
         iteration_trace=result.iteration_trace,
     )
     return PowerFlowResults(
         information=information,
         ac_buses=ac_buses,
+        generators=generators,
         ac_lines=ac_lines,
+        transformers=transformers,
         ltc_transformers=ltc_transformers,
         phase_shifting_transformers=phase_shifting_transformers,
         switch_devices=switch_devices,
@@ -196,6 +231,84 @@ def build_component_results(
         controllable_series_compensators=controllable_series_compensators,
         dc_lines=dc_lines,
     )
+
+
+def _build_generator_results(
+    components: Iterable[object], solved_buses: Iterable[ACBusResults]
+) -> list[GeneratorResults]:
+    buses = {bus.bus_number: bus for bus in solved_buses}
+    results = []
+    for component in components:
+        bus_number = _number(getattr(component, "number", 0))
+        solved = buses.get(bus_number)
+        if solved is None:
+            continue
+        maximum = _optional_magnitude(getattr(component, "max_active_generation", None))
+        generator_type = getattr(component, "gen_type", None)
+        results.append(
+            GeneratorResults(
+                name=_result_name(component),
+                bus_number=bus_number,
+                bus_name=solved.bus_name,
+                generator_type=str(getattr(generator_type, "value", generator_type or "Unknown")),
+                active_generation_mw=solved.active_generation_mw,
+                reactive_generation_mvar=solved.reactive_generation_mvar,
+                maximum_active_generation_mw=maximum,
+                reserve_mw=(maximum - solved.active_generation_mw if maximum is not None else None),
+                voltage_pu=solved.voltage_pu,
+                angle_deg=solved.angle_deg,
+            )
+        )
+    if results:
+        return results
+    for solved in buses.values():
+        if solved.bus_type.upper() not in {"PV", "REF", "SLACK", "REFERENCE"}:
+            continue
+        results.append(
+            GeneratorResults(
+                name=f"generator-{solved.bus_number}:power-flow",
+                bus_number=solved.bus_number,
+                bus_name=solved.bus_name,
+                generator_type="Unknown",
+                active_generation_mw=solved.active_generation_mw,
+                reactive_generation_mvar=solved.reactive_generation_mvar,
+                maximum_active_generation_mw=None,
+                reserve_mw=None,
+                voltage_pu=solved.voltage_pu,
+                angle_deg=solved.angle_deg,
+            )
+        )
+    return results
+
+
+def _build_transformer_results(
+    components: Iterable[object],
+    branch_results: dict[tuple[int, int, int], BranchPowerFlowResult],
+) -> list[TransformerResults]:
+    results = []
+    for device_number, component in enumerate(components, start=1):
+        key = _component_branch_key(component)
+        solved = branch_results.get(key)
+        if solved is None:
+            continue
+        values = _pwf_values(component)
+        results.append(
+            TransformerResults(
+                name=_result_name(component),
+                device_number=device_number,
+                from_bus=key[0],
+                to_bus=key[1],
+                circuit=key[2],
+                resistance_pu=_magnitude(getattr(component, "r", None)) * 0.01,
+                reactance_pu=_magnitude(getattr(component, "x", None)) * 0.01,
+                tap_pu=_magnitude(getattr(component, "tap", None), 1.0),
+                phase_shift_deg=float(values.get("phase_shift") or 0.0),
+                rating_mva=_magnitude(getattr(component, "normal_capacity", None)),
+                **_line_flow_values(solved),
+                violation=solved.loading_percent > 100.0,
+            )
+        )
+    return results
 
 
 def _build_ltc_results(
@@ -365,56 +478,83 @@ def _build_csc_results(
 
 
 def _build_dc_results(
-    parsed: ParsedAnaredeSystem,
-    solved_buses: Mapping[int, BusPowerFlowResult],
+    lccs: Iterable[LCCData],
+    solved_buses: Iterable[ACBusResults],
+    original_bus_names: Mapping[int, str],
 ) -> list[DCLineResults]:
-    controls = {
-        _number(getattr(control, "number", 0)): control
-        for control in parsed.components_by_block.get("DCCV", [])
-    }
-    injections = {item.bus: item for item in build_lcc_injections(parsed.components_by_block)}
-    converters_by_dc_bus = {
-        _optional_number(getattr(converter, "dc_bus", None)): converter
-        for converter in parsed.components_by_block.get("DCNV", [])
-    }
-    results = []
-    for component in parsed.components_by_block.get("DCLI", []):
-        from_dc_bus = getattr(component, "from_bus", None)
-        converter = converters_by_dc_bus.get(_optional_number(from_dc_bus))
-        if converter is None:
-            converter = converters_by_dc_bus.get(
-                _optional_number(getattr(component, "to_bus", None))
-            )
-        number = _number(getattr(converter, "number", 0)) if converter is not None else 0
-        bus_number = _optional_number(getattr(converter, "ac_bus", None))
-        bus = getattr(converter, "ac_bus", None)
-        control = controls.get(number)
-        injection = injections.get(bus_number)
+    buses = {bus.bus_number: bus for bus in solved_buses}
+    results: list[DCLineResults] = []
+    for link_index, lcc in enumerate(sorted(lccs, key=lambda item: item.link_id), start=1):
+        active = abs(lcc.pdc_mw) > 1e-12
+        current_ka = abs(lcc.current_ka) if active else 0.0
+        current_a = current_ka * 1000.0
+        base_current_ka = (
+            lcc.power_base_mw / lcc.vbase_kv
+            if lcc.power_base_mw > 1e-12 and lcc.vbase_kv > 1e-12
+            else 0.0
+        )
+        current_pu = current_ka / base_current_ka if base_current_ka > 1e-12 else 0.0
+        loss_mw = current_ka**2 * max(0.0, lcc.rdc_ohm)
+        pole_number = _lcc_pole_number(lcc, link_index)
+        status = "ON" if active else "OFF"
+        rectifier = buses.get(lcc.rectifier_bus)
+        inverter = buses.get(lcc.inverter_bus)
         results.append(
             DCLineResults(
-                name=_result_name(component),
-                bus_number=bus_number,
-                bus_name=str(getattr(bus, "name", "")) or None,
-                voltage_pu=float(getattr(solved_buses.get(bus_number), "voltage_pu", 0.0))
-                if bus_number is not None
-                else None,
-                converter_type=str(getattr(converter, "mode", "")) or None,
-                pole_number=_optional_number(getattr(component, "dcli_circuit", None)),
-                control_mode=str(getattr(control, "converter_control_type", "")) or None,
-                active_power_mw=getattr(injection, "active_mw", None),
-                reactive_power_mvar=getattr(injection, "reactive_mvar", None),
-                loss_mw=None,
-                dc_voltage_kv=None,
-                dc_current_pu=None,
-                dc_current_a=_optional_magnitude(getattr(converter, "current", None)),
-                firing_angle_deg=_optional_magnitude(getattr(control, "converter_angle", None)),
-                overlap_angle_deg=None,
+                name=f"LCC-{lcc.link_id}-rectifier:power-flow",
+                bus_number=lcc.rectifier_bus,
+                bus_name=original_bus_names.get(
+                    lcc.rectifier_bus, rectifier.bus_name if rectifier is not None else ""
+                )
+                or None,
+                voltage_pu=(abs(lcc.vdc_rectifier_kv) / lcc.vbase_kv if active else 1.0),
+                converter_type="Rectifier",
+                pole_number=pole_number,
+                control_mode=lcc.rectifier_control_mode,
+                active_power_mw=lcc.p_rectifier_mw,
+                reactive_power_mvar=lcc.q_rectifier_mvar,
+                loss_mw=loss_mw,
+                dc_voltage_kv=lcc.vdc_rectifier_kv,
+                dc_current_pu=current_pu,
+                dc_current_a=current_a,
+                firing_angle_deg=lcc.alpha_deg,
+                overlap_angle_deg=lcc.mu_rectifier_deg,
                 power_factor_angle_deg=None,
-                tap_pu=_optional_magnitude(getattr(control, "tap_reduced_voltage_mode", None)),
-                status="InSvc" if getattr(component, "available", True) else "OutSvc",
+                tap_pu=lcc.tap_rectifier if active else 1.0,
+                status=status,
+            )
+        )
+        results.append(
+            DCLineResults(
+                name=f"LCC-{lcc.link_id}-inverter:power-flow",
+                bus_number=lcc.inverter_bus,
+                bus_name=original_bus_names.get(
+                    lcc.inverter_bus, inverter.bus_name if inverter is not None else ""
+                )
+                or None,
+                voltage_pu=(abs(lcc.vdc_inverter_kv) / lcc.vbase_kv if active else 1.0),
+                converter_type="Inverter",
+                pole_number=pole_number,
+                control_mode=lcc.inverter_control_mode,
+                active_power_mw=-lcc.p_inverter_mw,
+                reactive_power_mvar=lcc.q_inverter_mvar,
+                loss_mw=loss_mw,
+                dc_voltage_kv=lcc.vdc_inverter_kv,
+                dc_current_pu=-current_pu,
+                dc_current_a=-current_a,
+                firing_angle_deg=lcc.gamma_deg,
+                overlap_angle_deg=lcc.mu_inverter_deg,
+                power_factor_angle_deg=None,
+                tap_pu=lcc.tap_inverter if active else 1.0,
+                status=status,
             )
         )
     return results
+
+
+def _lcc_pole_number(lcc: LCCData, fallback: int) -> int:
+    match = re.search(r"(\d+)\s*$", lcc.link_name)
+    return int(match.group(1)) if match else fallback
 
 
 def _terminal_flow_values(solved: BranchPowerFlowResult) -> TerminalFlowValues:
@@ -423,7 +563,28 @@ def _terminal_flow_values(solved: BranchPowerFlowResult) -> TerminalFlowValues:
         "reactive_from_mvar": solved.reactive_from_mvar,
         "active_to_mw": solved.active_to_mw,
         "reactive_to_mvar": solved.reactive_to_mvar,
+        "power_factor_from": _power_factor(solved.active_from_mw, solved.reactive_from_mvar),
+        "reactive_type_from": _reactive_type(solved.active_from_mw, solved.reactive_from_mvar),
+        "power_factor_to": _power_factor(solved.active_to_mw, solved.reactive_to_mvar),
+        "reactive_type_to": _reactive_type(solved.active_to_mw, solved.reactive_to_mvar),
     }
+
+
+def _power_factor(active_mw: float, reactive_mvar: float) -> float:
+    if active_mw <= 1e-9:
+        return 0.0
+    apparent_mva = math.hypot(active_mw, reactive_mvar)
+    return active_mw / apparent_mva if apparent_mva > 1e-12 else 0.0
+
+
+def _reactive_type(active_mw: float, reactive_mvar: float) -> str:
+    if active_mw <= 1e-9:
+        return "-"
+    if reactive_mvar > 1e-9:
+        return "Cap"
+    if reactive_mvar < -1e-9:
+        return "Ind"
+    return "-"
 
 
 def _line_flow_values(solved: BranchPowerFlowResult) -> LineFlowValues:
@@ -486,7 +647,12 @@ def _magnitude(value: object, default: object = 0.0) -> float:
 
 
 def _optional_magnitude(value: object) -> float | None:
-    return None if value is None else _magnitude(value)
+    if value is None:
+        return None
+    try:
+        return _magnitude(value)
+    except (TypeError, ValueError):
+        return None
 
 
 def _scaled_optional(value: object, scale: float) -> float | None:
@@ -499,9 +665,11 @@ def _pwf_values(component: object) -> dict:
     return ext.get("pwf_values", {}) if isinstance(ext, dict) else {}
 
 
-def _solver_mode(solver: str) -> str:
+def _solver_mode(solver: str, fallback_used: bool = False) -> str:
     if solver == "newton-raphson":
         return "sparse direct full Newton solve"
     if solver == "fast-decoupled":
+        if fallback_used:
+            return "sparse fast-decoupled solve with Newton-Raphson fallback"
         return "sparse factorized fast-decoupled solve"
     return solver

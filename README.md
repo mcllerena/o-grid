@@ -62,9 +62,33 @@ The returned `system` is a standard `infrasys` `System`; query it with
 `system.get_components(ACBus)` and friends. See the
 [documentation](docs/) for a full walkthrough.
 
-## ANAREDE blocks handled by the parser
+### Run an AC power flow
 
-The parser recognizes the following ANAREDE execution codes. Each block is sliced
+Pass the parsed system directly to either pure-Python solver. The solver returns
+the same `AnaredeSystem` with solved values and typed result components attached.
+
+```python
+from o_grid import ACBusResults
+from o_grid.acpf import NewtonRaphsonPowerFlow
+
+solved_system = NewtonRaphsonPowerFlow(
+   system=system,
+   print_iterations=True,
+)
+
+solved_system.info()
+bus_results = list(solved_system.get_components(ACBusResults))
+```
+
+Use `FastDecoupledPowerFlow` instead of `NewtonRaphsonPowerFlow` to run the
+fast-decoupled algorithm. `print_iterations=True` prints the convergence trace;
+`solved_system.info()` renders component counts and the attached **Statistic
+Results Information** table. See [Run an AC power flow](docs/src/content/docs/tutorials/run-power-flow.mdx)
+for the complete parser-to-solution example.
+
+## PWF blocks handled by the parser
+
+The parser recognizes the following PWF execution codes. Each block is sliced
 by its column mapping and resolved into the typed component model shown below.
 
 | Block | Component model | Purpose |

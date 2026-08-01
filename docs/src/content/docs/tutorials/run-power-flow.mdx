@@ -1,0 +1,132 @@
+---
+title: Run an AC power flow
+description: Parse an ANAREDE case, solve it with Newton-Raphson or Fast-Decoupled, and inspect the attached infrasys results.
+head: []
+---
+
+This tutorial parses an ANAREDE `.pwf` case and solves the resulting `infrasys`
+system with one of the pure-Python AC power-flow algorithms. It follows the
+runnable [`examples/run_power_flow.py`](https://github.com/mcllerena/o-grid/blob/main/examples/run_power_flow.py).
+
+## What you'll build
+
+A parser-first script that:
+
+- creates an `AnaredeSystem` from a PWF case,
+- runs Newton-Raphson or Fast-Decoupled power flow,
+- optionally prints the iteration convergence trace,
+- displays system and solver statistics, and
+- queries typed result components from the solved system.
+
+:::tip[Before you start]
+Run commands from the repository root and install the workspace with
+`uv sync --all-groups`.
+:::
+
+## Parse and solve a case
+
+Create `tmp_power_flow.py` in the repository root:
+
+```python
+from pathlib import Path
+
+from r2x_core import DataStore, PluginContext
+
+from o_grid import AnaredeConfig, AnaredeParser
+from o_grid.acpf import NewtonRaphsonPowerFlow
+from o_grid.system import AnaredeSystem
+
+DATA_PATH = Path("tests/data/pwf/CASO_FINAL_EQV2020.pwf")
+
+parse_config = AnaredeConfig(
+    system_name="CASO_FINAL_EQV2020",
+    pwf_path=str(DATA_PATH),
+)
+parse_context = PluginContext(
+    config=parse_config,
+    store=DataStore(path=DATA_PATH.parent),
+)
+parsed_system = AnaredeParser.from_context(parse_context).run().system
+
+solved_system = NewtonRaphsonPowerFlow(
+    system=parsed_system,
+    print_iterations=True,
+)
+assert isinstance(solved_system, AnaredeSystem)
+assert solved_system.power_flow_results is not None
+
+solved_system.info()
+```
+
+Run it with:
+
+```bash
+uv run python tmp_power_flow.py
+```
+
+`NewtonRaphsonPowerFlow` solves and returns the same `AnaredeSystem` instance.
+Solved bus states, branch flows, component result rows, and solver statistics are
+attached to that system. `print_iterations=True` prints the numerical convergence
+trace; omit it or set it to `False` for a quiet solve.
+
+## Use the Fast-Decoupled algorithm
+
+Only the solver class changes:
+
+```python
+from o_grid.acpf import FastDecoupledPowerFlow
+
+solved_system = FastDecoupledPowerFlow(
+    system=parsed_system,
+    print_iterations=True,
+)
+```
+
+Both algorithms use the same system input, attach the same result component
+classes, and log whether the solve converged or failed.
+
+## Inspect system statistics
+
+Calling `solved_system.info()` renders the normal infrasys tables followed by:
+
+- **Results Information**, with a `Type` and `Count` row for every result class;
+- **Statistic Results Information**, with the case, solver settings, convergence,
+  generation/load balance, losses, voltage violations, and line overloads.
+
+The statistics are also queryable as an attached component:
+
+```python
+from o_grid import StatisticResultsInformation
+
+statistics = next(
+    iter(solved_system.get_components(StatisticResultsInformation))
+)
+print(statistics.converged)
+print(statistics.max_mismatch_pu)
+print(statistics.power_balance_mw)
+```
+
+## Query solved component results
+
+Result rows are ordinary infrasys components:
+
+```python
+from o_grid import ACBusResults, ACLineResults
+
+bus_results = list(solved_system.get_components(ACBusResults))
+line_results = list(solved_system.get_components(ACLineResults))
+
+first_bus = bus_results[0]
+print(first_bus.bus_number, first_bus.voltage_pu, first_bus.angle_deg)
+```
+
+Other available result types include `LTCTransformerResults`,
+`PhaseShiftingTransformerResults`, `SwitchDeviceResults`,
+`StaticVARCompensatorResults`, `ControllableSeriesCompensatorResults`, and
+`DCLineResults`.
+
+## Next steps
+
+- Review the [power system models reference](/reference/models/).
+- See how source records are parsed in the [ANAREDE blocks reference](/reference/anarede-blocks/).
+- Learn the parsing pipeline in [parser architecture](/explanation/parser-architecture/).
