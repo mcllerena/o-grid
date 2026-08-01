@@ -1,0 +1,44 @@
+{
+  "sidebar": [
+    {
+      "label": "Start here",
+      "items": [
+        {
+          "label": "Introduction",
+          "link": "/"
+        }
+      ]
+    },
+    {
+      "label": "Tutorials",
+      "items": [
+        {
+          "label": "Write your first ANAREDE parser",
+          "link": "/tutorials/write-a-parser/"
+        }
+      ]
+    },
+    {
+      "label": "Reference",
+      "items": [
+        {
+          "label": "ANAREDE blocks",
+          "link": "/reference/anarede-blocks/"
+        },
+        {
+          "label": "Power system models",
+          "link": "/reference/models/"
+        }
+      ]
+    },
+    {
+      "label": "Explanation",
+      "items": [
+        {
+          "label": "Parser architecture",
+          "link": "/explanation/parser-architecture/"
+        }
+      ]
+    }
+  ]
+}

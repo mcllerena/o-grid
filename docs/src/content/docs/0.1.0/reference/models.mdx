@@ -1,0 +1,186 @@
+---
+title: Power system models
+description: The typed component models that o-grid builds from ANAREDE blocks.
+head: []
+slug: 0.1.0/reference/models
+---
+
+Every ANAREDE block is resolved into a typed component defined in
+[`o_grid.models`](https://github.com/mcllerena/o-grid/blob/main/src/o_grid/models).
+The models are [`pydantic`](https://docs.pydantic.dev/) classes built on
+`infrasys.Component`, so their fields are validated and carry physical units
+(MW, MVAr, kV, p.u., %). Import them from `o_grid.models`:
+
+```python
+from o_grid.models import ACBus, ACLine, Generator, DCBus
+```
+
+## Base classes
+
+All components ultimately derive from a small set of base classes.
+
+| Class | Role |
+| --- | --- |
+| `OGridComponent` | Base component with shared metadata: `uuid`, `available`, `category`, and an `ext` dictionary. |
+| `AnaredeComponent` | ANAREDE-derived component; adds a `name` and a `block` class variable identifying its source execution code. |
+| `Topology` | Abstract base for structural elements (buses, arcs, areas). |
+| `Branch` / `ACBranch` | Abstract bases for connections between buses; `ACBranch` adds `arc`, `r`, `x`, and `rating`. |
+
+## Topology and buses
+
+### `ACBus`
+
+The core AC node parsed from `DBAR`. It carries the bus operating point and
+limits.
+
+| Field | Meaning |
+| --- | --- |
+| `number` | Unique AC bus identification number. |
+| `bustype` | Bus category: `PQ`, `PV`, `REF`, `SLACK`, or `ISOLATED`. |
+| `area` | Owning `Area` (coerced from the area number). |
+| `base_voltage` | Base voltage in kV. |
+| `initial_voltage` | Initial voltage magnitude in p.u. |
+| `angle` | Initial voltage phase angle in degrees. |
+| `active_load` / `reactive_load` | Bus load in MW / MVAr. |
+| `active_generation` / `reactive_generation` | Bus generation base point in MW / MVAr. |
+| `min_reactive_generation` / `max_reactive_generation` | Reactive limits in MVAr. |
+| `capacitor_reactor` | Reactive injection from banks at 1.0 p.u. (positive = capacitor). |
+| `controlled_bus` | Remotely controlled bus for PV/reference buses. |
+| `voltage_base_group` / `voltage_limit_group` | Links to `DGBT` / `DGLT` groups. |
+
+### `DCBus`
+
+DC node parsed from `DCBA`.
+
+| Field | Meaning |
+| --- | --- |
+| `number` | DC bus identification number. |
+| `dc_link_number` | Owning DC link (`DELO`). |
+| `polarity` | `+` positive pole, `-` negative pole, `0` neutral. |
+| `type` | `0` no specified voltage, `1` reference bus. |
+| `voltage` | DC bus voltage in kV (held constant for type-1 buses). |
+| `ground_electrode_resistance` | Neutral-bus ground resistance in ohms. |
+
+### `Area`, `Arc`, and groups
+
+| Class | Block | Purpose |
+| --- | --- | --- |
+| `Area` | (from `DBAR`) | Collection of buses in a region, with peak active/reactive power. |
+| `Arc` | (derived) | Directed edge connecting a `from` bus to a `to` bus. |
+| `AreaInterchange` | `DARE` | Net and min/max active power interchange targets between areas. |
+| `VoltageBaseGroup` | `DGBT` | Base-voltage group definition referenced by buses. |
+| `VoltageLimitGroup` | `DGLT` | Normal and emergency voltage min/max limits. |
+| `BusVoltageMonitoring` | `DMTE` | Resolved set of buses selected for voltage monitoring. |
+| `VoltageMonitoringSelection` | `DMTE` | Raw selection-language record (interval/union/difference/intersection). |
+
+## Branches: lines and transformers
+
+A `DLIN` record is classified during parsing and materialized as the most specific
+branch type based on its tap and impedance fields.
+
+### `ACLine`
+
+AC circuit parsed from `DLIN`.
+
+| Field | Meaning |
+| --- | --- |
+| `arc` | The `from`/`to` bus connection. |
+| `r` / `x` | Series resistance / reactance in %. |
+| `b` / `g` | Shunt susceptance (MVAr) / conductance (MW), split from/to. |
+| `rating` | Thermal rating in MVA. |
+| `normal_capacity` / `emergency_capacity` | Loading capacity for flow monitoring, MVA. |
+| `from_bus` / `to_bus` | Terminal bus numbers. |
+| `from_bus_opening` / `to_bus_opening` | Circuit connected (`L`) or disconnected (`D`). |
+| `line_circuit` | Parallel-circuit identifier. |
+| `owner` | Owning `Area`. |
+
+### Derived transformer and switch models
+
+| Class | Derived block | Distinguishing condition |
+| --- | --- | --- |
+| `LTCTransformer` | `DLIN_TAP` | The record has a tap **range** (variable tap changer). |
+| `PhaseShiftingTransformer` | `DLIN_PHASE_SHIFT` | The record has a non-zero phase-shift angle. |
+| `TransformerDevice` | `DLIN_TRANSFORMER` | The record has a fixed tap but no range. |
+| `SwitchDevice` | `DLIN_SWITCH` | The record has switch/low-impedance characteristics. |
+
+### Series compensation and line shunts
+
+| Class | Block | Purpose |
+| --- | --- | --- |
+| `ControllableSeriesCompensator` | `DCSC` | CSC element with `control_mode` (`P` power, `I` current, `X` reactance) and `bypass` state. |
+| `LineShunt` | `DSHL` | Shunt device attached to an AC-circuit terminal, inserted/removed with its circuit. |
+
+## Generation and reactive support
+
+### `Generator`
+
+Generator dispatch and participation parsed from `DGER`.
+
+| Field | Meaning |
+| --- | --- |
+| `number` | Bus number the generator is attached to. |
+| `gen_type` | Technology type resolved from the gen-type mapping. |
+| `active_generation` | Active generation base point in MW. |
+| `min_active_generation` / `max_active_generation` | Active power limits in MW. |
+| `participation_factor` | Share of area interchange error assigned to this bus, %. |
+| `remote_control_participation_factor` | Share of remote-bus reactive control, %. |
+| `nominal_apparent_power` / `nominal_power_factor` | Machine ratings. |
+| `machine_reactance`, `load_angle`, `armature_service_factor`, `rotor_service_factor` | Machine electrical/thermal parameters. |
+
+### `IndividualizedGeneratorGroup`
+
+Detailed multi-unit generator group parsed from `DGEI`, with per-unit reactances
+(`direct_axis_reactance`, `quadrature_axis_reactance`, `leakage_reactance`,
+`step_up_transformer_reactance`), unit counts (`units`, `units_in_operation`,
+`minimum_units_in_operation`), reactive limits, and an `automatic_mode` flag.
+
+### `StaticVARCompensator`
+
+Static VAr compensator parsed from `DCER`, modeled by a control curve:
+`control_mode` (`P` power or `I` current), `controlled_bus`, reactive
+min/max limits, current `reactive_generation`, and the curve `slope`.
+
+## Loads and shunt banks
+
+| Class | Block | Purpose |
+| --- | --- | --- |
+| `IndividualizedLoad` | `DCAI` | Group of identical, voltage-dependent load units at a bus. |
+| `BankController` | `DBSH` | Switching controller for capacitor/reactor banks on a bus or line. |
+| `ShuntBank` | `DBSH_BANK` | Base capacitor/reactor bank record. |
+| `BusShuntBank` | `DBSH_BANK` | Bank whose controller has no *To Bus* (bus-connected). |
+| `LineShuntBank` | `DBSH_BANK` | Bank whose controller has a *To Bus* (line-connected). |
+
+## Control, options, and DC network
+
+| Class | Block | Purpose |
+| --- | --- | --- |
+| `PowerFlowOption` | `DOPC` | Power-flow execution option with an activated/deactivated state. |
+| `ProgramConstant` | `DCTE` | Program constant (mnemonic/value pair). |
+| `TapTransformerControl` | `DCTR` | Complementary control data for LTC and phase-shifting transformers. |
+| `TransferFunctionConstraint` | `DTPF` | Automatic tap voltage-control (CTAP) fixed data by element set. |
+| `TransferFunctionCircuit` | `DTPF_CIRC` | CTAP data selecting explicit circuits. |
+| `FlowMonitoringCircuit` | `DMFL_CIRC` | AC circuit flow-monitoring selector (extends `TransferFunctionCircuit`). |
+| `ConverterControl` | `DCCV` | AC-DC converter control settings. |
+| `ConverterStation` | `DCNV` | AC-DC converter (`RECTIFIER` / `INVERTER` mode). |
+| `DCLine` | `DCLI` | DC line between two DC buses. |
+| `DCLineData` | `DELO` | DC link data grouping the DC network. |
+| `CaseTitle` | `TITU` | System title/description entry. |
+
+## Enumerations
+
+Categorical fields use `StrEnum` types from
+[`o_grid.models.enums`](https://github.com/mcllerena/o-grid/blob/main/src/o_grid/models/enums.py).
+
+| Enum | Values |
+| --- | --- |
+| `ACBusTypes` | `PV`, `PQ`, `REF`, `SLACK`, `ISOLATED` |
+| `DCBusPolarity` | `+`, `-`, `0` |
+| `DCBusType` | `0` (no voltage), `1` (reference) |
+| `CircuitState` | `L` (closed), `D` (open) |
+| `OptionState` | `L` (activated), `D` (deactivated) |
+| `ConverterMode` | `R` (rectifier), `I` (inverter) |
+| `ConverterControlType` | `C` (current), `P` (power) |
+| `SVCControlMode` | `P` (power), `I` (current) |
+| `CSCControlMode` | `P` (power), `I` (current), `X` (reactance) |
+| `ShuntControlMode` | `C` (continuous), `D` (discrete), `F` (fixed) |
+| `VoltageMonitoringCondition` | `A`, `E`, `X`, `S` (interval/union/difference/intersection) |

@@ -1,0 +1,48 @@
+---
+title: o-grid documentation
+description: Parse ANAREDE power-flow cases into typed infrasys systems with o-grid.
+head: []
+---
+
+`o-grid` is an open power system modeling and optimization framework. Its parser
+reads Brazilian **ANAREDE** power-flow cases (`.pwf`) and converts each execution
+block into a typed [`infrasys`](https://pypi.org/project/infrasys/) component,
+producing a validated, queryable `System`.
+
+This documentation is organized by user need.
+
+- **Tutorials** teach the first successful workflow through guided practice.
+- **Reference** describes the ANAREDE blocks and the component models.
+- **Explanation** describes the design behind the parser.
+
+## Start here
+
+- [Write your first ANAREDE parser](/tutorials/write-a-parser/) if you want a guided
+  introduction that builds on [`examples/parser_script.py`](https://github.com/mcllerena/o-grid/blob/main/examples/parser_script.py).
+- [ANAREDE blocks reference](/reference/anarede-blocks/) if you need to know which
+  execution codes the parser handles and how they map to components.
+- [Power system models reference](/reference/models/) if you need the fields and
+  purpose of each component in `o_grid.models`.
+- [Parser architecture](/explanation/parser-architecture/) if you want the design
+  rationale behind the column-driven parser.
+
+## Package scope
+
+| Module | Purpose |
+| --- | --- |
+| `o_grid.parser` | Column-driven ANAREDE reader that populates an `infrasys` `System`. |
+| `o_grid.models` | Typed power-system component models (buses, branches, generators, loads, control). |
+| `o_grid.plugin_parser` | `r2x-core` plugin wrapper (`AnaredeParser`) exposing the parser. |
+| `o_grid.plugin_config` | `AnaredeConfig`, the configuration model for the parser plugin. |
+| `o_grid.config` | Declarative column mapping (`anarede_mapping.json`) and generator type mapping. |
+
+## Building these docs
+
+```bash
+cd docs
+npm install
+npm run dev
+```
+
+The site is built with [Astro Starlight](https://starlight.astro.build/) and uses
+the [Celestia theme](https://github.com/trueberryless-org/starlight-theme-celestia).

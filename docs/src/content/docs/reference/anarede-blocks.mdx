@@ -1,0 +1,100 @@
+---
+title: ANAREDE blocks
+description: Execution codes handled by the o-grid parser and the components they map to.
+head: []
+---
+
+The parser recognizes ANAREDE **execution codes** (blocks). Each block's fields
+are sliced by fixed column ranges defined in
+[`config/anarede_mapping.json`](https://github.com/mcllerena/o-grid/blob/main/src/o_grid/config/anarede_mapping.json),
+then resolved into the typed component registered in `BLOCK_BASE_CLASSES`
+([`o_grid/models/__init__.py`](https://github.com/mcllerena/o-grid/blob/main/src/o_grid/models/__init__.py)).
+
+## Topology and buses
+
+| Block | Component | Purpose |
+| --- | --- | --- |
+| `TITU` | [`CaseTitle`](/reference/models/#casetitle) | System title and description information. |
+| `DBAR` | [`ACBus`](/reference/models/#acbus) | AC buses. |
+| `DGBT` | [`VoltageBaseGroup`](/reference/models/#voltagebasegroup) | AC bus voltage base group definitions. |
+| `DGLT` | [`VoltageLimitGroup`](/reference/models/#voltagelimitgroup) | Voltage operating-limit group definitions. |
+| `DARE` | [`AreaInterchange`](/reference/models/#areainterchange) | Active power interchange limits between areas. |
+
+## Branches (lines and transformers)
+
+A single `DLIN` record is classified during parsing and may be materialized as a
+line, transformer, or switch depending on its tap and impedance fields.
+
+| Block | Component | Purpose |
+| --- | --- | --- |
+| `DLIN` | [`ACLine`](/reference/models/#acline) | AC circuits (lines & transformers). |
+| `DLIN_TAP` | [`LTCTransformer`](/reference/models/#ltctransformer) | Load-tap-changing transformer derived from a `DLIN` tap range. |
+| `DLIN_PHASE_SHIFT` | [`PhaseShiftingTransformer`](/reference/models/#phaseshiftingtransformer) | Phase-shifting transformer derived from a `DLIN` phase angle. |
+| `DLIN_TRANSFORMER` | [`TransformerDevice`](/reference/models/#transformerdevice) | Fixed-ratio transformer derived from a `DLIN` tap without a range. |
+| `DLIN_SWITCH` | [`SwitchDevice`](/reference/models/#switchdevice) | Switch / low-impedance element derived from a `DLIN` record. |
+| `DCSC` | [`ControllableSeriesCompensator`](/reference/models/#controllableseriescompensator) | Controllable Series Compensator (CSC) data. |
+| `DSHL` | [`LineShunt`](/reference/models/#lineshunt) | AC-circuit terminal shunt devices. |
+
+## Generation and reactive support
+
+| Block | Component | Purpose |
+| --- | --- | --- |
+| `DGER` | [`Generator`](/reference/models/#generator) | Active power generation limits and participation factors. |
+| `DGEI` | [`IndividualizedGeneratorGroup`](/reference/models/#individualizedgeneratorgroup) | Individualized generator group data. |
+| `DCER` | [`StaticVARCompensator`](/reference/models/#staticvarcompensator) | Static reactive (VAr) compensator data. |
+
+## Loads and shunt banks
+
+| Block | Component | Purpose |
+| --- | --- | --- |
+| `DCAI` | [`IndividualizedLoad`](/reference/models/#individualizedload) | Individualized, voltage-dependent load groups. |
+| `DBSH` | [`BankController`](/reference/models/#bankcontroller) | Capacitor/reactor bank controller for a bus or line. |
+| `DBSH_BANK` | [`ShuntBank`](/reference/models/#shuntbank) | Individual capacitor/reactor bank record (terminated by `FBAN`). |
+
+## Control, monitoring, and options
+
+| Block | Component | Purpose |
+| --- | --- | --- |
+| `DOPC` | [`PowerFlowOption`](/reference/models/#powerflowoption) | Power-flow execution options (option/state pairs). |
+| `DCTE` | [`ProgramConstant`](/reference/models/#programconstant) | Program constants (mnemonic/value pairs). |
+| `DCTR` | [`TapTransformerControl`](/reference/models/#taptransformercontrol) | Complementary control data for LTC/phase-shift transformers. |
+| `DTPF` | [`TransferFunctionConstraint`](/reference/models/#transferfunctionconstraint) | Fixed automatic tap voltage-control (CTAP) data by element set. |
+| `DTPF_CIRC` | [`TransferFunctionCircuit`](/reference/models/#transferfunctioncircuit) | Automatic tap voltage-control (CTAP) data by explicit circuit. |
+| `DMFL_CIRC` | [`FlowMonitoringCircuit`](/reference/models/#flowmonitoringcircuit) | AC circuit flow monitoring by explicit circuit. |
+| `DMTE` | [`VoltageMonitoringSelection`](/reference/models/#voltagemonitoringselection) | AC bus voltage monitoring by selected element set. |
+
+## DC network
+
+| Block | Component | Purpose |
+| --- | --- | --- |
+| `DCBA` | [`DCBus`](/reference/models/#dcbus) | DC bus data. |
+| `DCLI` | [`DCLine`](/reference/models/#dcline) | DC line data. |
+| `DELO` | [`DCLineData`](/reference/models/#dclinedata) | DC link data. |
+| `DCNV` | [`ConverterStation`](/reference/models/#converterstation) | AC-DC converter data. |
+| `DCCV` | [`ConverterControl`](/reference/models/#convertercontrol) | AC-DC converter control data. |
+
+## How a block is described
+
+Every field in the mapping declares the columns to slice, a default value, and a
+description sourced from the ANAREDE manual. For example, the `DARE` block:
+
+```json
+"DARE": {
+  "function": "Reading of active power interchange data between areas.",
+  "fields": {
+    "area_number": {
+      "column": { "start": 1, "end": 3 },
+      "default": "",
+      "description": "Area number, as defined in the Area field of the DBAR execution code."
+    },
+    "net_interchange": {
+      "column": { "start": 8, "end": 13 },
+      "default": 0.0,
+      "description": "Net active power interchange of the area, in MW."
+    }
+  }
+}
+```
+
+To support a new field or adjust a column, edit the mapping — the parsing code
+does not change.
