@@ -10,7 +10,16 @@ from typing import Any, cast
 from infrasys import Component, System
 from loguru import logger
 
-from o_grid.constants import REQUIRED_KEYS
+from o_grid.constants import (
+    BUS_INTERNAL_GROUP_BLOCKS,
+    DEFAULT_SWITCH_IMPEDANCE_THRESHOLD,
+    DLIN_BRANCH_BLOCKS,
+    DLIN_DERIVED_BLOCKS,
+    GEN_TYPE_MAPPING_PATH,
+    MAPPING_PATH,
+    REQUIRED_KEYS,
+    SWITCH_IMPEDANCE_MNEMONIC,
+)
 from o_grid.models import (
     BLOCK_BASE_CLASSES,
     ACBus,
@@ -69,20 +78,6 @@ from o_grid.utils.utils_parser import (
     repair_dbar_values,
     slice_field,
 )
-
-MAPPING_PATH = Path(__file__).resolve().parent / "config" / "anarede_mapping.json"
-GEN_TYPE_MAPPING_PATH = Path(__file__).resolve().parent / "config" / "gen_type_mapping.json"
-
-DLIN_DERIVED_BLOCKS: tuple[str, ...] = (
-    "DLIN_TAP",
-    "DLIN_PHASE_SHIFT",
-    "DLIN_TRANSFORMER",
-    "DLIN_SWITCH",
-)
-DLIN_BRANCH_BLOCKS: tuple[str, ...] = ("DLIN", *DLIN_DERIVED_BLOCKS)
-BUS_INTERNAL_GROUP_BLOCKS: tuple[str, ...] = ("DGBT", "DGLT")
-SWITCH_IMPEDANCE_MNEMONIC: str = "ZMIN"
-DEFAULT_SWITCH_IMPEDANCE_THRESHOLD: float = 0.001
 
 
 @dataclass(slots=True)

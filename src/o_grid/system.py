@@ -9,24 +9,12 @@ from infrasys.system import System, SystemInfo
 from rich import print as _pprint
 from rich.table import Table
 
+from o_grid.constants import POWER_FLOW_COMPONENT_TYPES, RESULT_COMPONENT_TYPES
+
 if TYPE_CHECKING:
     from infrasys import Component
 
     from o_grid.acpf.models.results import PowerFlowResults
-
-# Component types reported under "Power Flow Information" instead of "Component Information".
-POWER_FLOW_COMPONENT_TYPES: tuple[str, ...] = ("PowerFlowOption", "ProgramConstant")
-RESULT_COMPONENT_TYPES: tuple[str, ...] = (
-    "StatisticResultsInformation",
-    "ACBusResults",
-    "ACLineResults",
-    "LTCTransformerResults",
-    "PhaseShiftingTransformerResults",
-    "SwitchDeviceResults",
-    "StaticVARCompensatorResults",
-    "ControllableSeriesCompensatorResults",
-    "DCLineResults",
-)
 
 
 class AnaredeSystemInfo(SystemInfo):
