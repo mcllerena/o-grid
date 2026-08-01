@@ -86,6 +86,29 @@ fast-decoupled algorithm. `print_iterations=True` prints the convergence trace;
 Results Information** table. See [Run an AC power flow](docs/src/content/docs/tutorials/run-power-flow.mdx)
 for the complete parser-to-solution example.
 
+### Export solved results to Excel
+
+Write the solved power-flow results to an Excel workbook that follows the
+reference result schema:
+
+```python
+from o_grid import ExportSolution
+
+ExportSolution(
+    system=solved_system,
+    format="excel",
+    output_path="power_flow_results.xlsx",
+)
+```
+
+`ExportSolution` raises a `ValueError` if the system does not carry solved
+power-flow results, and it creates the output directory when needed. The
+workbook contains one sheet per result class — **Summary**, **Buses**,
+**Generators**, **Loads**, **Lines**, **Transformers**, **LTC**, **PST**,
+**HVDC**, **SVC**, and **CSC** — with a frozen header row and four-decimal
+numeric formatting. Use `export_rows(rows)` to serialize result rows as
+delimited text.
+
 ## PWF blocks handled by the parser
 
 The parser recognizes the following PWF execution codes. Each block is sliced

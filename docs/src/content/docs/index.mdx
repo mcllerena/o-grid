@@ -20,7 +20,8 @@ This documentation is organized by user need.
 - [Write your first ANAREDE parser](/tutorials/write-a-parser/) if you want a guided
   introduction that builds on [`examples/parser_script.py`](https://github.com/mcllerena/o-grid/blob/main/examples/parser_script.py).
 - [Run an AC power flow](/tutorials/run-power-flow/) to solve a parsed system with
-  Newton-Raphson or Fast-Decoupled and query the attached result components.
+  Newton-Raphson or Fast-Decoupled, then query the attached result components or
+  export them to Excel.
 - [ANAREDE blocks reference](/reference/anarede-blocks/) if you need to know which
   execution codes the parser handles and how they map to components.
 - [Power system models reference](/reference/models/) if you need the fields and
@@ -36,6 +37,7 @@ This documentation is organized by user need.
 | `o_grid.models` | Typed power-system component models (buses, branches, generators, loads, control). |
 | `o_grid.plugin_parser` | `r2x-core` plugin wrapper (`AnaredeParser`) exposing the parser. |
 | `o_grid.plugin_config` | `AnaredeConfig`, the configuration model for the parser plugin. |
+| `o_grid.exporter` | Writes solved power-flow results to Excel workbooks (`ExportSolution`) and delimited text (`export_rows`). |
 | `o_grid.config` | Declarative column mapping (`anarede_mapping.json`) and generator type mapping. |
 
 ## Building these docs

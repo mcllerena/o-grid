@@ -15,8 +15,9 @@ A parser-first script that:
 - creates an `AnaredeSystem` from a PWF case,
 - runs Newton-Raphson or Fast-Decoupled power flow,
 - optionally prints the iteration convergence trace,
-- displays system and solver statistics, and
-- queries typed result components from the solved system.
+- displays system and solver statistics,
+- queries typed result components from the solved system, and
+- exports the solved results to an Excel workbook.
 
 :::tip[Before you start]
 Run commands from the repository root and install the workspace with
@@ -124,6 +125,29 @@ Other available result types include `LTCTransformerResults`,
 `PhaseShiftingTransformerResults`, `SwitchDeviceResults`,
 `StaticVARCompensatorResults`, `ControllableSeriesCompensatorResults`, and
 `DCLineResults`.
+
+## Export solved results to Excel
+
+The solved result components can be written to an Excel workbook that follows
+the reference result schema:
+
+```python
+from o_grid import ExportSolution
+
+ExportSolution(
+    system=solved_system,
+    format="excel",
+    output_path="power_flow_results.xlsx",
+)
+```
+
+`ExportSolution` raises a `ValueError` if the system does not carry solved
+power-flow results, and it creates the output directory when needed. The
+workbook contains one sheet per result class — **Summary**, **Buses**,
+**Generators**, **Loads**, **Lines**, **Transformers**, **LTC**, **PST**,
+**HVDC**, **SVC**, and **CSC** — with a frozen header row and four-decimal
+numeric formatting. To serialize the same rows as delimited text instead, use
+`export_rows(rows, separator=";")` from `o_grid`.
 
 ## Next steps
 
