@@ -117,23 +117,16 @@ def reduce_closed_switches(case: PowerFlowCase) -> ReducedPowerFlowCase:
                 voltage=representative.voltage,
                 angle=representative.angle,
                 active_generation=sum(case.buses[index].active_generation for index in members),
-                reactive_generation=sum(
-                    case.buses[index].reactive_generation for index in members
-                ),
+                reactive_generation=sum(case.buses[index].reactive_generation for index in members),
                 active_load=sum(case.buses[index].active_load for index in members),
                 reactive_load=sum(case.buses[index].reactive_load for index in members),
-                shunt_susceptance=sum(
-                    case.buses[index].shunt_susceptance for index in members
-                ),
+                shunt_susceptance=sum(case.buses[index].shunt_susceptance for index in members),
                 minimum_voltage=min(case.buses[index].minimum_voltage for index in members),
                 maximum_voltage=max(case.buses[index].maximum_voltage for index in members),
                 base_voltage=representative.base_voltage,
                 voltage_group=representative.voltage_group,
                 minimum_reactive_generation=(
-                    sum(
-                        case.buses[index].minimum_reactive_generation or 0.0
-                        for index in members
-                    )
+                    sum(case.buses[index].minimum_reactive_generation or 0.0 for index in members)
                     if all(
                         case.buses[index].minimum_reactive_generation is not None
                         for index in members
@@ -142,10 +135,7 @@ def reduce_closed_switches(case: PowerFlowCase) -> ReducedPowerFlowCase:
                     else None
                 ),
                 maximum_reactive_generation=(
-                    sum(
-                        case.buses[index].maximum_reactive_generation or 0.0
-                        for index in members
-                    )
+                    sum(case.buses[index].maximum_reactive_generation or 0.0 for index in members)
                     if all(
                         case.buses[index].maximum_reactive_generation is not None
                         for index in members

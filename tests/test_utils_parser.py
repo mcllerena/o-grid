@@ -16,7 +16,10 @@ from o_grid.utils.utils_parser import (
     default_dcli_circuit,
     has_non_default_tap,
     has_non_zero_angle,
+    has_tap_range,
+    has_tap_value,
     implicit_decimal_places,
+    is_switch_impedance,
     load_mapping,
     looks_numeric,
     map_anarede_state_to_available,
@@ -341,3 +344,41 @@ def test_repair_dbar_values_returns_input_when_numeric() -> None:
 def test_repair_dbar_values_returns_input_without_match() -> None:
     values = {"voltage": "not-packed"}
     assert repair_dbar_values(" " * 22 + "xxxx", {}, values) is values
+
+
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        (None, False),
+        (1.05, True),
+        (3, True),
+        ("abc", True),
+        (object(), False),
+    ],
+)
+def test_has_tap_value(value: object, expected: bool) -> None:
+    assert has_tap_value(value) is expected  # type: ignore[arg-type]
+
+
+def test_has_tap_value_reads_quantity() -> None:
+    assert has_tap_value(ActivePower(2.0, "MW")) is True
+
+
+def test_has_tap_range_detects_present_values() -> None:
+    assert has_tap_range(None, 1.05) is True
+    assert has_tap_range("", "") is False
+
+
+@pytest.mark.parametrize(
+    ("resistance", "reactance", "susceptance", "expected"),
+    [
+        (None, "", ActivePower(0.0, "MW"), True),
+        (0.0, 0.0, 0.0, True),
+        ("abc", "abc", "abc", True),
+        (1.0, 0.0, 0.0, False),
+    ],
+)
+def test_is_switch_impedance(
+    resistance: object, reactance: object, susceptance: object, expected: bool
+) -> None:
+    assert is_switch_impedance(resistance, reactance, susceptance, 0.001) is expected  # type: ignore[arg-type]

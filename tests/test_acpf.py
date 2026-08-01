@@ -318,6 +318,25 @@ def test_solver_defaults_to_thirty_iterations() -> None:
     assert solver.max_control_passes == 12
 
 
+def test_solver_runs_from_pwf_path() -> None:
+    solver = NewtonRaphsonPowerFlow()
+
+    run = solver.run(DATA / "d_9nodes.pwf")
+
+    assert run.result.converged is True
+    assert run.result.solver == "newton-raphson"
+    assert run.system is not None
+
+
+def test_fast_decoupled_with_lcc_marks_fallback() -> None:
+    parsed = AnaredeInfrasysParser().parse(DATA / "CASO_FINAL_EQV2020.pwf")
+
+    run = FastDecoupledPowerFlow().run(parsed)
+
+    assert run.result.converged is True
+    assert run.result.fallback_used is True
+
+
 @pytest.mark.parametrize(
     ("max_iterations", "expected_level"),
     [(50, "SUCCESS"), (0, "ERROR")],

@@ -7,10 +7,34 @@ from openpyxl import load_workbook
 
 from o_grid import ExportSolution
 from o_grid.acpf import NewtonRaphsonPowerFlow
-from o_grid.exporter import SHEET_HEADERS
+from o_grid.exporter import SHEET_HEADERS, _svc_state
 from o_grid.parser import AnaredeInfrasysParser
 
 DATA = Path(__file__).parent / "data" / "pwf"
+
+
+class _Svc:
+    def __init__(
+        self, status: str, q: float, qmin: float | None = None, qmax: float | None = None
+    ) -> None:
+        self.status = status
+        self.reactive_power_mvar = q
+        self.minimum_reactive_power_mvar = qmin
+        self.maximum_reactive_power_mvar = qmax
+
+
+@pytest.mark.parametrize(
+    ("svc", "expected"),
+    [
+        (_Svc("OutSvc", 0.0), "OutSvc"),
+        (_Svc("InSvc", 10.0, qmin=10.0, qmax=50.0), "Qmin"),
+        (_Svc("InSvc", 50.0, qmin=10.0, qmax=50.0), "Qmax"),
+        (_Svc("InSvc", 30.0, qmin=10.0, qmax=50.0), "Free"),
+        (_Svc("InSvc", 0.0), "Free"),
+    ],
+)
+def test_svc_state(svc: _Svc, expected: str) -> None:
+    assert _svc_state(svc) == expected
 
 
 def test_export_solution_writes_reference_excel_schema(tmp_path: Path) -> None:

@@ -64,5 +64,3 @@ def apply_bus_limit_controls(
         if changed:
             voltage = magnitude * np.exp(1j * angle)
     return changed, voltage
-
-

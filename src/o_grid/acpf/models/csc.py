@@ -18,9 +18,7 @@ def apply_csc_to_branches(
     branch_factory: Callable[..., BranchData],
 ) -> None:
     """Add active CSC reactance to a matching branch or stamp a standalone branch."""
-    by_circuit = {
-        (branch.from_bus, branch.to_bus, branch.circuit): branch for branch in branches
-    }
+    by_circuit = {(branch.from_bus, branch.to_bus, branch.circuit): branch for branch in branches}
     for component in components:
         if not is_active_csc(component):
             continue
@@ -28,9 +26,12 @@ def apply_csc_to_branches(
         from_bus = _bus_number(getattr(component, "from_bus", values.get("from_bus")))
         to_bus = _bus_number(getattr(component, "to_bus", values.get("to_bus")))
         circuit = _integer(getattr(component, "dcsc_circuit", None), 1)
-        reactance = _magnitude(
-            getattr(component, "initial_reactance", None), values.get("initial_reactance", 0.0)
-        ) * 0.01
+        reactance = (
+            _magnitude(
+                getattr(component, "initial_reactance", None), values.get("initial_reactance", 0.0)
+            )
+            * 0.01
+        )
         branch = by_circuit.get((from_bus, to_bus, circuit))
         if branch is None:
             branch = by_circuit.get((to_bus, from_bus, circuit))
