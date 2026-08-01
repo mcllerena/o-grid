@@ -212,9 +212,7 @@ def test_optimization_model_squared_generation_redispatches_slack() -> None:
     assert iterations is not None
     assert solution_metrics(model)["converged"] is True
     assert solution_metrics(model)["max_p"] <= 1.0e-9
-    slack_gen = sum(
-        pyo.value(model.pg_slack[bus]) ** 2 for bus in model.SLACK_GEN
-    )
+    slack_gen = sum(pyo.value(model.pg_slack[bus]) ** 2 for bus in model.SLACK_GEN)
     assert slack_gen > 0.0
     assert slack_gen < pyo.value(model.objective)
 

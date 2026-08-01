@@ -36,6 +36,8 @@ class PowerFlowSolver:
     """Base interface for an in-process Python AC power-flow implementation."""
 
     solver_name: ClassVar[str]
+    objective_function: str
+    strict_voltage_limits: bool
 
     def __new__(
         cls,

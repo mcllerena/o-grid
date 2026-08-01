@@ -18,7 +18,7 @@ import re
 import tempfile
 from collections import defaultdict
 from pathlib import Path
-from typing import ClassVar
+from typing import Any, ClassVar, cast
 
 import numpy as np
 import pyomo.environ as pyo
@@ -164,8 +164,9 @@ def _apply_slack_generation_redispatch(
     slack_buses = [bus.number for bus in case.buses if _bus_type_code(bus.kind) == SLACK]
     if not slack_buses:
         return
+    model_any = cast(Any, model)
     slack_load = {bus: bus_by_id[bus].active_load / base_mva for bus in slack_buses}
-    model._slack_load_pu = slack_load
+    model_any._slack_load_pu = slack_load
     slack_upper = {
         bus: max(
             1.0,
@@ -173,19 +174,19 @@ def _apply_slack_generation_redispatch(
         )
         for bus in slack_buses
     }
-    model.SLACK_GEN = pyo.Set(initialize=slack_buses, ordered=True)
-    model.pg_slack = pyo.Var(
-        model.SLACK_GEN,
+    model_any.SLACK_GEN = pyo.Set(initialize=slack_buses, ordered=True)
+    model_any.pg_slack = pyo.Var(
+        model_any.SLACK_GEN,
         initialize=lambda m, bus: max(0.0, p_seed.get(bus, 0.0) + slack_load[bus]),
         bounds=lambda m, bus: (0.0, slack_upper[bus]),
         within=pyo.Reals,
     )
 
-    def slack_active_balance_rule(m, bus: int):
+    def slack_active_balance_rule(m: Any, bus: int):
         return m.pg_slack[bus] - slack_load[bus] - m.calculated_p_injection[bus] == 0.0
 
-    model.strict_slack_active_power_balance = pyo.Constraint(
-        model.SLACK_GEN, rule=slack_active_balance_rule
+    model_any.strict_slack_active_power_balance = pyo.Constraint(
+        model_any.SLACK_GEN, rule=slack_active_balance_rule
     )
 
 
@@ -226,6 +227,7 @@ def build_optimization_model(
             )
         )
     model = pyo.ConcreteModel("optimization_power_flow")
+    model_any = cast(Any, model)
     base_mva = case.base_mva
     bus_ids = [bus.number for bus in case.buses]
     bus_by_id = {bus.number: bus for bus in case.buses}
@@ -236,43 +238,43 @@ def build_optimization_model(
         bus.number for bus in case.buses if _uses_bounded_q_control(qlim_enabled, bus)
     ]
 
-    model.BUS = pyo.Set(initialize=bus_ids, ordered=True)
-    model.QPV = pyo.Set(initialize=q_limited_pv_ids, ordered=True)
-    model.BRANCH = pyo.Set(initialize=branch_ids, ordered=True)
-    model.SVC = pyo.Set(initialize=svc_ids, ordered=True)
+    model_any.BUS = pyo.Set(initialize=bus_ids, ordered=True)
+    model_any.QPV = pyo.Set(initialize=q_limited_pv_ids, ordered=True)
+    model_any.BRANCH = pyo.Set(initialize=branch_ids, ordered=True)
+    model_any.SVC = pyo.Set(initialize=svc_ids, ordered=True)
 
-    model.base_mva = pyo.Param(initialize=base_mva, within=pyo.PositiveReals)
-    model.angle_limit = pyo.Param(initialize=ANGLE_LIMIT_RAD, within=pyo.PositiveReals)
-    model.active_tolerance = pyo.Param(
+    model_any.base_mva = pyo.Param(initialize=base_mva, within=pyo.PositiveReals)
+    model_any.angle_limit = pyo.Param(initialize=ANGLE_LIMIT_RAD, within=pyo.PositiveReals)
+    model_any.active_tolerance = pyo.Param(
         initialize=max(active_tolerance_pu, TOLERANCE), within=pyo.NonNegativeReals
     )
-    model.reactive_tolerance = pyo.Param(
+    model_any.reactive_tolerance = pyo.Param(
         initialize=max(reactive_tolerance_pu, TOLERANCE), within=pyo.NonNegativeReals
     )
-    model.control_tolerance = pyo.Param(
+    model_any.control_tolerance = pyo.Param(
         initialize=max(control_tolerance_pu, TOLERANCE), within=pyo.NonNegativeReals
     )
-    model.weight_voltage = pyo.Param(initialize=OBJECTIVE_WEIGHT_VOLTAGE)
-    model.weight_voltage_limits = pyo.Param(initialize=OBJECTIVE_WEIGHT_VOLTAGE_LIMITS)
-    model.weight_angle = pyo.Param(initialize=OBJECTIVE_WEIGHT_ANGLE)
-    model.weight_angle_limits = pyo.Param(initialize=OBJECTIVE_WEIGHT_ANGLE_LIMITS)
-    model.weight_svc = pyo.Param(initialize=OBJECTIVE_WEIGHT_SVC)
+    model_any.weight_voltage = pyo.Param(initialize=OBJECTIVE_WEIGHT_VOLTAGE)
+    model_any.weight_voltage_limits = pyo.Param(initialize=OBJECTIVE_WEIGHT_VOLTAGE_LIMITS)
+    model_any.weight_angle = pyo.Param(initialize=OBJECTIVE_WEIGHT_ANGLE)
+    model_any.weight_angle_limits = pyo.Param(initialize=OBJECTIVE_WEIGHT_ANGLE_LIMITS)
+    model_any.weight_svc = pyo.Param(initialize=OBJECTIVE_WEIGHT_SVC)
 
-    model.bus_type = pyo.Param(
-        model.BUS, initialize={bus.number: _bus_type_code(bus.kind) for bus in case.buses}
+    model_any.bus_type = pyo.Param(
+        model_any.BUS, initialize={bus.number: _bus_type_code(bus.kind) for bus in case.buses}
     )
-    model.vm_min = pyo.Param(
-        model.BUS, initialize={bus.number: bus.minimum_voltage for bus in case.buses}
+    model_any.vm_min = pyo.Param(
+        model_any.BUS, initialize={bus.number: bus.minimum_voltage for bus in case.buses}
     )
-    model.vm_max = pyo.Param(
-        model.BUS, initialize={bus.number: bus.maximum_voltage for bus in case.buses}
+    model_any.vm_max = pyo.Param(
+        model_any.BUS, initialize={bus.number: bus.maximum_voltage for bus in case.buses}
     )
-    model.b_shunt = pyo.Param(
-        model.BUS,
+    model_any.b_shunt = pyo.Param(
+        model_any.BUS,
         initialize={bus.number: bus.shunt_susceptance for bus in case.buses},
     )
-    model.p_spec = pyo.Param(
-        model.BUS,
+    model_any.p_spec = pyo.Param(
+        model_any.BUS,
         initialize={
             bus.number: (bus.active_generation - bus.active_load) / base_mva for bus in case.buses
         },
@@ -289,7 +291,7 @@ def build_optimization_model(
             q_spec[bus.number] = (
                 bus.reactive_generation - svc_initial_by_bus[bus.number]
             ) / base_mva - bus.reactive_load / base_mva
-    model.q_spec = pyo.Param(model.BUS, initialize=q_spec)
+    model_any.q_spec = pyo.Param(model_any.BUS, initialize=q_spec)
 
     bus_vm_bounds = {}
     bus_va_bounds = {}
@@ -311,27 +313,27 @@ def build_optimization_model(
             qg_lower[bus.number] = float(bus.minimum_reactive_generation or 0.0) / base_mva
             qg_upper[bus.number] = float(bus.maximum_reactive_generation or 0.0) / base_mva
 
-    model.vm = pyo.Var(
-        model.BUS, initialize=vm_seed, bounds=bus_vm_bounds, within=pyo.NonNegativeReals
+    model_any.vm = pyo.Var(
+        model_any.BUS, initialize=vm_seed, bounds=bus_vm_bounds, within=pyo.NonNegativeReals
     )
-    model.va = pyo.Var(
-        model.BUS, initialize=va_seed, bounds=bus_va_bounds, within=pyo.Reals
+    model_any.va = pyo.Var(
+        model_any.BUS, initialize=va_seed, bounds=bus_va_bounds, within=pyo.Reals
     )
-    model.qg_qpv = pyo.Var(
-        model.QPV,
+    model_any.qg_qpv = pyo.Var(
+        model_any.QPV,
         initialize=qg_initial,
         bounds=lambda m, bus: (qg_lower[bus], qg_upper[bus]),
         within=pyo.Reals,
     )
 
-    model.p_slack_pos = pyo.Var(model.BUS, within=pyo.NonNegativeReals, initialize=0.0)
-    model.p_slack_neg = pyo.Var(model.BUS, within=pyo.NonNegativeReals, initialize=0.0)
-    model.q_slack_pos = pyo.Var(model.BUS, within=pyo.NonNegativeReals, initialize=0.0)
-    model.q_slack_neg = pyo.Var(model.BUS, within=pyo.NonNegativeReals, initialize=0.0)
-    model.v_upper_slack = pyo.Var(model.BUS, within=pyo.NonNegativeReals, initialize=0.0)
-    model.v_lower_slack = pyo.Var(model.BUS, within=pyo.NonNegativeReals, initialize=0.0)
-    model.a_upper_slack = pyo.Var(model.BUS, within=pyo.NonNegativeReals, initialize=0.0)
-    model.a_lower_slack = pyo.Var(model.BUS, within=pyo.NonNegativeReals, initialize=0.0)
+    model_any.p_slack_pos = pyo.Var(model_any.BUS, within=pyo.NonNegativeReals, initialize=0.0)
+    model_any.p_slack_neg = pyo.Var(model_any.BUS, within=pyo.NonNegativeReals, initialize=0.0)
+    model_any.q_slack_pos = pyo.Var(model_any.BUS, within=pyo.NonNegativeReals, initialize=0.0)
+    model_any.q_slack_neg = pyo.Var(model_any.BUS, within=pyo.NonNegativeReals, initialize=0.0)
+    model_any.v_upper_slack = pyo.Var(model_any.BUS, within=pyo.NonNegativeReals, initialize=0.0)
+    model_any.v_lower_slack = pyo.Var(model_any.BUS, within=pyo.NonNegativeReals, initialize=0.0)
+    model_any.a_upper_slack = pyo.Var(model_any.BUS, within=pyo.NonNegativeReals, initialize=0.0)
+    model_any.a_lower_slack = pyo.Var(model_any.BUS, within=pyo.NonNegativeReals, initialize=0.0)
 
     svc_bus = {}
     svc_ctrl_bus = {}
@@ -355,22 +357,22 @@ def build_optimization_model(
             min(svc_q_min[index] * lower * lower, svc_q_min[index] * upper * upper),
             max(svc_q_max[index] * lower * lower, svc_q_max[index] * upper * upper),
         )
-    model.svc_bus = pyo.Param(model.SVC, initialize=svc_bus)
-    model.svc_ctrl_bus = pyo.Param(model.SVC, initialize=svc_ctrl_bus)
-    model.svc_q_initial = pyo.Param(model.SVC, initialize=svc_q_initial)
-    model.svc_q_min = pyo.Param(model.SVC, initialize=svc_q_min)
-    model.svc_q_max = pyo.Param(model.SVC, initialize=svc_q_max)
-    model.svc_slope = pyo.Param(model.SVC, initialize=svc_slope)
-    model.svc_vref = pyo.Param(model.SVC, initialize=svc_vref)
+    model_any.svc_bus = pyo.Param(model_any.SVC, initialize=svc_bus)
+    model_any.svc_ctrl_bus = pyo.Param(model_any.SVC, initialize=svc_ctrl_bus)
+    model_any.svc_q_initial = pyo.Param(model_any.SVC, initialize=svc_q_initial)
+    model_any.svc_q_min = pyo.Param(model_any.SVC, initialize=svc_q_min)
+    model_any.svc_q_max = pyo.Param(model_any.SVC, initialize=svc_q_max)
+    model_any.svc_slope = pyo.Param(model_any.SVC, initialize=svc_slope)
+    model_any.svc_vref = pyo.Param(model_any.SVC, initialize=svc_vref)
 
-    model.qsvc = pyo.Var(
-        model.SVC,
+    model_any.qsvc = pyo.Var(
+        model_any.SVC,
         initialize=svc_q_initial,
         bounds=svc_bounds,
         within=pyo.Reals,
     )
-    model.svc_residual_pos = pyo.Var(model.SVC, within=pyo.NonNegativeReals, initialize=0.0)
-    model.svc_residual_neg = pyo.Var(model.SVC, within=pyo.NonNegativeReals, initialize=0.0)
+    model_any.svc_residual_pos = pyo.Var(model_any.SVC, within=pyo.NonNegativeReals, initialize=0.0)
+    model_any.svc_residual_neg = pyo.Var(model_any.SVC, within=pyo.NonNegativeReals, initialize=0.0)
 
     branch_g = {}
     branch_b = {}
@@ -413,14 +415,14 @@ def build_optimization_model(
         branch_ytf_b[index] = (conductance * sin_shift - susceptance * cos_shift) / tap
         branch_ytt_g[index] = conductance
         branch_ytt_b[index] = branch_b_self[index]
-    model.branch_yff_g = pyo.Param(model.BRANCH, initialize=branch_yff_g)
-    model.branch_yff_b = pyo.Param(model.BRANCH, initialize=branch_yff_b)
-    model.branch_yft_g = pyo.Param(model.BRANCH, initialize=branch_yft_g)
-    model.branch_yft_b = pyo.Param(model.BRANCH, initialize=branch_yft_b)
-    model.branch_ytf_g = pyo.Param(model.BRANCH, initialize=branch_ytf_g)
-    model.branch_ytf_b = pyo.Param(model.BRANCH, initialize=branch_ytf_b)
-    model.branch_ytt_g = pyo.Param(model.BRANCH, initialize=branch_ytt_g)
-    model.branch_ytt_b = pyo.Param(model.BRANCH, initialize=branch_ytt_b)
+    model_any.branch_yff_g = pyo.Param(model_any.BRANCH, initialize=branch_yff_g)
+    model_any.branch_yff_b = pyo.Param(model_any.BRANCH, initialize=branch_yff_b)
+    model_any.branch_yft_g = pyo.Param(model_any.BRANCH, initialize=branch_yft_g)
+    model_any.branch_yft_b = pyo.Param(model_any.BRANCH, initialize=branch_yft_b)
+    model_any.branch_ytf_g = pyo.Param(model_any.BRANCH, initialize=branch_ytf_g)
+    model_any.branch_ytf_b = pyo.Param(model_any.BRANCH, initialize=branch_ytf_b)
+    model_any.branch_ytt_g = pyo.Param(model_any.BRANCH, initialize=branch_ytt_g)
+    model_any.branch_ytt_b = pyo.Param(model_any.BRANCH, initialize=branch_ytt_b)
 
     injections: dict[int, list[tuple[int, int, bool]]] = defaultdict(list)
     for index, branch in enumerate(branches):
@@ -430,7 +432,7 @@ def build_optimization_model(
     for index in svc_ids:
         svcs_by_bus[svc_bus[index]].append(index)
 
-    def p_calc(m, bus: int):
+    def p_calc(m: Any, bus: int):
         expr = 0.0
         for other, branch_index, from_side in injections.get(bus, []):
             if from_side:
@@ -448,7 +450,7 @@ def build_optimization_model(
             )
         return expr
 
-    def q_calc(m, bus: int):
+    def q_calc(m: Any, bus: int):
         expr = -m.b_shunt[bus] * m.vm[bus] ** 2
         for other, branch_index, from_side in injections.get(bus, []):
             if from_side:
@@ -466,30 +468,29 @@ def build_optimization_model(
             )
         return expr
 
-    model.calculated_p_injection = pyo.Expression(model.BUS, rule=p_calc)
-    model.calculated_q_injection = pyo.Expression(model.BUS, rule=q_calc)
+    model_any.calculated_p_injection = pyo.Expression(model_any.BUS, rule=p_calc)
+    model_any.calculated_q_injection = pyo.Expression(model_any.BUS, rule=q_calc)
 
     for bus in case.buses:
         if _bus_type_code(bus.kind) == SLACK:
-            model.vm[bus.number].fix(vm_seed[bus.number])
-            model.va[bus.number].fix(va_seed[bus.number])
+            cast(Any, model_any.vm[bus.number]).fix(vm_seed[bus.number])
+            cast(Any, model_any.va[bus.number]).fix(va_seed[bus.number])
         elif (
             bus.kind == ACBusTypes.PV
             and bus.number not in q_limited_pv_ids
             and not strict_voltage_limits
         ):
-            model.vm[bus.number].fix(vm_seed[bus.number])
+            cast(Any, model_any.vm[bus.number]).fix(vm_seed[bus.number])
 
-    def p_balance_rule(m, bus: int):
+    def p_balance_rule(m: Any, bus: int):
         data = bus_by_id[bus]
         if _bus_type_code(data.kind) == SLACK:
             return pyo.Constraint.Skip
         return (
-            m.p_spec[bus] - m.calculated_p_injection[bus]
-            == m.p_slack_pos[bus] - m.p_slack_neg[bus]
+            m.p_spec[bus] - m.calculated_p_injection[bus] == m.p_slack_pos[bus] - m.p_slack_neg[bus]
         )
 
-    def q_balance_rule(m, bus: int):
+    def q_balance_rule(m: Any, bus: int):
         data = bus_by_id[bus]
         q_limited_pv = bus in m.QPV
         if _bus_type_code(data.kind) != PQ and not q_limited_pv:
@@ -499,96 +500,97 @@ def build_optimization_model(
             q_spec = q_spec + m.qg_qpv[bus]
         for svc_index in svcs_by_bus.get(bus, []):
             q_spec = q_spec + m.qsvc[svc_index]
-        return (
-            q_spec - m.calculated_q_injection[bus]
-            == m.q_slack_pos[bus] - m.q_slack_neg[bus]
-        )
+        return q_spec - m.calculated_q_injection[bus] == m.q_slack_pos[bus] - m.q_slack_neg[bus]
 
-    model.active_power_balance = pyo.Constraint(model.BUS, rule=p_balance_rule)
-    model.reactive_power_balance = pyo.Constraint(model.BUS, rule=q_balance_rule)
+    model_any.active_power_balance = pyo.Constraint(model_any.BUS, rule=p_balance_rule)
+    model_any.reactive_power_balance = pyo.Constraint(model_any.BUS, rule=q_balance_rule)
 
-    def active_tolerance_rule(m, bus: int):
+    def active_tolerance_rule(m: Any, bus: int):
         if _bus_type_code(bus_by_id[bus].kind) == SLACK:
             return pyo.Constraint.Skip
         return m.p_slack_pos[bus] + m.p_slack_neg[bus] <= m.active_tolerance
 
-    def reactive_tolerance_rule(m, bus: int):
+    def reactive_tolerance_rule(m: Any, bus: int):
         if _bus_type_code(bus_by_id[bus].kind) != PQ and bus not in m.QPV:
             return pyo.Constraint.Skip
         return m.q_slack_pos[bus] + m.q_slack_neg[bus] <= m.reactive_tolerance
 
-    model.active_residual_tolerance = pyo.Constraint(model.BUS, rule=active_tolerance_rule)
-    model.reactive_residual_tolerance = pyo.Constraint(model.BUS, rule=reactive_tolerance_rule)
+    model_any.active_residual_tolerance = pyo.Constraint(model_any.BUS, rule=active_tolerance_rule)
+    model_any.reactive_residual_tolerance = pyo.Constraint(
+        model_any.BUS, rule=reactive_tolerance_rule
+    )
     active_residual_buses = [
-        bus for bus in model.BUS if _bus_type_code(bus_by_id[bus].kind) != SLACK
+        bus for bus in model_any.BUS if _bus_type_code(bus_by_id[bus].kind) != SLACK
     ]
     reactive_residual_buses = [
         bus
-        for bus in model.BUS
-        if _bus_type_code(bus_by_id[bus].kind) == PQ or bus in model.QPV
+        for bus in model_any.BUS
+        if _bus_type_code(bus_by_id[bus].kind) == PQ or bus in model_any.QPV
     ]
     aggregate_active_residual = sum(
-        model.p_slack_pos[bus] - model.p_slack_neg[bus] for bus in active_residual_buses
+        cast(Any, model_any.p_slack_pos[bus]) - cast(Any, model_any.p_slack_neg[bus])
+        for bus in active_residual_buses
     )
     aggregate_reactive_residual = sum(
-        model.q_slack_pos[bus] - model.q_slack_neg[bus] for bus in reactive_residual_buses
+        cast(Any, model_any.q_slack_pos[bus]) - cast(Any, model_any.q_slack_neg[bus])
+        for bus in reactive_residual_buses
     )
-    model.aggregate_active_residual_upper = pyo.Constraint(
+    model_any.aggregate_active_residual_upper = pyo.Constraint(
         expr=(
-            aggregate_active_residual <= model.active_tolerance
+            aggregate_active_residual <= model_any.active_tolerance
             if active_residual_buses
             else pyo.Constraint.Feasible
         )
     )
-    model.aggregate_active_residual_lower = pyo.Constraint(
+    model_any.aggregate_active_residual_lower = pyo.Constraint(
         expr=(
-            aggregate_active_residual >= -model.active_tolerance
+            aggregate_active_residual >= -pyo.value(model_any.active_tolerance)
             if active_residual_buses
             else pyo.Constraint.Feasible
         )
     )
-    model.aggregate_reactive_residual_upper = pyo.Constraint(
+    model_any.aggregate_reactive_residual_upper = pyo.Constraint(
         expr=(
-            aggregate_reactive_residual <= model.reactive_tolerance
+            aggregate_reactive_residual <= model_any.reactive_tolerance
             if reactive_residual_buses
             else pyo.Constraint.Feasible
         )
     )
-    model.aggregate_reactive_residual_lower = pyo.Constraint(
+    model_any.aggregate_reactive_residual_lower = pyo.Constraint(
         expr=(
-            aggregate_reactive_residual >= -model.reactive_tolerance
+            aggregate_reactive_residual >= -pyo.value(model_any.reactive_tolerance)
             if reactive_residual_buses
             else pyo.Constraint.Feasible
         )
     )
 
-    model.voltage_upper_limit = pyo.Constraint(
-        model.BUS,
+    model_any.voltage_upper_limit = pyo.Constraint(
+        model_any.BUS,
         rule=lambda m, bus: m.vm[bus] <= m.vm_max[bus] + m.v_upper_slack[bus],
     )
-    model.voltage_lower_limit = pyo.Constraint(
-        model.BUS,
+    model_any.voltage_lower_limit = pyo.Constraint(
+        model_any.BUS,
         rule=lambda m, bus: m.vm[bus] >= m.vm_min[bus] - m.v_lower_slack[bus],
     )
-    model.angle_upper_limit = pyo.Constraint(
-        model.BUS,
+    model_any.angle_upper_limit = pyo.Constraint(
+        model_any.BUS,
         rule=lambda m, bus: m.va[bus] <= m.angle_limit + m.a_upper_slack[bus],
     )
-    model.angle_lower_limit = pyo.Constraint(
-        model.BUS,
-        rule=lambda m, bus: m.va[bus] >= -m.angle_limit - m.a_lower_slack[bus],
+    model_any.angle_lower_limit = pyo.Constraint(
+        model_any.BUS,
+        rule=lambda m, bus: m.va[bus] >= -pyo.value(m.angle_limit) - m.a_lower_slack[bus],
     )
 
-    def svc_lower_rule(m, index: int):
+    def svc_lower_rule(m: Any, index: int):
         return m.qsvc[index] >= m.svc_q_min[index] * m.vm[m.svc_ctrl_bus[index]] ** 2
 
-    def svc_upper_rule(m, index: int):
+    def svc_upper_rule(m: Any, index: int):
         return m.qsvc[index] <= m.svc_q_max[index] * m.vm[m.svc_ctrl_bus[index]] ** 2
 
-    def svc_control_rule(m, index: int):
+    def svc_control_rule(m: Any, index: int):
         if abs(pyo.value(m.svc_slope[index])) <= TOLERANCE:
             return pyo.Constraint.Skip
-        svc = case.svcs[index]
+        svc = (case.svcs or [])[index]
         if str(svc.mode).upper() == "I":
             expr = (
                 m.vm[m.svc_ctrl_bus[index]]
@@ -597,23 +599,21 @@ def build_optimization_model(
             )
         else:
             expr = (
-                m.vm[m.svc_ctrl_bus[index]]
-                - m.svc_vref[index]
-                + m.qsvc[index] * m.svc_slope[index]
+                m.vm[m.svc_ctrl_bus[index]] - m.svc_vref[index] + m.qsvc[index] * m.svc_slope[index]
             )
         return expr == m.svc_residual_pos[index] - m.svc_residual_neg[index]
 
-    model.svc_q_lower = pyo.Constraint(model.SVC, rule=svc_lower_rule)
-    model.svc_q_upper = pyo.Constraint(model.SVC, rule=svc_upper_rule)
-    model.svc_control = pyo.Constraint(model.SVC, rule=svc_control_rule)
-    model.svc_residual_tolerance = pyo.Constraint(
-        model.SVC,
+    model_any.svc_q_lower = pyo.Constraint(model_any.SVC, rule=svc_lower_rule)
+    model_any.svc_q_upper = pyo.Constraint(model_any.SVC, rule=svc_upper_rule)
+    model_any.svc_control = pyo.Constraint(model_any.SVC, rule=svc_control_rule)
+    model_any.svc_residual_tolerance = pyo.Constraint(
+        model_any.SVC,
         rule=lambda m, index: (
             m.svc_residual_pos[index] + m.svc_residual_neg[index] <= m.control_tolerance
         ),
     )
 
-    def objective_rule(m):
+    def objective_rule(m: Any):
         power_slacks = sum(
             m.p_slack_pos[bus] ** 2
             + m.p_slack_neg[bus] ** 2
@@ -645,8 +645,8 @@ def build_optimization_model(
             + reactive_generation_regularization
         )
 
-    model._case = case
-    model._strict_voltage_limits = strict_voltage_limits
+    model_any._case = case
+    model_any._strict_voltage_limits = strict_voltage_limits
 
     p_seed: dict[int, float] = defaultdict(float)
     q_seed: dict[int, float] = defaultdict(float)
@@ -667,47 +667,51 @@ def build_optimization_model(
                 mutual_b = branch_ytf_b[branch_index]
             delta = va_seed[bus.number] - va_seed[other]
             _p_calc += vm_seed[bus.number] ** 2 * self_g
-            _p_calc += vm_seed[bus.number] * vm_seed[other] * (
-                mutual_g * math.cos(delta) + mutual_b * math.sin(delta)
+            _p_calc += (
+                vm_seed[bus.number]
+                * vm_seed[other]
+                * (mutual_g * math.cos(delta) + mutual_b * math.sin(delta))
             )
             _q_calc -= vm_seed[bus.number] ** 2 * self_b
-            _q_calc += vm_seed[bus.number] * vm_seed[other] * (
-                mutual_g * math.sin(delta) - mutual_b * math.cos(delta)
+            _q_calc += (
+                vm_seed[bus.number]
+                * vm_seed[other]
+                * (mutual_g * math.sin(delta) - mutual_b * math.cos(delta))
             )
         p_seed[bus.number] = _p_calc
         q_seed[bus.number] = _q_calc
     for bus in case.buses:
         bus_id = bus.number
         vm0 = vm_seed[bus_id]
-        model.v_upper_slack[bus_id].set_value(
-            max(0.0, vm0 - pyo.value(model.vm_max[bus_id])), skip_validation=True
+        cast(Any, model_any.v_upper_slack[bus_id]).set_value(
+            max(0.0, vm0 - pyo.value(model_any.vm_max[bus_id])), skip_validation=True
         )
-        model.v_lower_slack[bus_id].set_value(
-            max(0.0, pyo.value(model.vm_min[bus_id]) - vm0), skip_validation=True
+        cast(Any, model_any.v_lower_slack[bus_id]).set_value(
+            max(0.0, pyo.value(model_any.vm_min[bus_id]) - vm0), skip_validation=True
         )
-        model.a_upper_slack[bus_id].set_value(
-            max(0.0, va_seed[bus_id] - pyo.value(model.angle_limit)), skip_validation=True
+        cast(Any, model_any.a_upper_slack[bus_id]).set_value(
+            max(0.0, va_seed[bus_id] - pyo.value(model_any.angle_limit)), skip_validation=True
         )
-        model.a_lower_slack[bus_id].set_value(
-            max(0.0, -pyo.value(model.angle_limit) - va_seed[bus_id]), skip_validation=True
+        cast(Any, model_any.a_lower_slack[bus_id]).set_value(
+            max(0.0, -pyo.value(model_any.angle_limit) - va_seed[bus_id]), skip_validation=True
         )
         if _bus_type_code(bus.kind) != SLACK:
-            p_spec0 = pyo.value(model.p_spec[bus_id])
+            p_spec0 = pyo.value(model_any.p_spec[bus_id])
             _set_signed_slack(
-                model.p_slack_pos[bus_id],
-                model.p_slack_neg[bus_id],
+                model_any.p_slack_pos[bus_id],
+                model_any.p_slack_neg[bus_id],
                 p_spec0 - p_seed.get(bus_id, 0.0),
             )
         q_limited_pv = bus_id in q_limited_pv_ids
         if _bus_type_code(bus.kind) == PQ or q_limited_pv:
-            q_spec0 = pyo.value(model.q_spec[bus_id])
+            q_spec0 = pyo.value(model_any.q_spec[bus_id])
             if q_limited_pv:
-                q_spec0 += pyo.value(model.qg_qpv[bus_id])
+                q_spec0 += pyo.value(model_any.qg_qpv[bus_id])
             for svc_index in svcs_by_bus.get(bus_id, []):
                 q_spec0 += svc_q_initial[svc_index]
             _set_signed_slack(
-                model.q_slack_pos[bus_id],
-                model.q_slack_neg[bus_id],
+                model_any.q_slack_pos[bus_id],
+                model_any.q_slack_neg[bus_id],
                 q_spec0 - q_seed.get(bus_id, 0.0),
             )
     for index, svc in enumerate(case.svcs or []):
@@ -724,8 +728,8 @@ def build_optimization_model(
         else:
             residual = vm_seed[svc.controlled_bus] - vref + svc_q_initial[index] * slope
         _set_signed_slack(
-            model.svc_residual_pos[index],
-            model.svc_residual_neg[index],
+            model_any.svc_residual_pos[index],
+            model_any.svc_residual_neg[index],
             residual,
         )
 
@@ -733,16 +737,16 @@ def build_optimization_model(
         model.objective = pyo.Objective(rule=objective_rule, sense=pyo.minimize)
     elif objective_function == "zero_function":
         _apply_zero_residuals(model)
-        model.objective = pyo.Objective(rule=objective_rule, sense=pyo.minimize)
+        model_any.objective = pyo.Objective(rule=objective_rule, sense=pyo.minimize)
     elif objective_function == "squared_generation":
         _apply_zero_residuals(model)
         _apply_slack_generation_redispatch(model, case, bus_by_id, p_seed)
-        model.objective = pyo.Objective(
+        model_any.objective = pyo.Objective(
             expr=objective_rule(model)
-            + sum(model.pg_slack[bus] ** 2 for bus in model.SLACK_GEN),
+            + sum(model_any.pg_slack[bus] ** 2 for bus in model_any.SLACK_GEN),
             sense=pyo.minimize,
         )
-    model._objective_function = objective_function
+    model_any._objective_function = objective_function
     return model
 
 
@@ -756,29 +760,26 @@ def solution_metrics(model: pyo.ConcreteModel) -> dict[str, float | bool]:
     close the system balance by construction and are excluded from the maximum
     residual, mirroring the Newton-Raphson mismatch metric.
     """
-    case: PowerFlowCase = model._case
+    model_any = cast(Any, model)
+    case = cast(PowerFlowCase, model_any._case)
     svcs_by_bus: dict[int, list[int]] = {}
-    for index in model.SVC:
-        svcs_by_bus.setdefault(int(_value_or_default(model.svc_bus[index])), []).append(index)
-    slack_buses = [
-        bus.number for bus in case.buses if _bus_type_code(bus.kind) == SLACK
-    ]
-    active_residual_buses = [
-        bus.number for bus in case.buses if _bus_type_code(bus.kind) != SLACK
-    ]
+    for index in model_any.SVC:
+        svcs_by_bus.setdefault(int(_value_or_default(model_any.svc_bus[index])), []).append(index)
+    slack_buses = [bus.number for bus in case.buses if _bus_type_code(bus.kind) == SLACK]
+    active_residual_buses = [bus.number for bus in case.buses if _bus_type_code(bus.kind) != SLACK]
     reactive_residual_buses = [
         bus.number
         for bus in case.buses
-        if _bus_type_code(bus.kind) == PQ or bus.number in model.QPV
+        if _bus_type_code(bus.kind) == PQ or bus.number in model_any.QPV
     ]
 
     def reactive_residual(bus: int) -> float:
-        expr = _value_or_default(model.q_spec[bus])
-        if bus in model.QPV:
-            expr += _value_or_default(model.qg_qpv[bus])
+        expr = _value_or_default(model_any.q_spec[bus])
+        if bus in model_any.QPV:
+            expr += _value_or_default(model_any.qg_qpv[bus])
         for index in svcs_by_bus.get(bus, []):
-            expr += _value_or_default(model.qsvc[index])
-        return expr - _value_or_default(model.calculated_q_injection[bus])
+            expr += _value_or_default(model_any.qsvc[index])
+        return expr - _value_or_default(model_any.calculated_q_injection[bus])
 
     max_p = 0.0
     max_q = 0.0
@@ -787,51 +788,57 @@ def solution_metrics(model: pyo.ConcreteModel) -> dict[str, float | bool]:
     max_q_slack = 0.0
     for bus in case.buses:
         if bus.number in slack_buses:
-            if hasattr(model, "pg_slack") and bus.number in model.SLACK_GEN:
+            if hasattr(model_any, "pg_slack") and bus.number in model_any.SLACK_GEN:
                 max_p_slack = max(
                     max_p_slack,
                     abs(
-                        _value_or_default(model.pg_slack[bus.number])
-                        - _value_or_default(model._slack_load_pu[bus.number])
-                        - _value_or_default(model.calculated_p_injection[bus.number])
+                        _value_or_default(model_any.pg_slack[bus.number])
+                        - _value_or_default(model_any._slack_load_pu[bus.number])
+                        - _value_or_default(model_any.calculated_p_injection[bus.number])
                     ),
                 )
             continue
         max_p = max(
             max_p,
             abs(
-                _value_or_default(model.p_spec[bus.number])
-                - _value_or_default(model.calculated_p_injection[bus.number])
+                _value_or_default(model_any.p_spec[bus.number])
+                - _value_or_default(model_any.calculated_p_injection[bus.number])
             ),
         )
         if bus.number in reactive_residual_buses:
             max_q = max(max_q, abs(reactive_residual(bus.number)))
-    for index in model.SVC:
-        slope = _value_or_default(model.svc_slope[index])
+    for index in model_any.SVC:
+        slope = _value_or_default(model_any.svc_slope[index])
         if abs(slope) <= TOLERANCE:
             continue
-        svc = case.svcs[index]
-        droop = (
-            _value_or_default(model.vm[int(_value_or_default(model.svc_ctrl_bus[index]))])
-            - _value_or_default(model.svc_vref[index])
-        )
-        q_svc = _value_or_default(model.qsvc[index])
+        svc = (case.svcs or [])[index]
+        droop = _value_or_default(
+            model_any.vm[int(_value_or_default(model_any.svc_ctrl_bus[index]))]
+        ) - _value_or_default(model_any.svc_vref[index])
+        q_svc = _value_or_default(model_any.qsvc[index])
         if str(svc.mode).upper() == "I":
-            droop += q_svc * slope / max(
-                _value_or_default(model.vm[int(_value_or_default(model.svc_bus[index]))]),
-                TOLERANCE,
+            droop += (
+                q_svc
+                * slope
+                / max(
+                    _value_or_default(
+                        model_any.vm[int(_value_or_default(model_any.svc_bus[index]))]
+                    ),
+                    TOLERANCE,
+                )
             )
         else:
             droop += q_svc * slope
         max_svc = max(max_svc, abs(droop))
     aggregate_p = sum(
-        _value_or_default(model.p_spec[bus]) - _value_or_default(model.calculated_p_injection[bus])
+        _value_or_default(model_any.p_spec[bus])
+        - _value_or_default(model_any.calculated_p_injection[bus])
         for bus in active_residual_buses
     )
     aggregate_q = sum(reactive_residual(bus) for bus in reactive_residual_buses)
-    active_tolerance = pyo.value(model.active_tolerance)
-    reactive_tolerance = pyo.value(model.reactive_tolerance)
-    control_tolerance = pyo.value(model.control_tolerance)
+    active_tolerance = pyo.value(model_any.active_tolerance)
+    reactive_tolerance = pyo.value(model_any.reactive_tolerance)
+    control_tolerance = pyo.value(model_any.control_tolerance)
     return {
         "max_p": max_p,
         "max_q": max_q,
@@ -1108,21 +1115,25 @@ class OptimizationACPowerFlow(PowerFlowSolver):
 def _solved_voltage(
     model: pyo.ConcreteModel,
 ) -> tuple[dict[int, float], dict[int, float]]:
-    case: PowerFlowCase = model._case
-    vm = {bus.number: _value_or_default(model.vm[bus.number], bus.voltage) for bus in case.buses}
-    va = {bus.number: _value_or_default(model.va[bus.number], bus.angle) for bus in case.buses}
+    model_any = cast(Any, model)
+    case = cast(PowerFlowCase, model_any._case)
+    vm = {
+        bus.number: _value_or_default(model_any.vm[bus.number], bus.voltage) for bus in case.buses
+    }
+    va = {bus.number: _value_or_default(model_any.va[bus.number], bus.angle) for bus in case.buses}
     return vm, va
 
 
 def summarize_solution(model: pyo.ConcreteModel) -> str:
     """Return a human-readable summary of a solved optimization power flow."""
-    case: PowerFlowCase = model._case
+    model_any = cast(Any, model)
+    case = cast(PowerFlowCase, model_any._case)
     vm, va = _solved_voltage(model)
     metrics = solution_metrics(model)
     lines = [
         f"Optimization power-flow summary for {len(case.buses)} buses, "
         f"{len(case.branches)} branches",
-        f"  Objective function: {getattr(model, '_objective_function', 'minimize_residuals')}",
+        f"  Objective function: {getattr(model_any, '_objective_function', 'minimize_residuals')}",
         f"  Converged: {metrics['converged']}",
         f"  Max P residual: {metrics['max_p']:.6e} pu",
         f"  Max Q residual: {metrics['max_q']:.6e} pu",
