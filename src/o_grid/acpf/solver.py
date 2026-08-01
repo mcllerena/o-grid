@@ -20,7 +20,6 @@ from o_grid.acpf.models import (
 from o_grid.acpf.models.lcc import refresh_lcc_reporting_state, update_lcc_from_dc_solution
 from o_grid.acpf.models.ltc import adjust_ltc_taps
 from o_grid.acpf.models.shunt import adjust_switched_shunts
-from o_grid.acpf.models.svc import adjust_svc_reactive_power
 from o_grid.acpf.newton_raphson import solve_newton_raphson
 from o_grid.acpf.reporting import LiveIterationReporter
 from o_grid.acpf.results import ACPowerFlowResult, PowerFlowRun, apply_power_flow_result
@@ -135,7 +134,7 @@ class PowerFlowSolver:
                 break
             accepted_any = False
             changed_any = False
-            control_names = ["SVC", "switched shunt", "LTC", "LCC"]
+            control_names = ["switched shunt", "LTC", "LCC"]
             if control_pass == 0:
                 control_names.insert(0, "bus limits")
             for control_name in control_names:
@@ -148,8 +147,6 @@ class PowerFlowSolver:
                     changed, trial_voltage = apply_bus_limit_controls(
                         numerical_case, ybus, trial_voltage, settings
                     )
-                elif control_name == "SVC":
-                    changed = adjust_svc_reactive_power(numerical_case, trial_voltage)
                 elif control_name == "switched shunt":
                     changed = adjust_switched_shunts(numerical_case, trial_voltage)
                 elif control_name == "LTC":

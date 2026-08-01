@@ -436,9 +436,9 @@ def test_workbook_results_cover_ltc_svc_and_dc_components(capsys) -> None:
         min(settings.active_tolerance, settings.reactive_tolerance)
     )
     assert information.scheduled_generation_mw == pytest.approx(110098.618, abs=1e-3)
-    assert information.solved_generation_mw == pytest.approx(110110.238, abs=1e-3)
+    assert information.solved_generation_mw == pytest.approx(110112.055, abs=1e-3)
     assert information.total_load_mw == pytest.approx(109228.117)
-    assert information.branch_active_losses_mw == pytest.approx(882.121, abs=1e-3)
+    assert information.branch_active_losses_mw == pytest.approx(883.938, abs=1e-3)
 
     solved.info()
     output = capsys.readouterr().out

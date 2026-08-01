@@ -11,7 +11,7 @@ from o_grid.acpf import NewtonRaphsonPowerFlow
 from o_grid.system import AnaredeSystem
 
 # Parse PWF case and load infrasys system
-sys_name = "NEXPSE19M_19"
+sys_name = "LEN_A_4_2020_SECO_2023VM_SE_EXP_N"
 DATA_PATH = Path(f"tests/data/pwf/{sys_name}.pwf")
 
 parse_config = AnaredeConfig(
@@ -28,6 +28,7 @@ parsed_system = AnaredeParser.from_context(parse_context).run().system
 nr_pf = NewtonRaphsonPowerFlow(
     system=parsed_system,
     max_iterations=30,
+    max_control_passes=0,
     print_iterations=True,
 )
 assert isinstance(nr_pf, AnaredeSystem)

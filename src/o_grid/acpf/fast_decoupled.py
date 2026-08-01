@@ -9,6 +9,12 @@ from scipy.sparse import csc_matrix
 from scipy.sparse.linalg import factorized
 
 from o_grid.acpf.models import NumericalSolution, PowerFlowCase
+from o_grid.acpf.models.svc import (
+    build_svc_states,
+    refresh_decoupled_svc_controls,
+    svc_q_injection_by_bus,
+    sync_svc_states_to_case,
+)
 from o_grid.acpf.results import IterationPowerFlowResult
 from o_grid.acpf.utils.network import calculate_power
 
@@ -23,20 +29,28 @@ def solve_fast_decoupled(
     max_voltage_step: float = 0.1,
     iteration_callback: Callable[[IterationPowerFlowResult], None] | None = None,
 ) -> NumericalSolution:
-    """Solve an AC case using constant decoupled active/angle and reactive/voltage matrices."""
+    """Solve an AC case using constant decoupled active/angle and reactive/voltage matrices.
+
+    Active PQ-bus SVC devices are refreshed from their droop equations each iteration,
+    matching the reference decoupled DCER handling.
+    """
     voltage = case.initial_voltage.copy()
     specified = case.specified_power
     pq = case.pq_indices
     pv_pq = np.concatenate((case.pv_indices, pq))
+    svc_states = build_svc_states(case, voltage)
+    specified_no_svc = specified - 1j * svc_q_injection_by_bus(svc_states, len(case.buses))
     active_matrix, reactive_matrix = _build_decoupled_matrices(ybus)
     active_solver = factorized(active_matrix[pv_pq, :][:, pv_pq])
     reactive_solver = factorized(reactive_matrix[pq, :][:, pq]) if pq.size else None
     trace: list[IterationPowerFlowResult] = []
 
     for iteration in range(max_iterations + 1):
+        refresh_decoupled_svc_controls(svc_states, np.abs(voltage))
+        svc_injection = svc_q_injection_by_bus(svc_states, len(case.buses))
         calculated = calculate_power(ybus, voltage)
-        active_mismatch = specified.real - calculated.real
-        reactive_mismatch = specified.imag - calculated.imag
+        active_mismatch = specified_no_svc.real - calculated.real
+        reactive_mismatch = specified_no_svc.imag + svc_injection - calculated.imag
         max_dp = _maximum_absolute(active_mismatch[pv_pq])
         max_dq = _maximum_absolute(reactive_mismatch[pq])
         max_residual = max(max_dp, max_dq)
@@ -44,6 +58,7 @@ def solve_fast_decoupled(
             _append_trace(
                 trace, _trace(iteration, max_dp, max_dq, max_residual, 0.0), iteration_callback
             )
+            sync_svc_states_to_case(case, svc_states)
             return NumericalSolution(
                 voltage=voltage,
                 converged=True,
@@ -65,11 +80,12 @@ def solve_fast_decoupled(
             voltage_step = np.clip(
                 voltage_factor * np.abs(voltage[pq]), -max_voltage_step, max_voltage_step
             )
-        voltage, scale = _damped_step(
+        voltage, svc_states, scale = _damped_step(
             case,
             ybus,
             voltage,
-            specified,
+            svc_states,
+            specified_no_svc,
             pv_pq,
             pq,
             angle_step,
@@ -84,6 +100,7 @@ def solve_fast_decoupled(
         )
         magnitude = np.abs(voltage)
         if not np.all(np.isfinite(voltage)) or np.any(magnitude < 0.4) or np.any(magnitude > 2.0):
+            sync_svc_states_to_case(case, svc_states)
             return NumericalSolution(
                 voltage=voltage,
                 diverged=True,
@@ -92,6 +109,7 @@ def solve_fast_decoupled(
                 trace=trace,
             )
 
+    sync_svc_states_to_case(case, svc_states)
     return NumericalSolution(
         voltage=voltage,
         iterations=max_iterations,
@@ -109,13 +127,14 @@ def _damped_step(
     case: PowerFlowCase,
     ybus: csc_matrix,
     voltage: np.ndarray,
+    svc_states: list,
     specified: np.ndarray,
     pv_pq: np.ndarray,
     pq: np.ndarray,
     angle_step: np.ndarray,
     voltage_step: np.ndarray,
     residual: float,
-) -> tuple[np.ndarray, float]:
+) -> tuple[np.ndarray, list, float]:
     magnitude = np.abs(voltage)
     angle = np.angle(voltage)
     scale = 1.0
@@ -133,14 +152,19 @@ def _damped_step(
             < np.array([max(2.0, case.buses[index].maximum_voltage * 1.5) for index in pq])
         )
         trial = trial_magnitude * np.exp(1j * trial_angle)
+        refresh_decoupled_svc_controls(svc_states, trial_magnitude)
+        trial_injection = svc_q_injection_by_bus(svc_states, len(case.buses))
         calculated = calculate_power(ybus, trial)
         mismatch = np.concatenate(
-            ((specified.real - calculated.real)[pv_pq], (specified.imag - calculated.imag)[pq])
+            (
+                (specified.real - calculated.real)[pv_pq],
+                (specified.imag + trial_injection - calculated.imag)[pq],
+            )
         )
         if voltage_ok and (_maximum_absolute(mismatch) <= residual or scale < 1e-4):
-            return trial, scale
+            return trial, svc_states, scale
         scale *= 0.5
-    return trial, scale
+    return trial, svc_states, scale
 
 
 def _trace(

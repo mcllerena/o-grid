@@ -3,12 +3,21 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from dataclasses import replace
 
 import numpy as np
 from scipy.sparse import csc_matrix, diags, hstack, vstack
 from scipy.sparse.linalg import MatrixRankWarning, spsolve
 
 from o_grid.acpf.models import NumericalSolution, PowerFlowCase
+from o_grid.acpf.models.svc import (
+    build_svc_states,
+    svc_control_derivative_q,
+    svc_control_derivative_voltage,
+    svc_q_injection_by_bus,
+    sync_svc_states_to_case,
+    update_svc_limits,
+)
 from o_grid.acpf.results import IterationPowerFlowResult
 from o_grid.acpf.utils.network import calculate_power
 
@@ -22,42 +31,59 @@ def solve_newton_raphson(
     initial_voltage: np.ndarray | None = None,
     iteration_callback: Callable[[IterationPowerFlowResult], None] | None = None,
 ) -> NumericalSolution:
-    """Solve an AC case with a sparse polar-coordinate Newton-Raphson method."""
+    """Solve an AC case with a sparse polar-coordinate Newton-Raphson method.
+
+    Active PQ-bus SVC devices are embedded in the Newton state vector as reactive
+    injections with control/limit residual rows, following the reference DCER model.
+    """
     voltage = case.initial_voltage.copy() if initial_voltage is None else initial_voltage.copy()
     specified = case.specified_power
     pq = case.pq_indices
     pv_pq = np.concatenate((case.pv_indices, pq))
+    svc_states = build_svc_states(case, voltage)
+    specified_no_svc = _without_svc_injection(case, specified, svc_states)
+    active_svc = np.array(
+        [index for index, state in enumerate(svc_states) if state.active], dtype=np.int64
+    )
     if initial_voltage is None and max_iterations > 0:
-        parsed_seed = _warm_start_angles(ybus, voltage, specified, pv_pq, pq)
+        parsed_seed = _warm_start_angles(ybus, voltage, specified_no_svc, pv_pq, pq)
         flat_seed = _warm_start_angles(
             ybus,
             np.abs(voltage).astype(np.complex128),
-            specified,
+            specified_no_svc,
             pv_pq,
             pq,
         )
         parsed_residual = _maximum_absolute(
-            specified.real[pv_pq] - calculate_power(ybus, parsed_seed).real[pv_pq]
+            specified_no_svc.real[pv_pq] - calculate_power(ybus, parsed_seed).real[pv_pq]
         )
         flat_residual = _maximum_absolute(
-            specified.real[pv_pq] - calculate_power(ybus, flat_seed).real[pv_pq]
+            specified_no_svc.real[pv_pq] - calculate_power(ybus, flat_seed).real[pv_pq]
         )
         voltage = flat_seed if flat_residual < parsed_residual else parsed_seed
     trace: list[IterationPowerFlowResult] = []
 
     for iteration in range(max_iterations + 1):
         calculated = calculate_power(ybus, voltage)
-        active_mismatch = specified.real - calculated.real
-        reactive_mismatch = specified.imag - calculated.imag
-        mismatch = np.concatenate((active_mismatch[pv_pq], reactive_mismatch[pq]))
+        svc_injection = svc_q_injection_by_bus(svc_states, len(case.buses))
+        active_mismatch = specified_no_svc.real - calculated.real
+        reactive_mismatch = specified_no_svc.imag + svc_injection - calculated.imag
+        control_residual = -np.array(
+            [svc_states[index].control_residual for index in active_svc], dtype=float
+        )
+        mismatch = np.concatenate((active_mismatch[pv_pq], reactive_mismatch[pq], control_residual))
         max_dp = _maximum_absolute(active_mismatch[pv_pq])
         max_dq = _maximum_absolute(reactive_mismatch[pq])
+        max_control = _maximum_absolute(control_residual)
         max_residual = _maximum_absolute(mismatch)
 
         if max_residual <= tolerance:
             _append_trace(
-                trace, _trace(iteration, max_dp, max_dq, max_residual, 0.0), iteration_callback
+                trace,
+                _trace(iteration, max_dp, max_dq, max_control, max_residual, 0.0),
+                iteration_callback,
             )
+            sync_svc_states_to_case(case, svc_states)
             return NumericalSolution(
                 voltage=voltage,
                 converged=True,
@@ -67,17 +93,22 @@ def solve_newton_raphson(
             )
         if iteration == max_iterations:
             _append_trace(
-                trace, _trace(iteration, max_dp, max_dq, max_residual, 0.0), iteration_callback
+                trace,
+                _trace(iteration, max_dp, max_dq, max_control, max_residual, 0.0),
+                iteration_callback,
             )
             break
 
-        jacobian = _build_jacobian(ybus, voltage, pv_pq, pq)
+        jacobian = _build_jacobian(
+            ybus, voltage, pv_pq, pq, svc_states, active_svc, np.abs(voltage)
+        )
         try:
             with np.errstate(all="raise"):
                 step = np.asarray(spsolve(jacobian, mismatch), dtype=float)
         except (MatrixRankWarning, FloatingPointError, RuntimeError, ValueError):
-            item = _trace(iteration, max_dp, max_dq, max_residual, 0.0)
+            item = _trace(iteration, max_dp, max_dq, max_control, max_residual, 0.0)
             _append_trace(trace, item, iteration_callback)
+            sync_svc_states_to_case(case, svc_states)
             return NumericalSolution(
                 voltage=voltage,
                 diverged=True,
@@ -86,8 +117,9 @@ def solve_newton_raphson(
                 trace=trace,
             )
         if not np.all(np.isfinite(step)):
-            item = _trace(iteration, max_dp, max_dq, max_residual, 0.0)
+            item = _trace(iteration, max_dp, max_dq, max_control, max_residual, 0.0)
             _append_trace(trace, item, iteration_callback)
+            sync_svc_states_to_case(case, svc_states)
             return NumericalSolution(
                 voltage=voltage,
                 diverged=True,
@@ -96,13 +128,27 @@ def solve_newton_raphson(
                 trace=trace,
             )
 
-        voltage, scale = _line_search(case, ybus, voltage, specified, pv_pq, pq, step, max_residual)
+        voltage, svc_states, scale = _line_search(
+            case,
+            ybus,
+            voltage,
+            svc_states,
+            active_svc,
+            specified_no_svc,
+            pv_pq,
+            pq,
+            step,
+            max_residual,
+        )
         max_step = _maximum_absolute(scale * step)
         _append_trace(
-            trace, _trace(iteration, max_dp, max_dq, max_residual, max_step), iteration_callback
+            trace,
+            _trace(iteration, max_dp, max_dq, max_control, max_residual, max_step),
+            iteration_callback,
         )
         magnitudes = np.abs(voltage)
         if np.any(magnitudes < 0.4) or np.any(magnitudes > 2.0):
+            sync_svc_states_to_case(case, svc_states)
             return NumericalSolution(
                 voltage=voltage,
                 diverged=True,
@@ -111,6 +157,7 @@ def solve_newton_raphson(
                 trace=trace,
             )
 
+    sync_svc_states_to_case(case, svc_states)
     return NumericalSolution(
         voltage=voltage,
         iterations=max_iterations,
@@ -119,8 +166,22 @@ def solve_newton_raphson(
     )
 
 
+def _without_svc_injection(
+    case: PowerFlowCase, specified: np.ndarray, svc_states: list
+) -> np.ndarray:
+    """Remove the SVC reactive injection baked into bus generation from the schedule."""
+    injection = svc_q_injection_by_bus(svc_states, len(case.buses))
+    return specified - 1j * injection
+
+
 def _build_jacobian(
-    ybus: csc_matrix, voltage: np.ndarray, pv_pq: np.ndarray, pq: np.ndarray
+    ybus: csc_matrix,
+    voltage: np.ndarray,
+    pv_pq: np.ndarray,
+    pq: np.ndarray,
+    svc_states: list | None = None,
+    active_svc: np.ndarray | None = None,
+    magnitudes: np.ndarray | None = None,
 ) -> csc_matrix:
     voltage_magnitude = np.abs(voltage)
     normalized_voltage = np.divide(
@@ -143,43 +204,90 @@ def _build_jacobian(
     j12 = d_power_d_magnitude[pv_pq, :][:, pq].real
     j21 = d_power_d_angle[pq, :][:, pv_pq].imag
     j22 = d_power_d_magnitude[pq, :][:, pq].imag
-    return vstack((hstack((j11, j12)), hstack((j21, j22))), format="csc")
+
+    if not svc_states or active_svc is None or active_svc.size == 0:
+        return vstack((hstack((j11, j12)), hstack((j21, j22))), format="csc")
+
+    magnitude = voltage_magnitude if magnitudes is None else magnitudes
+    pq_column = {int(index): column for column, index in enumerate(pq)}
+    svc_offset = len(pv_pq) + len(pq)
+    svc_count = len(active_svc)
+    rows = len(pv_pq) + len(pq) + svc_count
+    columns = len(pv_pq) + len(pq) + svc_count
+    jacobian = np.zeros((rows, columns), dtype=float)
+    jacobian[: len(pv_pq), : len(pv_pq)] = j11.toarray()
+    jacobian[: len(pv_pq), len(pv_pq) : svc_offset] = j12.toarray()
+    jacobian[len(pv_pq) : svc_offset, : len(pv_pq)] = j21.toarray()
+    jacobian[len(pv_pq) : svc_offset, len(pv_pq) : svc_offset] = j22.toarray()
+
+    for column, index in enumerate(active_svc.tolist()):
+        state = svc_states[index]
+        q_row = pq_column.get(state.bus_index)
+        if q_row is not None:
+            jacobian[len(pv_pq) + q_row, svc_offset + column] = -1.0
+        control_row = len(pv_pq) + len(pq) + column
+        control_column = pq_column.get(state.control_bus_index)
+        if control_column is not None:
+            jacobian[control_row, len(pv_pq) + control_column] += svc_control_derivative_voltage(
+                state, state.control_bus_index, magnitude
+            )
+        device_column = pq_column.get(state.bus_index)
+        if device_column is not None:
+            jacobian[control_row, len(pv_pq) + device_column] += svc_control_derivative_voltage(
+                state, state.bus_index, magnitude
+            )
+        jacobian[control_row, svc_offset + column] = svc_control_derivative_q(state, magnitude)
+    return csc_matrix(jacobian)
 
 
 def _line_search(
     case: PowerFlowCase,
     ybus: csc_matrix,
     voltage: np.ndarray,
+    svc_states: list,
+    active_svc: np.ndarray,
     specified: np.ndarray,
     pv_pq: np.ndarray,
     pq: np.ndarray,
     step: np.ndarray,
     current_residual: float,
-) -> tuple[np.ndarray, float]:
+) -> tuple[np.ndarray, list, float]:
     angle = np.angle(voltage)
     magnitude = np.abs(voltage)
     angle_count = len(pv_pq)
+    magnitude_count = len(pq)
     scale = 1.0
     trial = voltage
     for _ in range(16):
         trial_angle = angle.copy()
         trial_magnitude = magnitude.copy()
+        trial_states = [replace(state) for state in svc_states]
         trial_angle[pv_pq] += scale * step[:angle_count]
-        trial_magnitude[pq] += scale * step[angle_count:]
+        trial_magnitude[pq] += scale * step[angle_count : angle_count + magnitude_count]
         trial_magnitude[pq] = np.clip(
             trial_magnitude[pq],
             [max(0.5, case.buses[index].minimum_voltage * 0.8) for index in pq],
             [max(1.5, case.buses[index].maximum_voltage * 1.5) for index in pq],
         )
+        for column, index in enumerate(active_svc):
+            trial_states[index].q_pu += scale * step[angle_count + magnitude_count + column]
+        update_svc_limits(trial_states, trial_magnitude)
         trial = trial_magnitude * np.exp(1j * trial_angle)
         calculated = calculate_power(ybus, trial)
+        trial_injection = svc_q_injection_by_bus(trial_states, len(case.buses))
         mismatch = np.concatenate(
-            ((specified.real - calculated.real)[pv_pq], (specified.imag - calculated.imag)[pq])
+            (
+                (specified.real - calculated.real)[pv_pq],
+                (specified.imag + trial_injection - calculated.imag)[pq],
+                -np.array(
+                    [trial_states[index].control_residual for index in active_svc], dtype=float
+                ),
+            )
         )
         if _maximum_absolute(mismatch) <= current_residual or scale < 1e-4:
-            return trial, scale
+            return trial, trial_states, scale
         scale *= 0.5
-    return trial, scale
+    return trial, trial_states, scale
 
 
 def _warm_start_angles(
@@ -224,13 +332,18 @@ def _warm_start_angles(
 
 
 def _trace(
-    iteration: int, max_dp: float, max_dq: float, max_residual: float, max_step: float
+    iteration: int,
+    max_dp: float,
+    max_dq: float,
+    max_control_residual: float,
+    max_residual: float,
+    max_step: float,
 ) -> IterationPowerFlowResult:
     return IterationPowerFlowResult(
         iteration=iteration,
         max_dp=max_dp,
         max_dq=max_dq,
-        max_control_residual=0.0,
+        max_control_residual=max_control_residual,
         max_residual=max_residual,
         max_step=max_step,
     )

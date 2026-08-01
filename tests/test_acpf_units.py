@@ -19,7 +19,19 @@ from o_grid.acpf.models.lcc import (
 from o_grid.acpf.models.ltc import adjust_ltc_taps
 from o_grid.acpf.models.pst import apply_pst_to_branch
 from o_grid.acpf.models.settings import PowerFlowSettings
-from o_grid.acpf.models.svc import SVCData, adjust_svc_reactive_power
+from o_grid.acpf.models.svc import (
+    SVCData,
+    SVCState,
+    adjust_svc_reactive_power,
+    build_svc_states,
+    refresh_decoupled_svc_controls,
+    svc_control_derivative_q,
+    svc_control_derivative_voltage,
+    svc_control_residual,
+    svc_q_injection_by_bus,
+    sync_svc_states_to_case,
+    update_svc_limits,
+)
 from o_grid.acpf.reporting import LiveIterationReporter, format_power_flow_report
 from o_grid.acpf.results import (
     ACPowerFlowResult,
@@ -283,6 +295,186 @@ def test_adjust_svc_reactive_power_skips_bus_at_target() -> None:
     changed = adjust_svc_reactive_power(case, np.array([1.0 + 0.0j]))
 
     assert changed is False
+
+
+def test_build_svc_states_only_activates_pq_buses() -> None:
+    svc = SVCData(
+        bus=1,
+        controlled_bus=1,
+        mode="I",
+        slope=0.05,
+        reactive_power=20.0,
+        minimum_reactive_power=-100.0,
+        maximum_reactive_power=100.0,
+        reference_voltage=1.02,
+    )
+    case = _case([_bus(1, kind=ACBusTypes.PV)], svcs=[svc])
+
+    states = build_svc_states(case, np.array([1.01 + 0.0j]))
+
+    assert len(states) == 1
+    assert states[0].active is False
+    assert states[0].q_pu == 0.0
+
+    case = _case([_bus(1)], svcs=[svc])
+    states = build_svc_states(case, np.array([1.01 + 0.0j]))
+
+    assert states[0].active is True
+    assert states[0].q_pu == pytest.approx(0.2)
+    assert states[0].v_ref == pytest.approx(1.02)
+
+
+def test_svc_control_residual_matches_reference_droop() -> None:
+    state = SVCState(
+        device_index=0,
+        bus_index=1,
+        control_bus_index=1,
+        active=True,
+        mode="P",
+        slope=0.02,
+        q_pu=0.5,
+        q_min_pu=-1.0,
+        q_max_pu=1.0,
+        v_ref=1.0,
+    )
+    vm = np.array([1.0, 1.04, 1.0])
+
+    assert svc_control_residual(state, vm) == pytest.approx(1.04 - 1.0 + 0.5 * 0.02)
+
+    state.mode = "I"
+    assert svc_control_residual(state, vm) == pytest.approx(1.04 - 1.0 + 0.5 * 0.02 / 1.04)
+
+    state.limit_state = -1
+    assert svc_control_residual(state, vm) == pytest.approx(-1.0 * 1.04**2 - 0.5)
+    state.limit_state = 1
+    assert svc_control_residual(state, vm) == pytest.approx(1.0 * 1.04**2 - 0.5)
+
+
+def test_svc_control_derivatives_match_reference() -> None:
+    state = SVCState(
+        device_index=0,
+        bus_index=2,
+        control_bus_index=1,
+        active=True,
+        mode="I",
+        slope=0.02,
+        q_pu=0.5,
+        q_min_pu=-1.0,
+        q_max_pu=1.0,
+        v_ref=1.0,
+    )
+    vm = np.array([1.0, 1.04, 1.05])
+
+    assert svc_control_derivative_voltage(state, 1, vm) == pytest.approx(1.0)
+    assert svc_control_derivative_voltage(state, 2, vm) == pytest.approx(-0.5 * 0.02 / 1.05**2)
+    assert svc_control_derivative_q(state, vm) == pytest.approx(0.02 / 1.05)
+
+    state.mode = "P"
+    assert svc_control_derivative_q(state, vm) == pytest.approx(0.02)
+
+    state.limit_state = -1
+    assert svc_control_derivative_voltage(state, 1, vm) == pytest.approx(2.0 * -1.0 * 1.04)
+    assert svc_control_derivative_q(state, vm) == pytest.approx(-1.0)
+
+
+def test_update_svc_limits_clamps_and_sets_limit_state() -> None:
+    state = SVCState(
+        device_index=0,
+        bus_index=0,
+        control_bus_index=0,
+        active=True,
+        mode="P",
+        slope=0.02,
+        q_pu=0.0,
+        q_min_pu=-1.0,
+        q_max_pu=1.0,
+        v_ref=0.95,
+    )
+    vm = np.array([0.96, 1.0])
+    update_svc_limits([state], vm)
+    assert state.limit_state == 0
+    assert state.q_pu == pytest.approx(0.0)
+
+    vm = np.array([0.6, 1.0])
+    update_svc_limits([state], vm)
+    assert state.limit_state == 1
+    assert state.q_pu == pytest.approx(1.0 * 0.6**2)
+
+    vm = np.array([1.2, 1.0])
+    update_svc_limits([state], vm)
+    assert state.limit_state == -1
+    assert state.q_pu == pytest.approx(-1.0 * 1.2**2)
+
+
+def test_refresh_decoupled_svc_controls_updates_droop_injection() -> None:
+    state = SVCState(
+        device_index=0,
+        bus_index=0,
+        control_bus_index=1,
+        active=True,
+        mode="P",
+        slope=0.05,
+        q_pu=0.0,
+        q_min_pu=-2.0,
+        q_max_pu=2.0,
+        v_ref=1.0,
+    )
+    vm = np.array([1.0, 1.04])
+    refresh_decoupled_svc_controls([state], vm)
+    assert state.q_pu == pytest.approx((1.0 - 1.04) / 0.05)
+
+    state.mode = "I"
+    refresh_decoupled_svc_controls([state], vm)
+    assert state.q_pu == pytest.approx((1.0 - 1.04) * 1.0 / 0.05)
+
+    state.slope = 0.0
+    state.q_pu = 1.0
+    refresh_decoupled_svc_controls([state], vm)
+    assert state.q_pu == pytest.approx(1.0)
+
+
+def test_svc_q_injection_by_bus_sums_active_states() -> None:
+    states = [
+        SVCState(0, 0, 0, True, "P", 0.01, 0.3, -1.0, 1.0, 1.0),
+        SVCState(1, 2, 2, True, "P", 0.01, 0.4, -1.0, 1.0, 1.0),
+        SVCState(2, 0, 0, False, "P", 0.01, 9.9, -1.0, 1.0, 1.0),
+    ]
+    injection = svc_q_injection_by_bus(states, 3)
+    assert injection.tolist() == pytest.approx([0.3, 0.0, 0.4])
+
+
+def test_sync_svc_states_to_case_updates_bus_generation() -> None:
+    svc = SVCData(
+        bus=1,
+        controlled_bus=1,
+        mode="P",
+        slope=0.05,
+        reactive_power=10.0,
+        minimum_reactive_power=-100.0,
+        maximum_reactive_power=100.0,
+        reference_voltage=1.0,
+    )
+    bus = _bus(1, reactive_generation=10.0)
+    case = _case([bus], svcs=[svc])
+    state = SVCState(
+        device_index=0,
+        bus_index=0,
+        control_bus_index=0,
+        active=True,
+        mode="P",
+        slope=0.05,
+        q_pu=0.5,
+        q_min_pu=-1.0,
+        q_max_pu=1.0,
+        v_ref=1.0,
+    )
+
+    sync_svc_states_to_case(case, [state])
+
+    assert svc.reactive_power == pytest.approx(50.0)
+    assert bus.reactive_generation == pytest.approx(50.0)
+    sync_svc_states_to_case(case, [state])
+    assert bus.reactive_generation == pytest.approx(50.0)
 
 
 def test_build_ybus_rejects_zero_impedance_branch() -> None:
