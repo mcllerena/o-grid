@@ -1,3 +1,7 @@
+[files]
+# Generated bus-name data, not prose; skip spell checking.
+extend-exclude = ["src/o_grid/config/gen_type_mapping.json"]
+
 [default.extend-words]
 Inicial = "Inicial"
 MOR = "MOR"

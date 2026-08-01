@@ -19,7 +19,7 @@ def _build_plugin(config: PluginConfig) -> AnaredeParser:
 
 
 def test_on_build_parses_pwf(data_folder: Path) -> None:
-    pwf = data_folder / "anarede" / "d_33nodes.pwf"
+    pwf = data_folder / "pwf" / "d_33nodes.pwf"
     plugin = _build_plugin(AnaredeConfig(pwf_path=str(pwf), system_name="plugin-demo"))
 
     result = plugin.on_build()
@@ -32,7 +32,7 @@ def test_on_build_parses_pwf(data_folder: Path) -> None:
 
 
 def test_on_build_with_mapping_path(data_folder: Path) -> None:
-    pwf = data_folder / "anarede" / "d_33nodes.pwf"
+    pwf = data_folder / "pwf" / "d_33nodes.pwf"
     plugin = _build_plugin(AnaredeConfig(pwf_path=str(pwf), mapping_path=str(MAPPING_PATH)))
 
     result = plugin.on_build()

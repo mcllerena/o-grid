@@ -25,11 +25,11 @@ A short script that:
 
 ## Step 1: Pick a case file
 
-The repository ships several ANAREDE cases under `tests/data/anarede/`. This
+The repository ships several ANAREDE cases under `tests/data/pwf/`. This
 tutorial uses the 33-node distribution feeder:
 
 ```text
-tests/data/anarede/d_33nodes.pwf
+tests/data/pwf/d_33nodes.pwf
 ```
 
 ## Step 2: Configure and run the parser
@@ -43,7 +43,7 @@ from r2x_core import DataStore, PluginContext
 
 from o_grid import AnaredeConfig, AnaredeParser
 
-data_path = Path("tests/data/anarede/d_33nodes.pwf")
+data_path = Path("tests/data/pwf/d_33nodes.pwf")
 
 # 1. Describe the parse job.
 config = AnaredeConfig(
@@ -113,7 +113,7 @@ To use a customized mapping, point `AnaredeConfig` at your own file:
 ```python
 config = AnaredeConfig(
     system_name="d_33nodes",
-    pwf_path="tests/data/anarede/d_33nodes.pwf",
+    pwf_path="tests/data/pwf/d_33nodes.pwf",
     mapping_path="my_custom_mapping.json",
 )
 ```

@@ -4,7 +4,7 @@ from r2x_core import DataStore, PluginContext
 
 from o_grid import AnaredeConfig, AnaredeParser
 
-data_path = Path("tests/data/anarede/NEXPSE19M_19.pwf")
+data_path = Path("tests/data/pwf/LEN_A_4_2020_SECO_2023VM_SE_EXP_N.pwf")
 
 # Parse
 parse_cfg = AnaredeConfig(

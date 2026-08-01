@@ -2,9 +2,9 @@
 
 Open Power System Modeling & Optimization Framework.
 
-`o-grid` reads Brazilian **ANAREDE** power-flow cases (`.pwf`) and turns them into
+`o-grid` reads Brazilian **ANAREDE**/**Organon** power-flow cases (`.pwf`) and turns them into
 a typed, in-memory [`infrasys`](https://pypi.org/project/infrasys/) `System`. Each
-ANAREDE execution block is mapped to a strongly-typed component model, so the raw
+PWF execution block is mapped to a strongly-typed component model, so the raw
 fixed-width text becomes queryable, validated Python objects that downstream
 modeling and optimization code can consume.
 
@@ -19,7 +19,7 @@ resolves the values into typed components:
 2. **Slice** each record by fixed column ranges defined in
    [`config/anarede_mapping.json`](src/o_grid/config/anarede_mapping.json). Every
    field carries its `start`/`end` columns, a `default`, and a description drawn
-   from the ANAREDE manual.
+   from the PWF manual.
 3. **Normalize** raw scalars (numeric coercion, implicit decimal points, state
    flags, circuit numbers) with the helpers in
    [`utils/utils_parser.py`](src/o_grid/utils/utils_parser.py).
@@ -50,7 +50,7 @@ from r2x_core import DataStore, PluginContext
 
 from o_grid import AnaredeConfig, AnaredeParser
 
-data_path = Path("tests/data/anarede/d_33nodes.pwf")
+data_path = Path("tests/data/pwf/d_33nodes.pwf")
 
 config = AnaredeConfig(system_name="d_33nodes", pwf_path=str(data_path))
 context = PluginContext(config=config, store=DataStore(path=data_path.parent))

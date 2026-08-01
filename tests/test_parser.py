@@ -100,7 +100,7 @@ def test_parser_attach_bus_areas_and_build_arc() -> None:
 
 def test_parse_anarede_d9nodes_to_infrasys(data_folder: Path) -> None:
     parser = AnaredeInfrasysParser()
-    parsed = parser.parse(data_folder / "anarede" / "d_9nodes.pwf")
+    parsed = parser.parse(data_folder / "pwf" / "d_9nodes.pwf")
 
     assert "DBAR" in parsed.components_by_block
     assert "DLIN" in parsed.components_by_block
@@ -193,7 +193,7 @@ def test_parse_anarede_d9nodes_to_infrasys(data_folder: Path) -> None:
 
 
 def test_parse_anarede_dcer_dcsc_blocks(data_folder: Path) -> None:
-    parsed = parse_anarede_system(data_folder / "anarede" / "d_33nodes_dcer_dcsc.pwf")
+    parsed = parse_anarede_system(data_folder / "pwf" / "d_33nodes_dcer_dcsc.pwf")
 
     assert len(parsed.components_by_block["DCER"]) > 0
     assert len(parsed.components_by_block["DCSC"]) > 0
@@ -272,7 +272,7 @@ def test_parse_anarede_dcer_dcsc_blocks(data_folder: Path) -> None:
 
 
 def test_parse_anarede_derives_tap_changers_from_dlin(data_folder: Path) -> None:
-    parsed = parse_anarede_system(data_folder / "anarede" / "d_33nodes.pwf")
+    parsed = parse_anarede_system(data_folder / "pwf" / "d_33nodes.pwf")
 
     dlin_records = parsed.components_by_block["DLIN"]
     expected_tap_count = sum(
@@ -600,7 +600,7 @@ def test_attach_bus_voltage_monitoring_builds_sets() -> None:
 
 
 def test_components_store_pwf_values(data_folder: Path) -> None:
-    parsed = parse_anarede_system(data_folder / "anarede" / "d_9nodes.pwf")
+    parsed = parse_anarede_system(data_folder / "pwf" / "d_9nodes.pwf")
 
     bus = parsed.components_by_block["DBAR"][0]
     line = parsed.components_by_block["DLIN"][0]
@@ -619,7 +619,7 @@ def test_components_store_pwf_values(data_folder: Path) -> None:
 
 
 def test_program_constant_shape_is_minimal(data_folder: Path) -> None:
-    parsed = parse_anarede_system(data_folder / "anarede" / "d_33nodes_dcer_dcsc.pwf")
+    parsed = parse_anarede_system(data_folder / "pwf" / "d_33nodes_dcer_dcsc.pwf")
 
     constant = parsed.components_by_block["DCTE"][0]
 
@@ -630,14 +630,14 @@ def test_program_constant_shape_is_minimal(data_folder: Path) -> None:
 
 
 def test_parse_anarede_csc_measurement_terminal_is_bus(data_folder: Path) -> None:
-    parsed = parse_anarede_system(data_folder / "anarede" / "d_33nodes_dcer_dcsc.pwf")
+    parsed = parse_anarede_system(data_folder / "pwf" / "d_33nodes_dcer_dcsc.pwf")
 
     csc = parsed.components_by_block["DCSC"][0]
     assert isinstance(csc.measurement_terminal, ACBus)
 
 
 def test_parse_anarede_svc_controlled_bus_is_bus(data_folder: Path) -> None:
-    parsed = parse_anarede_system(data_folder / "anarede" / "d_33nodes_dcer_dcsc.pwf")
+    parsed = parse_anarede_system(data_folder / "pwf" / "d_33nodes_dcer_dcsc.pwf")
 
     svc = parsed.components_by_block["DCER"][0]
     assert isinstance(svc.controlled_bus, ACBus)
