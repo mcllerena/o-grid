@@ -107,10 +107,10 @@ raft setting.
 
 See the pdftex.def package documentation for explanation.
 Type  H <return>  for immediate help.
- ...                                              
-                                                  
+ ...
+
 l.6 ...phics[width=1cm]{img/svc_linear_with_q.png}
-                                                  
+
 Try typing  <return>  to proceed.
 If that doesn't work, type  X <return>  to quit.
 
@@ -122,7 +122,7 @@ If that doesn't work, type  X <return>  to quit.
 LaTeX2e <2023-11-01> patch level 1
 L3 programming layer <2024-01-04>
  ***********
- ) 
+ )
 Here is how much of TeX's memory you used:
  1295 strings out of 474486
  22357 string characters out of 5743755
@@ -139,4 +139,3 @@ PDF statistics:
  16 PDF objects out of 1000 (max. 8388607)
  0 named destinations out of 1000 (max. 500000)
  1 words of extra memory for PDF output out of 10000 (max. 10000000)
-

@@ -655,8 +655,8 @@ characteristics ($I_{ncl}$), accounting for physical operating limits ($Q_{cn}, 
 
 \subsection{Convergence and Performance}
 \label{sec:convergence}
-This section reports the convergence behavior of the proposed model on all the analyzed cases, using the full
-\texttt{OptimizationACPowerFlow} run path. Every run follows the pipeline of Fig.~\ref{fig:simulation_workflow}: the closed switches are
+This section reports the convergence behavior of the proposed model on all the analyzed cases, using the full \texttt{OptimizationACPowerFlow} 
+run path. Every run follows the pipeline of Fig.~\ref{fig:simulation_workflow}: the closed switches are
 contracted, the case is warm started with the Newton--Raphson solve, and the NLP is solved with Ipopt under the squared-generation
 objective (Section~\ref{sec:OB-ACPF}). Table~\ref{tab:case_summary} summarizes the system data of each case, reporting the number of buses in the
 full parsed case (the \texttt{DBAR} block, before the network reduction) and in the reduced case that the NLP is actually solved on, together

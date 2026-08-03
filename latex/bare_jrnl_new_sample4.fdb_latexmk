@@ -1,5 +1,5 @@
 # Fdb version 4
-["pdflatex"] 1785714729.16621 "c:/Users/marck/Desktop/25.05.23/25.05.26-Dev_Repositories/dev-projects/o-grid/latex/bare_jrnl_new_sample4.tex" "bare_jrnl_new_sample4.pdf" "bare_jrnl_new_sample4" 1785714730.26289 0
+["pdflatex"] 1785722076.81581 "c:/Users/marck/Desktop/25.05.23/25.05.26-Dev_Repositories/dev-projects/o-grid/latex/bare_jrnl_new_sample4.tex" "bare_jrnl_new_sample4.pdf" "bare_jrnl_new_sample4" 1785722077.78237 0
   "C:/Users/marck/AppData/Local/MiKTeX/fonts/map/pdftex/pdftex.map" 1785088381 279613 fe62a258ff6d99cc2243c3a2d16aa767 ""
   "C:/Users/marck/AppData/Local/MiKTeX/miktex/data/le/pdftex/pdflatex.fmt" 1758931912 24225046 5c6aeb20a51e72f6ea3e92571fdb27f8 ""
   "C:/Users/marck/AppData/Local/Programs/MiKTeX/fonts/enc/dvips/base/8r.enc" 1458473887 4993 80dc9bab7f31fb78a000ccfed0e27cab ""
@@ -117,9 +117,9 @@
   "C:/Users/marck/AppData/Local/Programs/MiKTeX/tex/latex/varwidth/varwidth.sty" 1238469540 10894 d359a13923460b2a73d4312d613554c8 ""
   "C:/Users/marck/AppData/Local/Programs/MiKTeX/tex/latex/xkeyval/xkeyval.sty" 1656236919 4937 4ce600ce9bd4ec84d0250eb6892fcf4f ""
   "IEEEtran.cls" 1785547924 281937 6e367a0f19eead8f2487b0f52d0e1a02 ""
-  "bare_jrnl_new_sample4.aux" 1785714730 7496 d72f08948362f0e5c05a173946b8a88b "pdflatex"
-  "bare_jrnl_new_sample4.tex" 1785714728 60800 b65c7ecac8394b7629e43eee14568cd2 ""
-  "c:/Users/marck/Desktop/25.05.23/25.05.26-Dev_Repositories/dev-projects/o-grid/latex/bare_jrnl_new_sample4.tex" 1785714728 60800 b65c7ecac8394b7629e43eee14568cd2 ""
+  "bare_jrnl_new_sample4.aux" 1785722077 7496 d72f08948362f0e5c05a173946b8a88b "pdflatex"
+  "bare_jrnl_new_sample4.tex" 1785722076 60801 bfc4affb0e9097fe16d73525d7fefd49 ""
+  "c:/Users/marck/Desktop/25.05.23/25.05.26-Dev_Repositories/dev-projects/o-grid/latex/bare_jrnl_new_sample4.tex" 1785722076 60801 bfc4affb0e9097fe16d73525d7fefd49 ""
   "img/LENA_CASO_FINAL_EQV2020_DC_Full_branch_flow_active_reactive.pdf" 1784974162 183844 346441429af41ddcd88be1ec661e0432 ""
   "img/LENA_CASO_FINAL_EQV2020_DC_Full_bus_voltage_angle_results.pdf" 1784974162 206863 7f8735c9442814342947792d7023c0f7 ""
   "img/LENA_CASO_FINAL_EQV2020_DC_Full_csc_svc_results.pdf" 1784974162 168084 f89981d46ec604eee4e61e2ce50be258 ""
