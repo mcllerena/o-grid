@@ -34,9 +34,11 @@ tests/data/pwf/20240820_C_00-00.pwf
 tests/data/pwf/LENA_BD0320R0_2Q2020_R1_CASO_12.pwf
 tests/data/pwf/NEXPSE19M_19.PWF
 tests/data/pwf/20240820_C_00-30.pwf
+tests/data/pwf/20240820_C_06-30.pwf
 tests/data/pwf/BD0320R0_2Q2020_R1_CASO_12.pwf
 tests/data/pwf/ONS_2Q2020_MAIO_MEDIA.pwf
 tests/data/pwf/LEN_A_4_2020_SECO_2023VM_SE_EXP_N.pwf
+tests/data/pwf/br-data-2024/*.pwf
 
 # Remove results .xlsx format outputs
 *.xlsx

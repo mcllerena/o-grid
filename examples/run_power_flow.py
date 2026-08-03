@@ -11,7 +11,7 @@ from o_grid.acpf import NewtonRaphsonPowerFlow, OptimizationACPowerFlow  # noqa:
 from o_grid.system import AnaredeSystem
 
 # Parse PWF case and load infrasys system
-sys_name = "20240820_C_06-30"
+sys_name = "20240820_C_00-30"
 DATA_PATH = Path(f"tests/data/pwf/{sys_name}.pwf")
 
 parse_config = AnaredeConfig(

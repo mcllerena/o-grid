@@ -266,7 +266,11 @@ def _newton_warm_start(case: PowerFlowCase, settings) -> bool:
             bus.kind = kind
         return False
     initial_residual = solution.trace[0].max_residual
-    if not solution.converged and solution.max_mismatch >= initial_residual:
+    if (
+        not solution.converged
+        and solution.max_mismatch is not None
+        and solution.max_mismatch >= initial_residual
+    ):
         for bus, kind in zip(case.buses, original_kinds):
             bus.kind = kind
         return False
