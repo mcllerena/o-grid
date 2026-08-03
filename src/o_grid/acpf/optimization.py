@@ -34,6 +34,8 @@ from o_grid.acpf.models import (
 )
 from o_grid.acpf.models.case import BusData, PowerFlowCase
 from o_grid.acpf.models.lcc import refresh_lcc_reporting_state
+from o_grid.acpf.models.svc import clamp_svc_seed_to_limits
+from o_grid.acpf.newton_raphson import solve_newton_raphson
 from o_grid.acpf.results import (
     ACPowerFlowResult,
     IterationPowerFlowResult,
@@ -42,6 +44,7 @@ from o_grid.acpf.results import (
 )
 from o_grid.acpf.solver import PowerFlowSolver
 from o_grid.acpf.utils import (
+    assign_island_reference_buses,
     build_ybus,
     calculate_branch_results,
     calculate_bus_results,
@@ -53,11 +56,12 @@ TOLERANCE = 1.0e-12
 DISPLAY_TOLERANCE = 1.0e-9
 CONVERGENCE_REPORT_EPS = 1.0e-6
 ANGLE_LIMIT_RAD = math.pi / 2.0
+ANGLE_BOUND_RAD = math.pi
 
 OBJECTIVE_WEIGHT_VOLTAGE = 1.0
 OBJECTIVE_WEIGHT_VOLTAGE_LIMITS = 100.0
 OBJECTIVE_WEIGHT_ANGLE = 1.0
-OBJECTIVE_WEIGHT_ANGLE_LIMITS = 1.0e4
+OBJECTIVE_WEIGHT_ANGLE_LIMITS = 1.0e-2
 OBJECTIVE_WEIGHT_LTC = 0.01
 OBJECTIVE_WEIGHT_SVC = 100.0
 
@@ -135,11 +139,12 @@ def _apply_zero_residuals(model: pyo.ConcreteModel) -> None:
     The active and reactive power-balance residuals are fixed at zero, so the
     power-flow equations ``P_spec = P_calc`` and ``Q_spec = Q_calc`` hold as
     exact equalities, and the per-bus and aggregate tolerance rows are
-    deactivated. SVC droop controllers keep their control-tolerance constraint
-    and the voltage/angle limits stay soft: those are control targets and
-    operational bounds, not physical equations, and leaving them relaxed keeps
-    the exact-balance model feasible on cases that only converge inside a
-    tolerance band (e.g. ``CASO_FINAL_EQV2020``).
+    deactivated. SVC droop residuals stay in the objective (their hard
+    control-tolerance row is removed from the formulation entirely) and the
+    voltage/angle limits stay soft: those are control targets and operational
+    bounds, not physical equations, and leaving them relaxed keeps the
+    exact-balance model feasible on cases that only converge inside a tolerance
+    band (e.g. ``CASO_FINAL_EQV2020``).
     """
     for component_name in ("p_slack_pos", "p_slack_neg", "q_slack_pos", "q_slack_neg"):
         component = getattr(model, component_name)
@@ -160,23 +165,14 @@ def _apply_exact_power_flow(model: pyo.ConcreteModel) -> None:
     """Enforce the AC power-flow equations exactly and relax operational limits.
 
     The power-balance slacks are already fixed at zero by
-    :func:`_apply_zero_residuals`.  This helper makes the controller equations
-    (SVC droop and, when present, LTC voltage control) exact by fixing their
-    residual slacks at zero, and deactivates the voltage and angle limit rows
-    since an AC power flow reports operational limits instead of enforcing
-    them.  The limit slacks are pinned to zero so the deactivated rows carry
-    no degrees of freedom.
+    :func:`_apply_zero_residuals`.  This helper deactivates the voltage and
+    angle limit rows (an AC power flow reports operational limits instead of
+    enforcing them) and pins their slacks to zero so the deactivated rows carry
+    no degrees of freedom.  The SVC droop and LTC voltage-control residuals are
+    left free: the droop row is then soft and a control device sitting at a
+    reactive or tap limit can release its controller equation without making
+    the exact-balance model infeasible.
     """
-    for component_name in ("svc_residual_pos", "svc_residual_neg"):
-        component = getattr(model, component_name)
-        for index in component:
-            component[index].fix(0.0)
-    for component_name in ("ltc_residual_pos", "ltc_residual_neg"):
-        component = getattr(model, component_name, None)
-        if component is None:
-            continue
-        for index in component:
-            component[index].fix(0.0)
     for component_name in ("v_upper_slack", "v_lower_slack", "a_upper_slack", "a_lower_slack"):
         component = getattr(model, component_name)
         for index in component:
@@ -234,6 +230,52 @@ def _apply_slack_generation_redispatch(
     )
 
 
+def _newton_warm_start(case: PowerFlowCase, settings) -> bool:
+    """Seed the case buses with a Newton-Raphson solution when available.
+
+    The optimization NLP is sensitive to its seed operating point.  A solved
+    case already satisfies the balance equations and releases saturated SVC
+    droop rows, giving Ipopt a feasible neighborhood to start from, whereas the
+    raw ANAREDE seed is often an internally inconsistent operating snapshot.
+    When Newton-Raphson does not fully converge but improves the residual
+    without diverging, its final iterate is still written back: the active rows
+    are typically converged and only a reactive limit cycle remains, which is a
+    far better starting point for the NLP than the raw input seed.  Island
+    reference buses are assigned exactly as in the Newton-Raphson solver path
+    and stay assigned, so islands whose input data lacks a reference bus are
+    solved the same way in the optimization model.  Returns ``True`` when the
+    NR solution is written back into the case buses; otherwise the case is left
+    untouched and the caller keeps the input seed.
+    """
+    original_kinds = [bus.kind for bus in case.buses]
+    try:
+        ybus = build_ybus(case)
+        assign_island_reference_buses(case, ybus)
+        solution = solve_newton_raphson(
+            case,
+            ybus,
+            tolerance=min(settings.active_tolerance, settings.reactive_tolerance),
+            max_iterations=int(getattr(settings, "max_iterations", 30)),
+        )
+    except Exception:
+        for bus, kind in zip(case.buses, original_kinds):
+            bus.kind = kind
+        return False
+    if solution.diverged or not solution.trace:
+        for bus, kind in zip(case.buses, original_kinds):
+            bus.kind = kind
+        return False
+    initial_residual = solution.trace[0].max_residual
+    if not solution.converged and solution.max_mismatch >= initial_residual:
+        for bus, kind in zip(case.buses, original_kinds):
+            bus.kind = kind
+        return False
+    for bus, voltage in zip(case.buses, solution.voltage):
+        bus.voltage = float(abs(voltage))
+        bus.angle = float(np.angle(voltage))
+    return True
+
+
 def build_optimization_model(
     case: PowerFlowCase,
     *,
@@ -255,14 +297,17 @@ def build_optimization_model(
       physical and controller equations are soft constraints whose positive and
       negative slacks are bounded by the per-bus tolerances, and the objective
       minimizes the weighted sum of squared slacks plus a small regularization
-      toward the input state.
+      toward the input state.  The SVC droop row is a soft control with no hard
+      residual cap: the objective drives it to zero while the device has
+      reactive headroom, and the droop error is carried as an objective
+      contribution when the device saturates at a capability limit.
     * ``zero_function`` -- the classic AC power flow.  The active and reactive
-      power-balance equations and the SVC/LTC controller equations are enforced
-      exactly (their residual slacks are fixed at zero) while the operational
-      voltage and angle limits are relaxed, so the objective is identically
-      zero and Ipopt performs a pure feasibility solve of the power-flow
-      equations.  An operating point exists only if the power-flow equations
-      admit one.
+      power-balance equations hold as hard equalities (their slacks are fixed
+      at zero) while the operational voltage and angle limits are relaxed, so
+      the objective is identically zero and Ipopt performs a pure feasibility
+      solve of the power-flow equations.  SVC/LTC droop residuals stay soft so
+      a saturated controller can release its row without making the exact
+      balance model infeasible.
     * ``squared_generation`` -- exact power balance with free reference-bus
       active generation and an objective that minimizes the sum of squared
       active generation, selecting the feasible point with minimum generation
@@ -352,9 +397,9 @@ def build_optimization_model(
     for bus in case.buses:
         lower, upper = _voltage_bounds(bus, strict_voltage_limits)
         bus_vm_bounds[bus.number] = (lower, upper)
-        bus_va_bounds[bus.number] = (-ANGLE_LIMIT_RAD, ANGLE_LIMIT_RAD)
+        bus_va_bounds[bus.number] = (-ANGLE_BOUND_RAD, ANGLE_BOUND_RAD)
         vm_seed[bus.number] = _bounded_voltage_seed(bus, strict_voltage_limits)
-        va_seed[bus.number] = min(max(bus.angle, -ANGLE_LIMIT_RAD), ANGLE_LIMIT_RAD)
+        va_seed[bus.number] = min(max(bus.angle, -ANGLE_BOUND_RAD), ANGLE_BOUND_RAD)
         if bus.number in q_limited_pv_ids:
             qg_initial[bus.number] = (
                 bus.reactive_generation - svc_initial_by_bus[bus.number]
@@ -766,12 +811,6 @@ def build_optimization_model(
     model_any.svc_q_lower = pyo.Constraint(model_any.SVC, rule=svc_lower_rule)
     model_any.svc_q_upper = pyo.Constraint(model_any.SVC, rule=svc_upper_rule)
     model_any.svc_control = pyo.Constraint(model_any.SVC, rule=svc_control_rule)
-    model_any.svc_residual_tolerance = pyo.Constraint(
-        model_any.SVC,
-        rule=lambda m, index: (
-            m.svc_residual_pos[index] + m.svc_residual_neg[index] <= m.control_tolerance
-        ),
-    )
 
     def ltc_voltage_rule(m: Any, index: int):
         return (
@@ -981,10 +1020,18 @@ def solution_metrics(model: pyo.ConcreteModel) -> dict[str, float | bool]:
     ``zero_function``/``squared_generation`` modes where the slacks are fixed at
     zero and an infeasible point is exactly the equation violation. Slack buses
     close the system balance by construction and are excluded from the maximum
-    residual, mirroring the Newton-Raphson mismatch metric.
+    residual, mirroring the Newton-Raphson mismatch metric. An SVC whose droop
+    residual exceeds the control tolerance has released its droop row: the
+    device cannot regulate to its reference at the solved point, either because
+    it sits at a reactive capability limit or because the droop row conflicts
+    with the reactive balance. Released controls are not convergence violations
+    and are counted separately from the maximum residual.
     """
     model_any = cast(Any, model)
     case = cast(PowerFlowCase, model_any._case)
+    active_tolerance = pyo.value(model_any.active_tolerance)
+    reactive_tolerance = pyo.value(model_any.reactive_tolerance)
+    control_tolerance = pyo.value(model_any.control_tolerance)
     svcs_by_bus: dict[int, list[int]] = {}
     for index in model_any.SVC:
         svcs_by_bus.setdefault(int(_value_or_default(model_any.svc_bus[index])), []).append(index)
@@ -1019,6 +1066,7 @@ def solution_metrics(model: pyo.ConcreteModel) -> dict[str, float | bool]:
     max_svc = 0.0
     max_p_slack = 0.0
     max_q_slack = 0.0
+    released_svc_count = 0
     for bus in case.buses:
         if bus.number in slack_buses:
             if hasattr(model_any, "pg_slack") and bus.number in model_any.SLACK_GEN:
@@ -1045,10 +1093,11 @@ def solution_metrics(model: pyo.ConcreteModel) -> dict[str, float | bool]:
         if abs(slope) <= TOLERANCE:
             continue
         svc = (case.svcs or [])[index]
-        droop = _value_or_default(
+        vm_ctrl = _value_or_default(
             model_any.vm[int(_value_or_default(model_any.svc_ctrl_bus[index]))]
-        ) - _value_or_default(model_any.svc_vref[index])
+        )
         q_svc = _value_or_default(model_any.qsvc[index])
+        droop = vm_ctrl - _value_or_default(model_any.svc_vref[index])
         if str(svc.mode).upper() == "I":
             droop += (
                 q_svc
@@ -1062,6 +1111,9 @@ def solution_metrics(model: pyo.ConcreteModel) -> dict[str, float | bool]:
             )
         else:
             droop += q_svc * slope
+        if abs(droop) > control_tolerance + CONVERGENCE_REPORT_EPS:
+            released_svc_count += 1
+            continue
         max_svc = max(max_svc, abs(droop))
     aggregate_p = sum(
         _value_or_default(model_any.p_spec[bus])
@@ -1069,9 +1121,6 @@ def solution_metrics(model: pyo.ConcreteModel) -> dict[str, float | bool]:
         for bus in active_residual_buses
     )
     aggregate_q = sum(reactive_residual(bus) for bus in reactive_residual_buses)
-    active_tolerance = pyo.value(model_any.active_tolerance)
-    reactive_tolerance = pyo.value(model_any.reactive_tolerance)
-    control_tolerance = pyo.value(model_any.control_tolerance)
     return {
         "max_p": max_p,
         "max_q": max_q,
@@ -1080,6 +1129,7 @@ def solution_metrics(model: pyo.ConcreteModel) -> dict[str, float | bool]:
         "max_q_slack": max_q_slack,
         "aggregate_p": aggregate_p,
         "aggregate_q": aggregate_q,
+        "released_svc_count": released_svc_count,
         "converged": max_p <= active_tolerance + CONVERGENCE_REPORT_EPS
         and max_q <= reactive_tolerance + CONVERGENCE_REPORT_EPS
         and max_svc <= control_tolerance + CONVERGENCE_REPORT_EPS
@@ -1147,10 +1197,13 @@ class OptimizationACPowerFlow(PowerFlowSolver):
     ``objective_function`` selects the formulation solved by Ipopt:
 
     * ``minimize_residuals`` -- weighted least-squares feasibility restoration
-      (soft balance, limit, and SVC droop constraints with bounded slacks).
-    * ``zero_function`` -- classic AC power flow: the power-balance and
-      controller equations hold as hard equalities and the objective is
-      identically zero, so Ipopt performs a pure feasibility solve.
+      (soft balance and limit constraints with bounded slacks; the SVC droop is
+      a soft control with no hard residual cap, so saturated devices release
+      their droop row instead of making the model infeasible).
+    * ``zero_function`` -- classic AC power flow: the power-balance equations
+      hold as hard equalities and the objective is identically zero, so Ipopt
+      performs a pure feasibility solve.  SVC/LTC droop residuals stay soft so
+      saturated controllers remain feasible.
     * ``squared_generation`` -- exact power balance with reference-bus
       generation redispatched to minimize the sum of squared active
       generation.
@@ -1215,6 +1268,8 @@ class OptimizationACPowerFlow(PowerFlowSolver):
         )
         reduction = reduce_closed_switches(case)
         numerical_case = reduction.case
+        clamp_svc_seed_to_limits(numerical_case)
+        _newton_warm_start(numerical_case, settings)
 
         model = build_optimization_model(
             numerical_case,
@@ -1381,6 +1436,7 @@ def summarize_solution(model: pyo.ConcreteModel) -> str:
         f"  Max P residual: {metrics['max_p']:.6e} pu",
         f"  Max Q residual: {metrics['max_q']:.6e} pu",
         f"  Max SVC residual: {metrics['max_svc']:.6e} pu",
+        f"  Released SVC controls: {metrics['released_svc_count']}",
         f"  Aggregate P residual: {metrics['aggregate_p']:.6e} pu",
         f"  Aggregate Q residual: {metrics['aggregate_q']:.6e} pu",
     ]

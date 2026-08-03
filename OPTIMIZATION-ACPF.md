@@ -293,15 +293,19 @@ V_{c(s)} - V^{ref}_s + q^{s}_s\, X_{s} = r^{+}_s - r^{-}_s,
 $$
 
 SVCs with zero slope ($X_s \le 10^{-12}$) have the droop constraint skipped
-(constant $Q$). The droop residual is bounded by the control tolerance:
+(constant $Q$). The droop residual $r^{+}_s - r^{-}_s$ is **soft**: it enters the
+objective with the large weight $w_{svc}$ (§6) but has no hard bound, so a
+device that cannot reach its reference at the solved point — because it sits at
+its voltage-dependent reactive capability limit, or because the droop row
+conflicts with the reactive balance — releases its droop equation instead of
+making the NLP infeasible. `solution_metrics` recognizes released controls
+(residual above $\varepsilon_C$, §8.3) and reports them separately rather than
+as convergence violations.
 
-$$
-r^{+}_s + r^{-}_s \le \varepsilon_C.
-$$
-
-Note this is the same droop law as [NEWTON-RAPHSON.md](NEWTON-RAPHSON.md) §4.4,
+Note the droop law is the same as [NEWTON-RAPHSON.md](NEWTON-RAPHSON.md) §4.4,
 but here it is a **constraint of the NLP** rather than an outer-loop injection
-update.
+update, and the residual slack variables make it soft instead of a strict
+equality.
 
 ## 6. Objective function
 
@@ -351,17 +355,18 @@ the same "warm start" philosophy as the Newton solver's §3.5.
 | `zero_function` | **Exact power balance**: balance residual slacks fixed to 0 and their tolerance rows deactivated; SVC droop and voltage/angle limits stay soft in the weighted objective | Checking whether the power-flow equations admit an exact solution |
 | `squared_generation` | `zero_function` **plus** free slack generation with a quadratic objective | Minimal-redispatch studies — how much slack generation must move to balance the case exactly |
 
-In `zero_function` mode (`_apply_zero_residuals`) the balance slacks
-$p^{\pm}_i, q^{\pm}_i$ are fixed at zero and the tolerance rows of §5.2
-(per-bus and aggregate) are deactivated. The active and reactive power balances
-therefore hold as exact equalities: $P_i^{spec} = P_i^{calc}$ and
-$Q_i^{spec} = Q_i^{calc}$ at every non-slack bus. The SVC droop controllers keep
-their control-tolerance constraint and the voltage/angle limits stay soft, both
-weighted in the (nonzero) objective — those are control targets and operational
-bounds rather than physical equations, and leaving them relaxed keeps the
-exact-balance model feasible on cases that only converge inside a tolerance band
-(e.g. `CASO_FINAL_EQV2020`). Ipopt still reports its termination condition and
-`solution_metrics` recomputes the residuals from the final point.
+In `zero_function` mode (`_apply_zero_residuals` + `_apply_exact_power_flow`)
+the balance slacks $p^{\pm}_i, q^{\pm}_i$ are fixed at zero and the tolerance
+rows of §5.2 (per-bus and aggregate) are deactivated. The active and reactive
+power balances therefore hold as exact equalities: $P_i^{spec} = P_i^{calc}$
+and $Q_i^{spec} = Q_i^{calc}$ at every non-slack bus. The voltage and angle
+limit rows are deactivated too and their slacks pinned to zero (an exact AC
+power flow *reports* operational limits instead of enforcing them), while the
+SVC droop residuals stay free — the droop row has no hard cap in the
+formulation (§5.6) — so the exact-balance model stays feasible on cases where a
+control device must release its droop equation. Ipopt still reports its
+termination condition and `solution_metrics` recomputes the residuals from the
+final point.
 
 `squared_generation` builds on that exact-balance model and replaces the
 *unmodeled* slack injection with an explicit decision. Each reference (slack)
@@ -411,6 +416,23 @@ V_i^{0} = \operatorname{clip}\!\left(V_i^{parsed},\ V^{min,b}_i,\ V^{max,b}_i\ri
 \qquad
 \theta_i^{0} = \operatorname{clip}\!\left(\theta_i^{parsed},\ -\tfrac{\pi}{2},\ +\tfrac{\pi}{2}\right).
 $$
+
+Before the seeds above are read, `OptimizationACPowerFlow.run` calls
+`_newton_warm_start`: it builds the network admittances, assigns an island
+reference bus to every island whose input data lacks one (exactly like the
+Newton-Raphson path), solves the AC power flow with
+`solve_newton_raphson` (tolerance = $\min(\varepsilon_P, \varepsilon_Q)$), and
+on convergence writes the NR voltage magnitudes/angles back into the case
+buses. This matters because a raw ANAREDE export is often an *internally
+inconsistent operating snapshot* — the seed voltages, generation, and SVC
+injections do not satisfy the balance equations together. The NR solution gives
+Ipopt a feasible neighborhood to start from and releases the SVC droop rows of
+devices that sit at their reactive limits, so the NLP converges from a point
+that already satisfies the physics. Only the voltage seed is taken; SVC
+injections and bus types keep the input values, and island buses promoted to
+reference stay promoted so islands without an explicit reference in the data are
+balanced the same way in both solvers. If NR does not converge, the case is
+left untouched and the raw seed is used.
 
 All slack variables are initialized from the **residual of the seeded state**
 (`_set_signed_slack`), e.g.
@@ -473,7 +495,12 @@ zero:
   (`PQ ∪ PV`) and the reactive (`PQ ∪ QPV`) buses;
 * `max_p_slack`, `max_q_slack` — residuals at the slack buses (where the balance
   is closed by construction);
-* `max_svc` — largest droop residual;
+* `max_svc` — largest droop residual among the SVCs still regulating. An SVC
+  whose droop residual exceeds the control tolerance has *released* its droop
+  row (reactive limit or balance conflict, §5.6); it is excluded from
+  `max_svc` and counted in `released_svc_count` instead, because it is a
+  correctly-modeled saturated control, not a convergence violation;
+* `released_svc_count` — number of released SVC controls;
 * `aggregate_p`, `aggregate_q` — the sums of §5.3;
 * `converged` — all of the above within tolerance
   ($+$ `CONVERGENCE_REPORT_EPS = 10^{-6}$).
@@ -657,9 +684,10 @@ and objective are all written on the reduced buses.
 | Residual report | `solution_metrics(model)` |
 | Human-readable summary | `summarize_solution(model)` |
 | Orchestration | `OptimizationACPowerFlow(PowerFlowSolver)` — `.run(pwf_path | System | ParsedAnaredeSystem)` |
+| Newton warm start | `_newton_warm_start(case, settings)` — NR seed before `build_optimization_model` |
 | Bounded-Q detection | `_uses_bounded_q_control(qlim_enabled, bus)` — `QLIM` option + `PV` + switchable name (`EOL`, `UFV`, `PCH`, `BIO`, `CGH`) + `base_voltage ≥ 900 kV` + valid limits |
 | Voltage bounds/seeds | `_voltage_bounds(bus, strict)`, `_bounded_voltage_seed(bus, strict)` |
-| Exact-feasibility mode | `_apply_zero_residuals(model)` — fixes residual slacks, deactivates tolerance rows |
+| Exact-feasibility mode | `_apply_zero_residuals(model)` — fixes residual slacks, deactivates tolerance rows; `_apply_exact_power_flow(model)` — deactivates the voltage/angle limit rows and pins their slacks |
 | Slack redispatch mode | `_apply_slack_generation_redispatch(model, case, bus_by_id, p_seed)` — `pg_slack` + strict slack balance |
 
 `OptimizationACPowerFlow` is a drop-in replacement for
@@ -676,14 +704,82 @@ and objective are all written on the reduced buses.
   pass `strict_voltage_limits=True` to fix `PV` magnitudes and tighten bounds.
 * `objective_function="minimize_residuals"` is the default. The `zero_function`
   and `squared_generation` modes keep the power balances as exact equalities
-  while leaving the SVC droop and the voltage/angle limits soft, so they remain
-  feasible even on cases whose control residual sits at the tolerance boundary;
-  the reported mismatch is then governed by the control residual.
-* Convergence is defined by the case tolerances; on the reference cases the
+  while the SVC droop residual stays soft (no hard control-tolerance row), so
+  they remain feasible even on cases where a control device must release its
+  droop equation; the reported mismatch is then governed by the balance and the
+  remaining regulating controls.
+* The solver warm-starts from a converged Newton-Raphson solution
+  (`_newton_warm_start`); island buses promoted to reference by
+  `assign_island_reference_buses` stay promoted in the optimization model, so
+  islands without an explicit reference bus in the data are balanced the same
+  way in both solvers.
+* Convergence is defined by the case tolerances. On the reference cases the
   solver converges to `max_mismatch` of order $10^{-7}$ p.u. (small `d_9nodes`
-  case, ~11 Ipopt iterations) and to the declared tolerance boundary
-  (large `CASO_FINAL_EQV2020` case with 6 SVCs, ~15–17 iterations), with the
-  control residual governing the reported mismatch.
+  case, ~11 Ipopt iterations) and to the declared tolerance boundary on the
+  large Brazilian systems: `LEN_A_4_2020_SECO_2023VM_SE_EXP_N` and
+  `LENA_BD0320R0_2Q2020_R1_CASO_12` reach $10^{-4}$-pu balances with all three
+  objectives (`TEPA`/`TEPR` 0.01 Mvar → $\varepsilon = 10^{-4}$), and the three
+  `20240820_C_*` snapshots ($\varepsilon = 10^{-3}$) converge with
+  `max_iterations` large enough for Ipopt to terminate `optimal` (the larger
+  runs need on the order of $10^2$ iterations).
+
+## 15. Validation on the Brazilian systems
+
+The tables below show the sweep that drove the formulation decisions of §5.6
+(soft SVC droop), §7 (Newton warm start, island references kept promoted), and
+§8.3 (released-control reporting). Every run uses the full
+`OptimizationACPowerFlow.run` path. System size is given as the number of buses
+in the full parsed case (the `DBAR` block, before network reduction) and in the
+reduced case that the NLP is actually solved on; the active/reactive generation
+and load are the sums of the per-bus `DBAR` values (`Pg/Qg/Pl/Ql`) on the full
+case.
+
+| System | Buses (full → reduced) | Pg (MW) | Qg (Mvar) | Pl (MW) | Ql (Mvar) |
+| --- | --- | --- | --- | --- | --- |
+| `LEN_A_4_2020_SECO_2023VM_SE_EXP_N` | 7282 → 6912 | 129 789 | −17 | 125 232 | 44 656 |
+| `LENA_BD0320R0_2Q2020_R1_CASO_12` | 7291 → 6895 | 105 932 | −3 779 | 102 649 | 34 563 |
+| `20240820_C_00-00.pwf` | 11 835 → 11 380 | 77 975 | −18 745 | 74 843 | 19 761 |
+| `20240820_C_00-30.pwf` | 11 835 → 11 372 | 76 363 | −19 370 | 73 292 | 19 519 |
+| `20240820_C_06-30.pwf` | 11 835 → 11 376 | 65 388 | −17 437 | 61 609 | 15 232 |
+| `CASO_FINAL_EQV2020.pwf` | 247 → 240 | 110 099 | 8 031 | 109 228 | −7 337 |
+
+For every run the columns are: `ws` — Newton warm-start wall time,
+`ipopt` — Ipopt solver time, `total` — `ws + ipopt`, `iter` — Ipopt iterations,
+`max_p`/`max_q`/`max_svc` — the `solution_metrics` residuals, and `conv` —
+`metrics["converged"]`. All eighteen runs terminate `optimal`.
+
+| System | Objective | ws (s) | ipopt (s) | total (s) | iter | `max_p` | `max_q` | `max_svc` | conv |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `LEN_A_4_2020_SECO_2023VM_SE_EXP_N` | `minimize_residuals` | 30 | 12 | 42 | 41 | 1.000e-04 | 1.000e-04 | 4.812e-04 | ✔ |
+| | `zero_function` | 29 | 3 | 32 | 27 | 1.133e-12 | 1.000e-11 | 0.000e+00 | ✔ |
+| | `squared_generation` | 29 | 5 | 34 | 23 | 1.519e-09 | 9.055e-09 | 5.463e-07 | ✔ |
+| `LENA_BD0320R0_2Q2020_R1_CASO_12` | `minimize_residuals` | 37 | 9 | 46 | 29 | 1.000e-04 | 1.000e-04 | 4.249e-04 | ✔ |
+| | `zero_function` | 186 | 8 | 194 | 15 | 8.324e-10 | 5.945e-09 | 0.000e+00 | ✔ |
+| | `squared_generation` | 185 | 13 | 198 | 28 | 8.895e-12 | 1.202e-11 | 1.787e-08 | ✔ |
+| `20240820_C_00-00.pwf` | `minimize_residuals` | 249 | 56 | 305 | 137 | 1.000e-03 | 1.000e-03 | 4.054e-03 | ✔ |
+| | `zero_function` | 106 | 5 | 111 | 22 | 8.326e-12 | 2.186e-10 | 0.000e+00 | ✔ |
+| | `squared_generation` | 105 | 23 | 128 | 83 | 2.750e-12 | 6.114e-12 | 4.969e-03 | ✔ |
+| `20240820_C_00-30.pwf` | `minimize_residuals` | 183 | 65 | 248 | 144 | 1.000e-03 | 1.000e-03 | 4.640e-03 | ✔ |
+| | `zero_function` | 223 | 13 | 237 | 20 | 5.930e-11 | 7.177e-09 | 0.000e+00 | ✔ |
+| | `squared_generation` | 927 | 71 | 998 | 76 | 2.193e-11 | 1.420e-10 | 4.600e-03 | ✔ |
+| `20240820_C_06-30.pwf` | `minimize_residuals` | 503 | 18 | 521 | 48 | 1.000e-03 | 1.000e-03 | 4.824e-03 | ✔ |
+| | `zero_function` | 539 | 5 | 544 | 9 | 2.945e-12 | 4.089e-12 | 4.783e-03 | ✔ |
+| | `squared_generation` | 548 | 8 | 557 | 25 | 5.621e-12 | 3.228e-11 | 4.577e-03 | ✔ |
+| `CASO_FINAL_EQV2020.pwf` | `minimize_residuals` | <1 | <1 | <1 | 19 | 1.000e-03 | 1.000e-03 | 8.531e-04 | ✔ |
+| | `zero_function` | <1 | <1 | <1 | 5 | 6.409e-11 | 2.329e-10 | 2.853e-03 | ✔ |
+| | `squared_generation` | <1 | <1 | <1 | 17 | 1.044e-12 | 5.574e-12 | 2.951e-03 | ✔ |
+
+The `20240820_C_*` snapshots carry no `TLVC` constant, so their control
+tolerance defaults to the 0.5-pu reference floor; their reported `max_svc` is
+well below it, and the released controls are accounted for via
+`released_svc_count`. Times are single-machine, single-thread and vary with
+load (the Newton warm start is the dominant cost on the `11 835`-bus snapshots
+and was observed between $10^2$ and $9\times10^2$ s); the `minimize_residuals`
+solves land exactly at the declared tolerance boundary because the soft-slack
+least-squares objective trades balance against regularization, whereas the
+exact-balance objectives reach the $10^{-10}$–$10^{-12}$ band. `CASO` is a
+small equivalent-network case, which is why its warm start and solve complete
+in under a second.
 
 ## References
 

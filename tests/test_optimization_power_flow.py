@@ -15,6 +15,7 @@ from o_grid.acpf.models import (
     build_power_flow_settings,
     reduce_closed_switches,
 )
+from o_grid.acpf.models.svc import SVCData
 from o_grid.acpf.optimization import (
     _parse_ipopt_iterations,
     build_optimization_model,
@@ -163,6 +164,30 @@ def test_optimization_model_build_solve_and_metrics() -> None:
     assert metrics["max_p"] <= 1.0e-3
     assert metrics["max_q"] <= 1.0e-3
     assert "Optimization power-flow summary" in summarize_solution(model)
+
+
+def test_solution_metrics_releases_saturated_svc_controls() -> None:
+    parsed, numerical_case, _ = _build_solved_model("d_9nodes.pwf")
+    numerical_case.svcs = [
+        SVCData(1, 1, "P", 0.5, 0.0, -100.0, 100.0, 1.0),
+        SVCData(2, 2, "P", 0.5, 0.0, -100.0, 100.0, 1.0),
+    ]
+    model = build_optimization_model(
+        numerical_case,
+        active_tolerance_pu=0.1,
+        reactive_tolerance_pu=0.1,
+        control_tolerance_pu=0.1,
+    )
+    for bus in model.BUS:
+        model.vm[bus].set_value(1.0)
+        model.va[bus].set_value(0.0)
+    model.qsvc[0].set_value(0.04)
+    model.qsvc[1].set_value(0.5)
+
+    metrics = solution_metrics(model)
+
+    assert metrics["max_svc"] == pytest.approx(0.04 * 0.5)
+    assert metrics["released_svc_count"] == 1
 
 
 def test_optimization_model_supports_strict_voltage_limits() -> None:

@@ -164,6 +164,35 @@ def refresh_decoupled_svc_controls(states: list[SVCState], vm: np.ndarray) -> No
     update_svc_limits(states, vm)
 
 
+def clamp_svc_seed_to_limits(case: PowerFlowCase) -> bool:
+    """Clamp active SVC seed injections to their physical reactive band.
+
+    The ANAREDE snapshot can schedule an SVC beyond its reactive capability
+    (e.g. a saturated device whose raw seed injection exceeds the DCER band).
+    The bus generation is adjusted by the same delta so the specified reactive
+    balance at the bus is unchanged while the seed becomes self-consistent with
+    the SVC limits used by the optimization and warm-start paths.
+    """
+    buses = {bus.number: bus for bus in case.buses}
+    changed = False
+    for svc in case.svcs or []:
+        bus = buses.get(svc.bus)
+        if bus is None or bus.kind != ACBusTypes.PQ:
+            continue
+        minimum = float(svc.minimum_reactive_power or 0.0)
+        maximum = float(svc.maximum_reactive_power or 0.0)
+        if not minimum and not maximum:
+            continue
+        clamped = min(max(svc.reactive_power, minimum), maximum)
+        delta = clamped - svc.reactive_power
+        if abs(delta) <= 1e-12:
+            continue
+        svc.reactive_power = clamped
+        bus.reactive_generation += delta
+        changed = True
+    return changed
+
+
 def sync_svc_states_to_case(case: PowerFlowCase, states: list[SVCState]) -> None:
     """Copy solved SVC injections back to the case so results and re-solves see them."""
     if not states:

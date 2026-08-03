@@ -1,12 +1,12 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.25 (MiKTeX 24.1) (preloaded format=pdflatex 2025.9.26)  2 AUG 2026 17:52
+This is pdfTeX, Version 3.141592653-2.6-1.40.25 (MiKTeX 24.1) (preloaded format=pdflatex 2025.9.26)  2 AUG 2026 17:55
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
-**./bare_jrnl_new_sample4.tex
-(bare_jrnl_new_sample4.tex
+**./latex/bare_jrnl_new_sample4.tex
+(latex/bare_jrnl_new_sample4.tex
 LaTeX2e <2023-11-01> patch level 1
 L3 programming layer <2024-01-04>
-(IEEEtran.cls
+(C:\Users\marck\AppData\Local\Programs\MiKTeX\tex/latex/ieeetran\IEEEtran.cls
 Document Class: IEEEtran 2015/08/26 V1.8b by Michael Shell
 -- See the "IEEEtran_HOWTO" manual for usage information.
 -- http://www.michaelshell.org/tex/ieeetran/
@@ -30,44 +30,54 @@ File: ot1ptm.fd 2001/06/04 font definitions for OT1/ptm.
 \CLASSINFOnormalsizeunitybaselineskip=\dimen145
 \IEEEnormaljot=\dimen146
 LaTeX Font Info:    Font shape `OT1/ptm/bx/n' in size <5> not available
-(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 1086.
+(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 1090.
 LaTeX Font Info:    Font shape `OT1/ptm/bx/it' in size <5> not available
-(Font)              Font shape `OT1/ptm/b/it' tried instead on input line 1086.
+(Font)              Font shape `OT1/ptm/b/it' tried instead on input line 1090.
 
 LaTeX Font Info:    Font shape `OT1/ptm/bx/n' in size <7> not available
-(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 1086.
+(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 1090.
 LaTeX Font Info:    Font shape `OT1/ptm/bx/it' in size <7> not available
-(Font)              Font shape `OT1/ptm/b/it' tried instead on input line 1086.
+(Font)              Font shape `OT1/ptm/b/it' tried instead on input line 1090.
 
 LaTeX Font Info:    Font shape `OT1/ptm/bx/n' in size <8> not available
-(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 1086.
+(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 1090.
 LaTeX Font Info:    Font shape `OT1/ptm/bx/it' in size <8> not available
-(Font)              Font shape `OT1/ptm/b/it' tried instead on input line 1086.
+(Font)              Font shape `OT1/ptm/b/it' tried instead on input line 1090.
 
 LaTeX Font Info:    Font shape `OT1/ptm/bx/n' in size <9> not available
-(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 1086.
+(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 1090.
 LaTeX Font Info:    Font shape `OT1/ptm/bx/it' in size <9> not available
-(Font)              Font shape `OT1/ptm/b/it' tried instead on input line 1086.
+(Font)              Font shape `OT1/ptm/b/it' tried instead on input line 1090.
 
 LaTeX Font Info:    Font shape `OT1/ptm/bx/n' in size <10> not available
-(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 1086.
+(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 1090.
 LaTeX Font Info:    Font shape `OT1/ptm/bx/it' in size <10> not available
-(Font)              Font shape `OT1/ptm/b/it' tried instead on input line 1086.
+(Font)              Font shape `OT1/ptm/b/it' tried instead on input line 1090.
 
 LaTeX Font Info:    Font shape `OT1/ptm/bx/n' in size <11> not available
-(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 1086.
+(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 1090.
 LaTeX Font Info:    Font shape `OT1/ptm/bx/it' in size <11> not available
-(Font)              Font shape `OT1/ptm/b/it' tried instead on input line 1086.
+(Font)              Font shape `OT1/ptm/b/it' tried instead on input line 1090.
 
 LaTeX Font Info:    Font shape `OT1/ptm/bx/n' in size <12> not available
-(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 1086.
+(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 1090.
 LaTeX Font Info:    Font shape `OT1/ptm/bx/it' in size <12> not available
-(Font)              Font shape `OT1/ptm/b/it' tried instead on input line 1086.
+(Font)              Font shape `OT1/ptm/b/it' tried instead on input line 1090.
 
-LaTeX Font Info:    Font shape `OT1/ptm/bx/n' in size <18> not available
-(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 1086.
-LaTeX Font Info:    Font shape `OT1/ptm/bx/it' in size <18> not available
-(Font)              Font shape `OT1/ptm/b/it' tried instead on input line 1086.
+LaTeX Font Info:    Font shape `OT1/ptm/bx/n' in size <17> not available
+(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 1090.
+LaTeX Font Info:    Font shape `OT1/ptm/bx/it' in size <17> not available
+(Font)              Font shape `OT1/ptm/b/it' tried instead on input line 1090.
+
+LaTeX Font Info:    Font shape `OT1/ptm/bx/n' in size <20> not available
+(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 1090.
+LaTeX Font Info:    Font shape `OT1/ptm/bx/it' in size <20> not available
+(Font)              Font shape `OT1/ptm/b/it' tried instead on input line 1090.
+
+LaTeX Font Info:    Font shape `OT1/ptm/bx/n' in size <24> not available
+(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 1090.
+LaTeX Font Info:    Font shape `OT1/ptm/bx/it' in size <24> not available
+(Font)              Font shape `OT1/ptm/b/it' tried instead on input line 1090.
 
 \IEEEquantizedlength=\dimen147
 \IEEEquantizedlengthdiff=\dimen148
@@ -432,15 +442,17 @@ rck/AppData/Local/Programs/MiKTeX/fonts/enc/dvips/base/8r.enc}
 
 
 ] [2]
-<img/svc_linear_with_q.png, id=24, 560.8453pt x 500.62032pt>
-File: img/svc_linear_with_q.png Graphic file (type png)
-<use img/svc_linear_with_q.png>
-Package pdftex.def Info: img/svc_linear_with_q.png  used on input line 282.
+<latex/img/svc_linear_with_q.png, id=24, 560.8453pt x 500.62032pt>
+File: latex/img/svc_linear_with_q.png Graphic file (type png)
+<use latex/img/svc_linear_with_q.png>
+Package pdftex.def Info: latex/img/svc_linear_with_q.png  used on input line 28
+2.
 (pdftex.def)             Requested size: 120.95892pt x 107.96738pt.
-<img/svc_linear_with_i.png, id=26, 585.68813pt x 491.58656pt>
-File: img/svc_linear_with_i.png Graphic file (type png)
-<use img/svc_linear_with_i.png>
-Package pdftex.def Info: img/svc_linear_with_i.png  used on input line 288.
+<latex/img/svc_linear_with_i.png, id=26, 585.68813pt x 491.58656pt>
+File: latex/img/svc_linear_with_i.png Graphic file (type png)
+<use latex/img/svc_linear_with_i.png>
+Package pdftex.def Info: latex/img/svc_linear_with_i.png  used on input line 28
+8.
 (pdftex.def)             Requested size: 120.95892pt x 101.5185pt.
  [3]
 Underfull \hbox (badness 10000) in paragraph at lines 319--325
@@ -454,16 +466,17 @@ Underfull \hbox (badness 1509) in paragraph at lines 341--343
  au-to-matic
  []
 
-[4 <./img/svc_linear_with_q.png> <./img/svc_linear_with_i.png>]
-<img/lcc_converters.png, id=36, 2127.95pt x 534.99875pt>
-File: img/lcc_converters.png Graphic file (type png)
-<use img/lcc_converters.png>
-Package pdftex.def Info: img/lcc_converters.png  used on input line 422.
+[4 <./latex/img/svc_linear_with_q.png> <./latex/img/svc_linear_with_i.png>]
+<latex/img/lcc_converters.png, id=36, 2127.95pt x 534.99875pt>
+File: latex/img/lcc_converters.png Graphic file (type png)
+<use latex/img/lcc_converters.png>
+Package pdftex.def Info: latex/img/lcc_converters.png  used on input line 422.
 (pdftex.def)             Requested size: 505.89pt x 127.18597pt.
-<img/simulation_workflow.png, id=37, 776.9025pt x 928.21782pt>
-File: img/simulation_workflow.png Graphic file (type png)
-<use img/simulation_workflow.png>
-Package pdftex.def Info: img/simulation_workflow.png  used on input line 447.
+<latex/img/simulation_workflow.png, id=37, 776.9025pt x 928.21782pt>
+File: latex/img/simulation_workflow.png Graphic file (type png)
+<use latex/img/simulation_workflow.png>
+Package pdftex.def Info: latex/img/simulation_workflow.png  used on input line 
+447.
 (pdftex.def)             Requested size: 252.0pt x 301.07236pt.
 LaTeX Font Info:    Trying to load font information for OT1+pcr on input line 4
 52.
@@ -471,10 +484,10 @@ LaTeX Font Info:    Trying to load font information for OT1+pcr on input line 4
 (C:\Users\marck\AppData\Local\Programs\MiKTeX\tex/latex/psnfss\ot1pcr.fd
 File: ot1pcr.fd 2001/06/04 font definitions for OT1/pcr.
 )
-<img/brazil_sys.png, id=38, 383.031pt x 390.696pt>
-File: img/brazil_sys.png Graphic file (type png)
-<use img/brazil_sys.png>
-Package pdftex.def Info: img/brazil_sys.png  used on input line 495.
+<latex/img/brazil_sys.png, id=38, 383.031pt x 390.696pt>
+File: latex/img/brazil_sys.png Graphic file (type png)
+<use latex/img/brazil_sys.png>
+Package pdftex.def Info: latex/img/brazil_sys.png  used on input line 495.
 (pdftex.def)             Requested size: 252.0pt x 257.04938pt.
 
 Underfull \hbox (badness 10000) in paragraph at lines 512--521
@@ -514,38 +527,40 @@ Underfull \hbox (badness 1383) in paragraph at lines 512--521
 
  []
 
-[5] [6 <./img/lcc_converters.png (PNG copy)> <./img/simulation_workflow.png>]
-<img/LENA_CASO_FINAL_EQV2020_DC_Full_bus_voltage_angle_results.pdf, id=48, 550.
-45537pt x 273.56363pt>
-File: img/LENA_CASO_FINAL_EQV2020_DC_Full_bus_voltage_angle_results.pdf Graphic
- file (type pdf)
-<use img/LENA_CASO_FINAL_EQV2020_DC_Full_bus_voltage_angle_results.pdf>
-Package pdftex.def Info: img/LENA_CASO_FINAL_EQV2020_DC_Full_bus_voltage_angle_
-results.pdf  used on input line 566.
+[5] [6 <./latex/img/lcc_converters.png (PNG copy)> <./latex/img/simulation_work
+flow.png>]
+<latex/img/LENA_CASO_FINAL_EQV2020_DC_Full_bus_voltage_angle_results.pdf, id=48
+, 550.45537pt x 273.56363pt>
+File: latex/img/LENA_CASO_FINAL_EQV2020_DC_Full_bus_voltage_angle_results.pdf G
+raphic file (type pdf)
+<use latex/img/LENA_CASO_FINAL_EQV2020_DC_Full_bus_voltage_angle_results.pdf>
+Package pdftex.def Info: latex/img/LENA_CASO_FINAL_EQV2020_DC_Full_bus_voltage_
+angle_results.pdf  used on input line 566.
 (pdftex.def)             Requested size: 239.39923pt x 118.97415pt.
-<img/LENA_CASO_FINAL_EQV2020_DC_Full_generation_active_reactive.pdf, id=49, 555
-.60258pt x 273.56363pt>
-File: img/LENA_CASO_FINAL_EQV2020_DC_Full_generation_active_reactive.pdf Graphi
-c file (type pdf)
-<use img/LENA_CASO_FINAL_EQV2020_DC_Full_generation_active_reactive.pdf>
-Package pdftex.def Info: img/LENA_CASO_FINAL_EQV2020_DC_Full_generation_active_
-reactive.pdf  used on input line 567.
+<latex/img/LENA_CASO_FINAL_EQV2020_DC_Full_generation_active_reactive.pdf, id=4
+9, 555.60258pt x 273.56363pt>
+File: latex/img/LENA_CASO_FINAL_EQV2020_DC_Full_generation_active_reactive.pdf 
+Graphic file (type pdf)
+<use latex/img/LENA_CASO_FINAL_EQV2020_DC_Full_generation_active_reactive.pdf>
+Package pdftex.def Info: latex/img/LENA_CASO_FINAL_EQV2020_DC_Full_generation_a
+ctive_reactive.pdf  used on input line 567.
 (pdftex.def)             Requested size: 239.39923pt x 117.87216pt.
-<img/LENA_CASO_FINAL_EQV2020_DC_Full_branch_flow_active_reactive.pdf, id=50, 56
-4.9997pt x 273.56363pt>
-File: img/LENA_CASO_FINAL_EQV2020_DC_Full_branch_flow_active_reactive.pdf Graph
-ic file (type pdf)
-<use img/LENA_CASO_FINAL_EQV2020_DC_Full_branch_flow_active_reactive.pdf>
-Package pdftex.def Info: img/LENA_CASO_FINAL_EQV2020_DC_Full_branch_flow_active
-_reactive.pdf  used on input line 568.
+<latex/img/LENA_CASO_FINAL_EQV2020_DC_Full_branch_flow_active_reactive.pdf, id=
+50, 564.9997pt x 273.56363pt>
+File: latex/img/LENA_CASO_FINAL_EQV2020_DC_Full_branch_flow_active_reactive.pdf
+ Graphic file (type pdf)
+<use latex/img/LENA_CASO_FINAL_EQV2020_DC_Full_branch_flow_active_reactive.pdf>
+
+Package pdftex.def Info: latex/img/LENA_CASO_FINAL_EQV2020_DC_Full_branch_flow_
+active_reactive.pdf  used on input line 568.
 (pdftex.def)             Requested size: 239.39923pt x 115.91444pt.
-<img/LENA_CASO_FINAL_EQV2020_DC_Full_csc_svc_results.pdf, id=51, 726.19952pt x 
-273.56363pt>
-File: img/LENA_CASO_FINAL_EQV2020_DC_Full_csc_svc_results.pdf Graphic file (typ
-e pdf)
-<use img/LENA_CASO_FINAL_EQV2020_DC_Full_csc_svc_results.pdf>
-Package pdftex.def Info: img/LENA_CASO_FINAL_EQV2020_DC_Full_csc_svc_results.pd
-f  used on input line 569.
+<latex/img/LENA_CASO_FINAL_EQV2020_DC_Full_csc_svc_results.pdf, id=51, 726.1995
+2pt x 273.56363pt>
+File: latex/img/LENA_CASO_FINAL_EQV2020_DC_Full_csc_svc_results.pdf Graphic fil
+e (type pdf)
+<use latex/img/LENA_CASO_FINAL_EQV2020_DC_Full_csc_svc_results.pdf>
+Package pdftex.def Info: latex/img/LENA_CASO_FINAL_EQV2020_DC_Full_csc_svc_resu
+lts.pdf  used on input line 569.
 (pdftex.def)             Requested size: 239.39923pt x 90.18025pt.
 LaTeX Font Info:    Trying to load font information for TS1+ptm on input line 5
 81.
@@ -553,121 +568,126 @@ LaTeX Font Info:    Trying to load font information for TS1+ptm on input line 5
 (C:\Users\marck\AppData\Local\Programs\MiKTeX\tex/latex/psnfss\ts1ptm.fd
 File: ts1ptm.fd 2001/06/04 font definitions for TS1/ptm.
 )
-<img/LENA_CASO_FINAL_EQV2020_DC_Full_hvdc_reactive_power.pdf, id=52, 706.28197p
-t x 202.356pt>
-File: img/LENA_CASO_FINAL_EQV2020_DC_Full_hvdc_reactive_power.pdf Graphic file 
-(type pdf)
-<use img/LENA_CASO_FINAL_EQV2020_DC_Full_hvdc_reactive_power.pdf>
-Package pdftex.def Info: img/LENA_CASO_FINAL_EQV2020_DC_Full_hvdc_reactive_powe
-r.pdf  used on input line 593.
+<latex/img/LENA_CASO_FINAL_EQV2020_DC_Full_hvdc_reactive_power.pdf, id=52, 706.
+28197pt x 202.356pt>
+File: latex/img/LENA_CASO_FINAL_EQV2020_DC_Full_hvdc_reactive_power.pdf Graphic
+ file (type pdf)
+<use latex/img/LENA_CASO_FINAL_EQV2020_DC_Full_hvdc_reactive_power.pdf>
+Package pdftex.def Info: latex/img/LENA_CASO_FINAL_EQV2020_DC_Full_hvdc_reactiv
+e_power.pdf  used on input line 593.
 (pdftex.def)             Requested size: 239.39923pt x 68.59016pt.
-<img/LENA_CASO_FINAL_EQV2020_DC_Full_hvdc_commutation_angle.pdf, id=53, 706.281
-97pt x 202.356pt>
-File: img/LENA_CASO_FINAL_EQV2020_DC_Full_hvdc_commutation_angle.pdf Graphic fi
-le (type pdf)
-<use img/LENA_CASO_FINAL_EQV2020_DC_Full_hvdc_commutation_angle.pdf>
-Package pdftex.def Info: img/LENA_CASO_FINAL_EQV2020_DC_Full_hvdc_commutation_a
-ngle.pdf  used on input line 594.
+<latex/img/LENA_CASO_FINAL_EQV2020_DC_Full_hvdc_commutation_angle.pdf, id=53, 7
+06.28197pt x 202.356pt>
+File: latex/img/LENA_CASO_FINAL_EQV2020_DC_Full_hvdc_commutation_angle.pdf Grap
+hic file (type pdf)
+<use latex/img/LENA_CASO_FINAL_EQV2020_DC_Full_hvdc_commutation_angle.pdf>
+Package pdftex.def Info: latex/img/LENA_CASO_FINAL_EQV2020_DC_Full_hvdc_commuta
+tion_angle.pdf  used on input line 594.
 (pdftex.def)             Requested size: 239.39923pt x 68.59016pt.
-<img/LENA_CASO_FINAL_EQV2020_DC_Full_hvdc_transformer_tap.pdf, id=54, 706.28197
-pt x 202.356pt>
-File: img/LENA_CASO_FINAL_EQV2020_DC_Full_hvdc_transformer_tap.pdf Graphic file
- (type pdf)
-<use img/LENA_CASO_FINAL_EQV2020_DC_Full_hvdc_transformer_tap.pdf>
-Package pdftex.def Info: img/LENA_CASO_FINAL_EQV2020_DC_Full_hvdc_transformer_t
-ap.pdf  used on input line 595.
+<latex/img/LENA_CASO_FINAL_EQV2020_DC_Full_hvdc_transformer_tap.pdf, id=54, 706
+.28197pt x 202.356pt>
+File: latex/img/LENA_CASO_FINAL_EQV2020_DC_Full_hvdc_transformer_tap.pdf Graphi
+c file (type pdf)
+<use latex/img/LENA_CASO_FINAL_EQV2020_DC_Full_hvdc_transformer_tap.pdf>
+Package pdftex.def Info: latex/img/LENA_CASO_FINAL_EQV2020_DC_Full_hvdc_transfo
+rmer_tap.pdf  used on input line 595.
 (pdftex.def)             Requested size: 239.39923pt x 68.59016pt.
 
-[7 <./img/brazil_sys.png> <./img/LENA_CASO_FINAL_EQV2020_DC_Full_bus_voltage_an
-gle_results.pdf> <./img/LENA_CASO_FINAL_EQV2020_DC_Full_generation_active_react
-ive.pdf> <./img/LENA_CASO_FINAL_EQV2020_DC_Full_branch_flow_active_reactive.pdf
-> <./img/LENA_CASO_FINAL_EQV2020_DC_Full_csc_svc_results.pdf>]
-<img/LEN_A_4_2020_SECO_2023VM_SE_EXP_N_4DC_bus_voltage_angle.pdf, id=148, 708.2
-4597pt x 238.43703pt>
-File: img/LEN_A_4_2020_SECO_2023VM_SE_EXP_N_4DC_bus_voltage_angle.pdf Graphic f
-ile (type pdf)
-<use img/LEN_A_4_2020_SECO_2023VM_SE_EXP_N_4DC_bus_voltage_angle.pdf>
-Package pdftex.def Info: img/LEN_A_4_2020_SECO_2023VM_SE_EXP_N_4DC_bus_voltage_
-angle.pdf  used on input line 616.
-(pdftex.def)             Requested size: 239.39923pt x 80.59453pt.
-<img/LEN_A_4_2020_SECO_2023VM_SE_EXP_N_4DC_generation_scatter.pdf, id=149, 708.
-24597pt x 238.43779pt>
-File: img/LEN_A_4_2020_SECO_2023VM_SE_EXP_N_4DC_generation_scatter.pdf Graphic 
-file (type pdf)
-<use img/LEN_A_4_2020_SECO_2023VM_SE_EXP_N_4DC_generation_scatter.pdf>
-Package pdftex.def Info: img/LEN_A_4_2020_SECO_2023VM_SE_EXP_N_4DC_generation_s
-catter.pdf  used on input line 617.
-(pdftex.def)             Requested size: 239.39923pt x 80.59479pt.
-<img/LEN_A_4_2020_SECO_2023VM_SE_EXP_N_4DC_branch_flow_scatter.pdf, id=150, 708
-.24597pt x 238.49101pt>
-File: img/LEN_A_4_2020_SECO_2023VM_SE_EXP_N_4DC_branch_flow_scatter.pdf Graphic
- file (type pdf)
-<use img/LEN_A_4_2020_SECO_2023VM_SE_EXP_N_4DC_branch_flow_scatter.pdf>
-Package pdftex.def Info: img/LEN_A_4_2020_SECO_2023VM_SE_EXP_N_4DC_branch_flow_
-scatter.pdf  used on input line 632.
-(pdftex.def)             Requested size: 239.39923pt x 80.61278pt.
-<img/LEN_A_4_2020_SECO_2023VM_SE_EXP_N_4DC_dcsc_dcer_scatter.pdf, id=151, 925.0
-5597pt x 238.49101pt>
-File: img/LEN_A_4_2020_SECO_2023VM_SE_EXP_N_4DC_dcsc_dcer_scatter.pdf Graphic f
-ile (type pdf)
-<use img/LEN_A_4_2020_SECO_2023VM_SE_EXP_N_4DC_dcsc_dcer_scatter.pdf>
-Package pdftex.def Info: img/LEN_A_4_2020_SECO_2023VM_SE_EXP_N_4DC_dcsc_dcer_sc
-atter.pdf  used on input line 633.
-(pdftex.def)             Requested size: 239.39923pt x 61.7187pt.
-<img/LEN_A_4_2020_SECO_2023VM_SE_EXP_N_DC_Full_hvdc_reactive_power.pdf, id=152,
- 706.28197pt x 202.356pt>
-File: img/LEN_A_4_2020_SECO_2023VM_SE_EXP_N_DC_Full_hvdc_reactive_power.pdf Gra
+[7 <./latex/img/brazil_sys.png> <./latex/img/LENA_CASO_FINAL_EQV2020_DC_Full_bu
+s_voltage_angle_results.pdf> <./latex/img/LENA_CASO_FINAL_EQV2020_DC_Full_gener
+ation_active_reactive.pdf> <./latex/img/LENA_CASO_FINAL_EQV2020_DC_Full_branch_
+flow_active_reactive.pdf> <./latex/img/LENA_CASO_FINAL_EQV2020_DC_Full_csc_svc_
+results.pdf>]
+<latex/img/LEN_A_4_2020_SECO_2023VM_SE_EXP_N_4DC_bus_voltage_angle.pdf, id=148,
+ 708.24597pt x 238.43703pt>
+File: latex/img/LEN_A_4_2020_SECO_2023VM_SE_EXP_N_4DC_bus_voltage_angle.pdf Gra
 phic file (type pdf)
-<use img/LEN_A_4_2020_SECO_2023VM_SE_EXP_N_DC_Full_hvdc_reactive_power.pdf>
-Package pdftex.def Info: img/LEN_A_4_2020_SECO_2023VM_SE_EXP_N_DC_Full_hvdc_rea
-ctive_power.pdf  used on input line 649.
-(pdftex.def)             Requested size: 239.39923pt x 68.59016pt.
-<img/LEN_A_4_2020_SECO_2023VM_SE_EXP_N_DC_Full_hvdc_commutation_angle.pdf, id=1
-53, 706.28197pt x 202.356pt>
-File: img/LEN_A_4_2020_SECO_2023VM_SE_EXP_N_DC_Full_hvdc_commutation_angle.pdf 
-Graphic file (type pdf)
-<use img/LEN_A_4_2020_SECO_2023VM_SE_EXP_N_DC_Full_hvdc_commutation_angle.pdf>
-Package pdftex.def Info: img/LEN_A_4_2020_SECO_2023VM_SE_EXP_N_DC_Full_hvdc_com
-mutation_angle.pdf  used on input line 650.
-(pdftex.def)             Requested size: 239.39923pt x 68.59016pt.
-<img/LEN_A_4_2020_SECO_2023VM_SE_EXP_N_DC_Full_hvdc_transformer_tap.pdf, id=154
-, 706.28197pt x 202.356pt>
-File: img/LEN_A_4_2020_SECO_2023VM_SE_EXP_N_DC_Full_hvdc_transformer_tap.pdf Gr
+<use latex/img/LEN_A_4_2020_SECO_2023VM_SE_EXP_N_4DC_bus_voltage_angle.pdf>
+Package pdftex.def Info: latex/img/LEN_A_4_2020_SECO_2023VM_SE_EXP_N_4DC_bus_vo
+ltage_angle.pdf  used on input line 616.
+(pdftex.def)             Requested size: 239.39923pt x 80.59453pt.
+<latex/img/LEN_A_4_2020_SECO_2023VM_SE_EXP_N_4DC_generation_scatter.pdf, id=149
+, 708.24597pt x 238.43779pt>
+File: latex/img/LEN_A_4_2020_SECO_2023VM_SE_EXP_N_4DC_generation_scatter.pdf Gr
 aphic file (type pdf)
-<use img/LEN_A_4_2020_SECO_2023VM_SE_EXP_N_DC_Full_hvdc_transformer_tap.pdf>
-Package pdftex.def Info: img/LEN_A_4_2020_SECO_2023VM_SE_EXP_N_DC_Full_hvdc_tra
-nsformer_tap.pdf  used on input line 651.
+<use latex/img/LEN_A_4_2020_SECO_2023VM_SE_EXP_N_4DC_generation_scatter.pdf>
+Package pdftex.def Info: latex/img/LEN_A_4_2020_SECO_2023VM_SE_EXP_N_4DC_genera
+tion_scatter.pdf  used on input line 617.
+(pdftex.def)             Requested size: 239.39923pt x 80.59479pt.
+<latex/img/LEN_A_4_2020_SECO_2023VM_SE_EXP_N_4DC_branch_flow_scatter.pdf, id=15
+0, 708.24597pt x 238.49101pt>
+File: latex/img/LEN_A_4_2020_SECO_2023VM_SE_EXP_N_4DC_branch_flow_scatter.pdf G
+raphic file (type pdf)
+<use latex/img/LEN_A_4_2020_SECO_2023VM_SE_EXP_N_4DC_branch_flow_scatter.pdf>
+Package pdftex.def Info: latex/img/LEN_A_4_2020_SECO_2023VM_SE_EXP_N_4DC_branch
+_flow_scatter.pdf  used on input line 632.
+(pdftex.def)             Requested size: 239.39923pt x 80.61278pt.
+<latex/img/LEN_A_4_2020_SECO_2023VM_SE_EXP_N_4DC_dcsc_dcer_scatter.pdf, id=151,
+ 925.05597pt x 238.49101pt>
+File: latex/img/LEN_A_4_2020_SECO_2023VM_SE_EXP_N_4DC_dcsc_dcer_scatter.pdf Gra
+phic file (type pdf)
+<use latex/img/LEN_A_4_2020_SECO_2023VM_SE_EXP_N_4DC_dcsc_dcer_scatter.pdf>
+Package pdftex.def Info: latex/img/LEN_A_4_2020_SECO_2023VM_SE_EXP_N_4DC_dcsc_d
+cer_scatter.pdf  used on input line 633.
+(pdftex.def)             Requested size: 239.39923pt x 61.7187pt.
+<latex/img/LEN_A_4_2020_SECO_2023VM_SE_EXP_N_DC_Full_hvdc_reactive_power.pdf, i
+d=152, 706.28197pt x 202.356pt>
+File: latex/img/LEN_A_4_2020_SECO_2023VM_SE_EXP_N_DC_Full_hvdc_reactive_power.p
+df Graphic file (type pdf)
+<use latex/img/LEN_A_4_2020_SECO_2023VM_SE_EXP_N_DC_Full_hvdc_reactive_power.pd
+f>
+Package pdftex.def Info: latex/img/LEN_A_4_2020_SECO_2023VM_SE_EXP_N_DC_Full_hv
+dc_reactive_power.pdf  used on input line 649.
+(pdftex.def)             Requested size: 239.39923pt x 68.59016pt.
+<latex/img/LEN_A_4_2020_SECO_2023VM_SE_EXP_N_DC_Full_hvdc_commutation_angle.pdf
+, id=153, 706.28197pt x 202.356pt>
+File: latex/img/LEN_A_4_2020_SECO_2023VM_SE_EXP_N_DC_Full_hvdc_commutation_angl
+e.pdf Graphic file (type pdf)
+<use latex/img/LEN_A_4_2020_SECO_2023VM_SE_EXP_N_DC_Full_hvdc_commutation_angle
+.pdf>
+Package pdftex.def Info: latex/img/LEN_A_4_2020_SECO_2023VM_SE_EXP_N_DC_Full_hv
+dc_commutation_angle.pdf  used on input line 650.
+(pdftex.def)             Requested size: 239.39923pt x 68.59016pt.
+<latex/img/LEN_A_4_2020_SECO_2023VM_SE_EXP_N_DC_Full_hvdc_transformer_tap.pdf, 
+id=154, 706.28197pt x 202.356pt>
+File: latex/img/LEN_A_4_2020_SECO_2023VM_SE_EXP_N_DC_Full_hvdc_transformer_tap.
+pdf Graphic file (type pdf)
+<use latex/img/LEN_A_4_2020_SECO_2023VM_SE_EXP_N_DC_Full_hvdc_transformer_tap.p
+df>
+Package pdftex.def Info: latex/img/LEN_A_4_2020_SECO_2023VM_SE_EXP_N_DC_Full_hv
+dc_transformer_tap.pdf  used on input line 651.
 (pdftex.def)             Requested size: 239.39923pt x 68.59016pt.
 
 Underfull \hbox (badness 1558) in paragraph at lines 658--664
 []\OT1/ptm/m/n/10 This sec-tion re-ports the con-ver-gence be-hav-ior of the
  []
 
-[8 <./img/LENA_CASO_FINAL_EQV2020_DC_Full_hvdc_reactive_power.pdf> <./img/LENA_
-CASO_FINAL_EQV2020_DC_Full_hvdc_commutation_angle.pdf> <./img/LENA_CASO_FINAL_E
-QV2020_DC_Full_hvdc_transformer_tap.pdf> <./img/LEN_A_4_2020_SECO_2023VM_SE_EXP
-_N_4DC_bus_voltage_angle.pdf> <./img/LEN_A_4_2020_SECO_2023VM_SE_EXP_N_4DC_gene
-ration_scatter.pdf> <./img/LEN_A_4_2020_SECO_2023VM_SE_EXP_N_4DC_branch_flow_sc
-atter.pdf> <./img/LEN_A_4_2020_SECO_2023VM_SE_EXP_N_4DC_dcsc_dcer_scatter.pdf> 
-<./img/LEN_A_4_2020_SECO_2023VM_SE_EXP_N_DC_Full_hvdc_reactive_power.pdf> <./im
-g/LEN_A_4_2020_SECO_2023VM_SE_EXP_N_DC_Full_hvdc_commutation_angle.pdf> <./img/
-LEN_A_4_2020_SECO_2023VM_SE_EXP_N_DC_Full_hvdc_transformer_tap.pdf>] [9]
-[10
+[8 <./latex/img/LENA_CASO_FINAL_EQV2020_DC_Full_hvdc_reactive_power.pdf> <./lat
+ex/img/LENA_CASO_FINAL_EQV2020_DC_Full_hvdc_commutation_angle.pdf> <./latex/img
+/LENA_CASO_FINAL_EQV2020_DC_Full_hvdc_transformer_tap.pdf> <./latex/img/LEN_A_4
+_2020_SECO_2023VM_SE_EXP_N_4DC_bus_voltage_angle.pdf> <./latex/img/LEN_A_4_2020
+_SECO_2023VM_SE_EXP_N_4DC_generation_scatter.pdf> <./latex/img/LEN_A_4_2020_SEC
+O_2023VM_SE_EXP_N_4DC_branch_flow_scatter.pdf> <./latex/img/LEN_A_4_2020_SECO_2
+023VM_SE_EXP_N_4DC_dcsc_dcer_scatter.pdf> <./latex/img/LEN_A_4_2020_SECO_2023VM
+_SE_EXP_N_DC_Full_hvdc_reactive_power.pdf> <./latex/img/LEN_A_4_2020_SECO_2023V
+M_SE_EXP_N_DC_Full_hvdc_commutation_angle.pdf> <./latex/img/LEN_A_4_2020_SECO_2
+023VM_SE_EXP_N_DC_Full_hvdc_transformer_tap.pdf>] [9] [10
 
-] (bare_jrnl_new_sample4.aux)
+]
+(bare_jrnl_new_sample4.aux)
  ***********
 LaTeX2e <2023-11-01> patch level 1
 L3 programming layer <2024-01-04>
  ***********
  ) 
 Here is how much of TeX's memory you used:
- 6093 strings out of 474486
- 114920 string characters out of 5743755
+ 6107 strings out of 474486
+ 116070 string characters out of 5743755
  1958542 words of memory out of 5000000
- 28266 multiletter control sequences out of 15000+600000
- 605196 words of font info for 135 fonts, out of 8000000 for 9000
+ 28277 multiletter control sequences out of 15000+600000
+ 608903 words of font info for 142 fonts, out of 8000000 for 9000
  1145 hyphenation exceptions out of 8191
- 86i,19n,93p,1952b,354s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 86i,19n,93p,1958b,354s stack positions out of 10000i,1000n,20000p,200000b,200000s
 <C:/Users/marck/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/
 cmbx10.pfb><C:/Users/marck/AppData/Local/Programs/MiKTeX/fonts/type1/public/ams
 fonts/cm/cmbx7.pfb><C:/Users/marck/AppData/Local/Programs/MiKTeX/fonts/type1/pu
@@ -696,7 +716,7 @@ arck/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy7.pfb><C:
 i8a.pfb><C:/Users/marck/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times/utm
 r8a.pfb><C:/Users/marck/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times/utm
 ri8a.pfb>
-Output written on bare_jrnl_new_sample4.pdf (10 pages, 2092876 bytes).
+Output written on bare_jrnl_new_sample4.pdf (10 pages, 2092957 bytes).
 PDF statistics:
  377 PDF objects out of 1000 (max. 8388607)
  0 named destinations out of 1000 (max. 500000)
