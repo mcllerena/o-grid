@@ -505,7 +505,169 @@ zero:
 * `converged` — all of the above within tolerance
   ($+$ `CONVERGENCE_REPORT_EPS = 10^{-6}$).
 
-## 9. Why the formulation converges
+## 9. Optimization workflow diagram and large-system convergence logic
+
+This section presents a complete flowchart of the optimization pipeline — from
+the raw ANAREDE `.pwf` file to the final `OptimizationResult` — and then
+details the specific mechanisms that make the solver converge on the ≈11,800-bus
+Brazilian systems validated in §15.
+
+### 9.1 End-to-end workflow
+
+```mermaid
+flowchart TD
+    %% Input
+    A["Raw ANAREDE .pwf file\n(DBAR, DLIN, DCER, DGER, DSVC, DLTC, DLCC, …)"] --> B[anarede.parse → ParsedAnaredeSystem]
+
+    %% Preprocessing
+    B --> C["reduce_closed_switches\n(union-find contraction)"]
+    C --> C1{Switch / jumper contraction\nZMIN = 2.000001e-4 pu\nnear-zero-Z branches}
+    C1 --> C2[Sum generation/load/shunt/Q-limits\nonto representative bus]
+    C2 --> C3["Assign island reference buses\n(assign_island_reference_buses)"]
+
+    %% Warm start
+    C3 --> D["_newton_warm_start\nbuild Ybus → NR solve\ntol = min(εP, εQ)"]
+    D --> D1{NR converged?}
+    D1 -- Yes --> D2["Write NR V, θ back to case buses"]
+    D1 -- No --> D3[Keep raw parsed seed]
+    D2 --> E[build_optimization_model]
+    D3 --> E
+
+    %% NLP construction
+    E --> F["Pyomo ConcreteModel\n• Sets: buses, branches, gens, SVCs, LTCs, LCCs\n• Params: Y_ff, Y_ft, Y_tf, Y_tt, specs, bounds, weights\n• Vars: V, θ, pg, qg, p±, q±, v±, θ±, svc_q, ltc_n, pg_slack"]
+    F --> F1[Active balance constraints\nP_i^spec = P_i^calc + p^+_i - p^-_i]
+    F --> F2[Reactive balance constraints\nQ_i^spec = Q_i^calc + q^+_i - q^-_i]
+    F --> F3["Aggregate balance slacks\n|Σp| ≤ ε, |Σq| ≤ ε"]
+    F --> F4["SVC droop rows\nsvc_q = Q_droop(V) + svc^+ - svc^-\n(bounded, §5.6)"]
+    F --> F5["LTC ratio rows\nltc_n = n_droop(V) + ltc^+ - ltc^-\n(bounded)"]
+    F --> F6["Voltage/angle limit slacks\nv^+, v^-, θ^+, θ^- (bounded)"]
+    F1 --> G[Objective assembly]
+    F2 --> G
+    F3 --> G
+    F4 --> G
+    F5 --> G
+    F6 --> G
+
+    %% Objective modes
+    G --> G1{objective_function mode}
+    G1 -- minimize_residuals --> G2["min Σ(p^+²+p^-²+q^+²+q^-²)\n  + W_V Σv^+²+v^-²\n  + W_θ Σθ^+²+θ^-²\n  + W_SVC Σsvc^+²+svc^-²\n  + W_LTC Σltc^+²+ltc^-²"]
+    G1 -- zero_function --> G3["min W_V Σv^+²+v^-²\n  + W_θ Σθ^+²+θ^-²\n  + W_SVC Σsvc^+²+svc^-²\n  + W_LTC Σltc^+²+ltc^-²\n  s.t. p^+ = p^- = q^+ = q^- = 0"]
+    G1 -- squared_generation --> G4["min Σ_{g∈slack}(pg_g)²\n  + W_V Σv^+²+v^-²\n  + W_θ Σθ^+²+θ^-²\n  + W_SVC Σsvc^+²+svc^-²\n  + W_LTC Σltc^+²+ltc^-²\n  s.t. p^+ = p^- = q^+ = q^- = 0\n       + exact slack-bus balance"]
+
+    G2 --> H["Ipopt solve\nsolve_optimization_model\nmax_iter, max_cpu_time, tol=1e-8"]
+    G3 --> H
+    G4 --> H
+
+    %% Post-processing
+    H --> I{Termination}
+    I -- optimal/locallyOptimal/feasible --> J[solution_metrics\nrecompute residuals from equations]
+    I -- infeasible/unbounded/error --> K[diverged]
+    I -- iteration/CPU budget --> L[not converged]
+    J --> J1{max_p, max_q, max_svc ≤ tol?}
+    J1 -- Yes --> M[converged ✔]
+    J1 -- No --> N[diverged ✘]
+    M --> O["expand_voltage\n(reduced → full buses)"]
+    N --> O
+    K --> O
+    L --> O
+    O --> P[sync_control_state\nSVC/LTC/LCC state back to case]
+    P --> Q[OptimizationResult attached to infrasys System]
+
+    classDef input fill:#e3f2fd,stroke:#1976d2,stroke-width:2px,color:#000;
+    classDef process fill:#fff3e0,stroke:#f57c00,stroke-width:2px,color:#000;
+    classDef decision fill:#fce4ec,stroke:#c2185b,stroke-width:2px,color:#000;
+    classDef success fill:#e8f5e9,stroke:#388e3c,stroke-width:2px,color:#000;
+    classDef fail fill:#ffebee,stroke:#d32f2f,stroke-width:2px,color:#000;
+
+    class A,B input;
+    class C,C2,C3,D,D2,D3,E,F,F1,F2,F3,F4,F5,F6,G,G2,G3,G4,H,O,P,Q process;
+    class C1,D1,G1,I,J1 decision;
+    class M success;
+    class K,N,L fail;
+```
+
+### 9.2 Convergence logic for large-scale Brazilian systems (≈11,800 buses)
+
+The workflow above is identical for all system sizes, but the following mechanisms
+are what make it **robust** on the large Brazilian cases (validated in §15:
+`LEN_A` 7,282→6,912, `LENABD` 7,291→6,895, three `20240820_C_*` snapshots
+11,835→11,3xx, `CASO` 247→240):
+
+1. **Network reduction before the NLP** — `reduce_closed_switches` contracts
+   closed switches and near-zero-impedance jumpers (|Z| ≤ 2.000001×10⁻⁴ pu, or
+   up to 1.05×10⁻³ pu when electrically equivalent). This shrinks the 11,835-bus
+   full case to ~11,380 NLP buses (§15 table), reducing the Pyomo model size and
+   Ipopt's KKT system dimension without losing physics.
+
+2. **Newton-Raphson warm start (`_newton_warm_start`)** — The raw ANAREDE export
+   is an internally inconsistent operating snapshot (generation + SVC injections
+   + seed voltages do not satisfy the balance equations). The NR solve on the
+   *reduced* network (tolerance = min(ε_P, ε_Q)) produces a feasible
+   neighborhood: voltages/angles that satisfy the physics, SVC droop rows that
+   already reflect limit saturation, and island reference buses promoted
+   identically to the direct solvers. On the 11,835-bus cases the NR warm start
+   takes 10²–9×10² s (single-thread) but is the decisive factor for Ipopt
+   convergence (§14, bullet 5; §15 timing table `ws` column).
+
+3. **Exact power-balance options (`zero_function` / `squared_generation`)** —
+   These modes fix the four balance slacks at zero (`_apply_zero_residuals`) and
+   instead either (a) minimize only the regularization (`zero_function`) or
+   (b) minimize squared slack-bus generation with strict balance
+   (`squared_generation`, `_apply_slack_generation_redispatch`). This removes
+   the balance-slack degrees of freedom that would otherwise let the NLP trade
+   residuals against regularization, yielding machine-precision balances
+   (10⁻¹⁰–10⁻¹² pu on the large systems, §15 table `max_p`/`max_q` columns)
+   while keeping the SVC droop rows soft (§5.6) so controls can release
+   gracefully.
+
+4. **Bounded soft constraints instead of hard limits** — Voltage limits,
+   angle limits, SVC droop, and LTC ratio are all implemented as **slack
+   variables with quadratic penalties** (weights `OBJECTIVE_WEIGHT_VOLTAGE=1.0`,
+   `VOLTAGE_LIMITS=100.0`, `ANGLE=1.0`, `ANGLE_LIMITS=1.0e-2`, `SVC=100.0`,
+   `LTC=0.01`). No variable is ever hard-clamped. This guarantees Ipopt always
+   has a compact feasible region (§9 bullet 1) and avoids the "overshoot into
+   non-physical voltages" failure mode of Newton steps.
+
+5. **Angle bounds anchored at ±π/2** — Every non-slack angle variable is bounded
+   by `ANGLE_BOUND_RAD = π` (±π/2 after clipping the seed). This prevents the
+   barrier method from exploring non-physical angle differences across the
+   interconnected system — a critical safeguard on a continental-scale network
+   with long transmission corridors.
+
+6. **Released-control accounting** — An SVC whose droop residual exceeds the
+   control tolerance (`ε_C = max(TEPR, 0.01 Mvar)` or 0.5 pu floor) has its
+   droop row deactivated (§5.6); it is **excluded** from `max_svc` and counted
+   in `released_svc_count`. This correctly models saturated controls without
+   labeling the solution "diverged," which is frequent on the `20240820_C_*`
+   snapshots that carry no `TLVC` constant (§15 note).
+
+7. **Self-reported convergence + independent verification** — Ipopt's
+   `optimal`/`locallyOptimal`/`feasible` termination means the declared
+   tolerance is satisfied *by construction* (interior-point constraints).
+   `solution_metrics` then **recomputes residuals from the power-balance
+   equations** (§8.3), excluding slack buses, to double-check. A run is only
+   `converged` if both agree.
+
+8. **Sparse exact derivatives (automatic differentiation)** — Ipopt receives
+   exact gradients and Hessians via Pyomo's automatic differentiation. There is
+   no finite-difference approximation, no Jacobian lag, and no decoupling
+   assumption — the full NLP KKT system is solved at each barrier step. On the
+   large systems this costs ~5–100 Ipopt iterations (10²–10³ s total) but
+   eliminates the convergence stalls that fixed-matrix methods encounter.
+
+9. **Island reference promotion preserved** — Buses promoted to reference by
+   `assign_island_reference_buses` (islands lacking an explicit slack in the
+   data) remain reference buses in the optimization model (§7). The island
+   power balance is closed identically in both the NR warm start and the NLP,
+   so disconnected subsystems never cause a singular Jacobian.
+
+10. **No outer control loops** — SVC droop and LTC ratio are algebraic
+    equality constraints *inside* the NLP (not an outer injection-update loop).
+    All regulating devices are solved simultaneously with the network equations,
+    removing the bounce-back-and-forth that destabilizes direct solvers on cases
+    with many active SVCs (§11 bullet 3).
+
+## 10. Why the formulation converges
 
 The direct solvers *hope* that the Newton/FD iteration lands on the solution;
 the optimization solver **guarantees feasibility and checks the physical
@@ -795,3 +957,4 @@ in under a second.
   Syst.*, 1974.
 * ANAREDE power-flow manual (execution codes `DBAR`, `DLIN`, `DCER`; program
   constants `BASE`, `TEPA`, `TEPR`).
+

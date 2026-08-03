@@ -379,6 +379,80 @@ can sit at the tolerance bounds in cases where a direct solver reaches
 machine-precision balance. Fast-Decoupled (with Newton fallback) remains the
 default fast path for large healthy cases.
 
+## End-to-end workflow
+
+```mermaid
+flowchart TD
+    %% Input
+    A["Raw ANAREDE .pwf file\n(DBAR, DLIN, DCER, DGER, DSVC, DLTC, DLCC, …)"] --> B[anarede.parse → ParsedAnaredeSystem]
+
+    %% Preprocessing
+    B --> C["reduce_closed_switches\n(union-find contraction)"]
+    C --> C1{Switch / jumper contraction\nZMIN = 2.000001e-4 pu\nnear-zero-Z branches}
+    C1 --> C2[Sum generation/load/shunt/Q-limits\nonto representative bus]
+    C2 --> C3["Assign island reference buses\n(assign_island_reference_buses)"]
+
+    %% Warm start
+    C3 --> D["_newton_warm_start\nbuild Ybus → NR solve\ntol = min(εP, εQ)"]
+    D --> D1{NR converged?}
+    D1 -- Yes --> D2["Write NR V, θ back to case buses"]
+    D1 -- No --> D3[Keep raw parsed seed]
+    D2 --> E[build_optimization_model]
+    D3 --> E
+
+    %% NLP construction
+    E --> F["Pyomo ConcreteModel\n• Sets: buses, branches, gens, SVCs, LTCs, LCCs\n• Params: Y_ff, Y_ft, Y_tf, Y_tt, specs, bounds, weights\n• Vars: V, θ, pg, qg, p±, q±, v±, θ±, svc_q, ltc_n, pg_slack"]
+    F --> F1[Active balance constraints\nP_i^spec = P_i^calc + p^+_i - p^-_i]
+    F --> F2[Reactive balance constraints\nQ_i^spec = Q_i^calc + q^+_i - q^-_i]
+    F --> F3["Aggregate balance slacks\n|Σp| ≤ ε, |Σq| ≤ ε"]
+    F --> F4["SVC droop rows\nsvc_q = Q_droop(V) + svc^+ - svc^-\n(bounded, §5.6)"]
+    F --> F5["LTC ratio rows\nltc_n = n_droop(V) + ltc^+ - ltc^-\n(bounded)"]
+    F --> F6["Voltage/angle limit slacks\nv^+, v^-, θ^+, θ^- (bounded)"]
+    F1 --> G[Objective assembly]
+    F2 --> G
+    F3 --> G
+    F4 --> G
+    F5 --> G
+    F6 --> G
+
+    %% Objective modes
+    G --> G1{objective_function mode}
+    G1 -- minimize_residuals --> G2["min Σ(p^+²+p^-²+q^+²+q^-²)\n  + W_V Σv^+²+v^-²\n  + W_θ Σθ^+²+θ^-²\n  + W_SVC Σsvc^+²+svc^-²\n  + W_LTC Σltc^+²+ltc^-²"]
+    G1 -- zero_function --> G3["min W_V Σv^+²+v^-²\n  + W_θ Σθ^+²+θ^-²\n  + W_SVC Σsvc^+²+svc^-²\n  + W_LTC Σltc^+²+ltc^-²\n  s.t. p^+ = p^- = q^+ = q^- = 0"]
+    G1 -- squared_generation --> G4["min Σ_{g∈slack}(pg_g)²\n  + W_V Σv^+²+v^-²\n  + W_θ Σθ^+²+θ^-²\n  + W_SVC Σsvc^+²+svc^-²\n  + W_LTC Σltc^+²+ltc^-²\n  s.t. p^+ = p^- = q^+ = q^- = 0\n       + exact slack-bus balance"]
+
+    G2 --> H["Ipopt solve\nsolve_optimization_model\nmax_iter, max_cpu_time, tol=1e-8"]
+    G3 --> H
+    G4 --> H
+
+    %% Post-processing
+    H --> I{Termination}
+    I -- optimal/locallyOptimal/feasible --> J[solution_metrics\nrecompute residuals from equations]
+    I -- infeasible/unbounded/error --> K[diverged]
+    I -- iteration/CPU budget --> L[not converged]
+    J --> J1{max_p, max_q, max_svc ≤ tol?}
+    J1 -- Yes --> M[converged ✔]
+    J1 -- No --> N[diverged ✘]
+    M --> O["expand_voltage\n(reduced → full buses)"]
+    N --> O
+    K --> O
+    L --> O
+    O --> P[sync_control_state\nSVC/LTC/LCC state back to case]
+    P --> Q[OptimizationResult attached to infrasys System]
+
+    classDef input fill:#e3f2fd,stroke:#1976d2,stroke-width:2px,color:#000;
+    classDef process fill:#fff3e0,stroke:#f57c00,stroke-width:2px,color:#000;
+    classDef decision fill:#fce4ec,stroke:#c2185b,stroke-width:2px,color:#000;
+    classDef success fill:#e8f5e9,stroke:#388e3c,stroke-width:2px,color:#000;
+    classDef fail fill:#ffebee,stroke:#d32f2f,stroke-width:2px,color:#000;
+
+    class A,B input;
+    class C,C2,C3,D,D2,D3,E,F,F1,F2,F3,F4,F5,F6,G,G2,G3,G4,H,O,P,Q process;
+    class C1,D1,G1,I,J1 decision;
+    class M success;
+    class K,N,L fail;
+```
+
 ## Next steps
 
 - Review the [power system models reference](/reference/models/).
