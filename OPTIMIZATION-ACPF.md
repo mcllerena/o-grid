@@ -794,7 +794,7 @@ CSCs are applied **statically** to the network admittances before the model is
 built (`apply_csc_to_branches`), so the NLP never sees the CSC explicitly. For
 each active CSC (available, operation ≠ `E`, state ≠ `D`, bypass ≠ `L`):
 
-* the percent reactance is converted to per-unit, $x_{csc} = X_{\%} \cdot 10^{-2}$;
+* the percent reactance is converted to per-unit, $x_{csc} = X_{\mathrm{pct}} \cdot 10^{-2}$;
 * a matching branch `(from, to, circuit)` (or its reversed pair) has the
   reactance **added** to its series impedance — for a capacitive compensator
   this reduces the net $x$ in the branch admittance of §3;
