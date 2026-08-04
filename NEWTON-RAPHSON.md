@@ -118,16 +118,16 @@ The complex power sensitivity is built from the current $\vec{I} = \mathbf{Y}\ve
 
 $$
 \frac{\partial \vec{S}}{\partial |V|}
-= \operatorname{diag}(\vec{V})\, \left(\mathbf{Y}\,
-\operatorname{diag}\!\left(\vec{V}/|\vec{V}|\right)\right)^*
-+ \left(\operatorname{diag}(\vec{I})\right)^*
-\,\operatorname{diag}\!\left(\vec{V}/|\vec{V}|\right),
+= \mathrm{diag}(\vec{V})\, \left(\mathbf{Y}\,
+\mathrm{diag}\!\left(\vec{V}/|\vec{V}|\right)\right)^*
++ \left(\mathrm{diag}(\vec{I})\right)^*
+\,\mathrm{diag}\!\left(\vec{V}/|\vec{V}|\right),
 $$
 
 $$
 \frac{\partial \vec{S}}{\partial \theta}
-= j\,\operatorname{diag}(\vec{V})
-\, \left(\operatorname{diag}(\vec{I}) - \mathbf{Y}\,\operatorname{diag}(\vec{V})\right)^* .
+= j\,\mathrm{diag}(\vec{V})
+\, \left(\mathrm{diag}(\vec{I}) - \mathbf{Y}\,\mathrm{diag}(\vec{V})\right)^* .
 $$
 
 The real (active) and imaginary (reactive) parts are then projected onto the
@@ -141,10 +141,10 @@ $$
 \end{bmatrix}
 =
 \begin{bmatrix}
-\operatorname{Re}\!\left(\frac{\partial S}{\partial\theta}\right)_{PV\cup PQ,\,PV\cup PQ}
-& \operatorname{Re}\!\left(\frac{\partial S}{\partial |V|}\right)_{PV\cup PQ,\,PQ} \\[8pt]
-\operatorname{Im}\!\left(\frac{\partial S}{\partial\theta}\right)_{PQ,\,PV\cup PQ}
-& \operatorname{Im}\!\left(\frac{\partial S}{\partial |V|}\right)_{PQ,\,PQ}
+\mathrm{Re}\!\left(\frac{\partial S}{\partial\theta}\right)_{PV\cup PQ,\,PV\cup PQ}
+& \mathrm{Re}\!\left(\frac{\partial S}{\partial |V|}\right)_{PV\cup PQ,\,PQ} \\[8pt]
+\mathrm{Im}\!\left(\frac{\partial S}{\partial\theta}\right)_{PQ,\,PV\cup PQ}
+& \mathrm{Im}\!\left(\frac{\partial S}{\partial |V|}\right)_{PQ,\,PQ}
 \end{bmatrix}.
 $$
 
@@ -417,11 +417,11 @@ controlled-bus voltage to its target with a **bounded proportional step** (max
 1 % tap change per pass):
 
 $$
-\Delta a = \operatorname{clip}\!\left(\pm\,0.5\,(V_{target} - V_{ctrl}),\; -0.01,\; 0.01\right),
+\Delta a = \mathrm{clip}\!\left(\pm\,0.5\,(V_{target} - V_{ctrl}),\; -0.01,\; 0.01\right),
 $$
 
 $$
-a^{(new)} = \operatorname{clip}\!\left(a + \Delta a,\; a_{min},\; a_{max}\right),
+a^{(new)} = \mathrm{clip}\!\left(a + \Delta a,\; a_{min},\; a_{max}\right),
 $$
 
 where the sign depends on whether the controlled bus is the $from$ ($+$) or $to$
@@ -517,7 +517,7 @@ topology/type changes applied **once** at the start of the control loop:
   reactive generation actually required is estimated as
 
 $$
-Q_{req} = \operatorname{Im}(S^{calc})\, S_{base} + Q_{load} - Q_{svc}.
+Q_{req} = \mathrm{Im}(S^{calc})\, S_{base} + Q_{load} - Q_{svc}.
 $$
 
   If $Q_{req} > Q_{max} + 0.1$ (or $< Q_{min} - 0.1$), the bus is converted

@@ -84,7 +84,7 @@ shunt terms removed from $\mathbf{B''}$. `o-grid` builds them directly from
 $\mathbf{Y}$ (`_build_decoupled_matrices`):
 
 $$
-\mathbf{B'} = \mathbf{B''} = -\operatorname{Im}(\mathbf{Y}).
+\mathbf{B'} = \mathbf{B''} = -\mathrm{Im}(\mathbf{Y}).
 $$
 
 Both matrices are **constant**: they are assembled once before the iteration
@@ -108,7 +108,7 @@ $$
     and **clips** the step to $\pm$`max_angle_step` (default $\pm 5^{\circ}$):
 
 $$
-\Delta\theta \leftarrow \operatorname{clip}(\Delta\theta,\; -5^{\circ},\; +5^{\circ}).
+\Delta\theta \leftarrow \mathrm{clip}(\Delta\theta,\; -5^{\circ},\; +5^{\circ}).
 $$
 
 3. Solves the **reactive** system with the fixed factorization
@@ -116,7 +116,7 @@ $$
    voltage magnitude:
 
 $$
-\Delta |V| = \operatorname{clip}\!\left( |V|_{PQ} \odot
+\Delta |V| = \mathrm{clip}\!\left( |V|_{PQ} \odot
 \left(\mathbf{B''}_{PQ}^{-1}\, \Delta Q_{PQ}\right),\; -\Delta V_{max},\; +\Delta V_{max}\right),
 $$
 
@@ -226,7 +226,7 @@ the reduced topology, taps, phase shifts, and shunts.
 ### 4.2 `utils/network.py` — `build_ybus`
 
 Produces the $\mathbf{Y}$ from which both constant matrices are derived:
-$\mathbf{B'} = \mathbf{B''} = -\operatorname{Im}(\mathbf{Y})$. Because the
+$\mathbf{B'} = \mathbf{B''} = -\mathrm{Im}(\mathbf{Y})$. Because the
 matrices are constant, any control change that modifies $\mathbf{Y}$ (SVC
 injection does not, but switched-shunt susceptance and LTC taps do) forces the
 solver to **rebuild and re-factor** $\mathbf{B'}$, $\mathbf{B''}$, which is
@@ -257,7 +257,7 @@ matrices.
 
 ### 4.6 `ltc.py` — `adjust_ltc_taps`
 
-LTC tap adjustment $a^{(new)} = \operatorname{clip}(a \pm 0.5(V_{t}-V_{c}),\,
+LTC tap adjustment $a^{(new)} = \mathrm{clip}(a \pm 0.5(V_{t}-V_{c}),\,
 a_{min},\,a_{max})$ with a $\pm 1\%$ step cap. Taps enter the network through
 the complex tap $t = a e^{j\phi}$ in $\mathbf{Y}$, so a tap change also
 invalidates both FD matrices and triggers a rebuild.
