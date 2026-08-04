@@ -140,17 +140,17 @@ $$
 expanded in the code as, e.g.,
 
 $$
-\texttt{yft\_g} = \frac{-g\cos\phi + b\sin\phi}{a},
+y_{ft,g} = \frac{-g\cos\phi + b\sin\phi}{a},
 \qquad
-\texttt{yft\_b} = \frac{-g\sin\phi - b\cos\phi}{a},
+y_{ft,b} = \frac{-g\sin\phi - b\cos\phi}{a},
 $$
 
 $$
-\texttt{ytf\_g} = \frac{-g\cos\phi - b\sin\phi}{a},
+y_{tf,g} = \frac{-g\cos\phi - b\sin\phi}{a},
 \qquad
-\texttt{ytf\_b} = \frac{g\sin\phi - b\cos\phi}{a},
+y_{tf,b} = \frac{g\sin\phi - b\cos\phi}{a},
 \qquad
-\texttt{yff\_g} = \frac{g}{a^2},\ \ \texttt{yff\_b} = \frac{b^{self}}{a^2},\ \ \texttt{ytt\_g} = g,\ \ \texttt{ytt\_b} = b^{self}.
+y_{ff,g} = \frac{g}{a^2},\ \ y_{ff,b} = \frac{b^{self}}{a^2},\ \ y_{tt,g} = g,\ \ y_{tt,b} = b^{self}.
 $$
 
 The bus-to-neighbor adjacency list is built once (`injections`) so each
@@ -412,9 +412,9 @@ made Ipopt report infeasibility; the fix above mirrors the reference exactly.)
 Seeds are clipped into the variable bounds:
 
 $$
-V_i^{0} = \operatorname{clip}\!\left(V_i^{parsed},\ V^{min,b}_i,\ V^{max,b}_i\right),
+V_i^{0} = \mathrm{clip}\!\left(V_i^{parsed},\ V^{min,b}_i,\ V^{max,b}_i\right),
 \qquad
-\theta_i^{0} = \operatorname{clip}\!\left(\theta_i^{parsed},\ -\tfrac{\pi}{2},\ +\tfrac{\pi}{2}\right).
+	heta_i^{0} = \mathrm{clip}\!\left(\theta_i^{parsed},\ -\tfrac{\pi}{2},\ +\tfrac{\pi}{2}\right).
 $$
 
 Before the seeds above are read, `OptimizationACPowerFlow.run` calls
@@ -477,8 +477,7 @@ where `<state>` follows the Ipopt termination condition — `infeasible`,
 `unbounded`, or `not converged` (e.g. when the iteration budget is exhausted)
 (`_optimization_failure_state`).
 
-The reported mismatch is
-$\max(\text{max\_p},\, \text{max\_q},\, \text{max\_svc})$ and the run is
+The reported mismatch is the maximum of `max_p`, `max_q`, and `max_svc`, and the run is
 attached to the infrasys system with the same result components as the other
 solvers.
 
@@ -957,4 +956,3 @@ in under a second.
   Syst.*, 1974.
 * ANAREDE power-flow manual (execution codes `DBAR`, `DLIN`, `DCER`; program
   constants `BASE`, `TEPA`, `TEPR`).
-
