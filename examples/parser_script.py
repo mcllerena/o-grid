@@ -5,12 +5,12 @@ from r2x_core import DataStore, PluginContext
 from o_grid import AnaredeConfig, AnaredeParser
 from o_grid.models import ACBus
 
-data_path = Path("tests/data/pwf/br-data-2024")
+data_path = Path("tests/data/pwf/br-data-2026-1q")
 
-br_data_2024_list = []
+br_data_2026_1q_list = []
 
 for file in data_path.iterdir():
-    if file.suffix == ".pwf":
+    if file.suffix == ".PWF":
         print(f"Found PWF file: {file.name}")
         parse_cfg = AnaredeConfig(
             system_name=file.stem,
@@ -19,13 +19,13 @@ for file in data_path.iterdir():
         parse_ctx = PluginContext(config=parse_cfg, store=DataStore(path=data_path.parent))
         parsed_system = AnaredeParser.from_context(parse_ctx).run().system
 
-        br_data_2024_list.append(parsed_system)
+        br_data_2026_1q_list.append(parsed_system)
 
 
 total_load_by_sys = []
-for system in br_data_2024_list:
+for system in br_data_2026_1q_list:
     total_load = sum(bus.active_load.magnitude for bus in system.get_components(ACBus))
-    total_load_by_sys.append((system.name, total_load))
+    total_load_by_sys.append((system.name, system.description, total_load))
 
 
 # Parse

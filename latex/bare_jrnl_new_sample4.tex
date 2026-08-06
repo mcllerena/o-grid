@@ -71,16 +71,14 @@
 \begingroup
 \hbadness=10000
 \begin{abstract}
-	This paper presents an open-source optimization-based integrated AC/DC power flow model for
-	the Brazilian Interconnected Power System (BIPS), including detailed representations of
-	LCC links and FACTS devices, together with general network control mechanisms. The formulation is a
-	nonlinear programming (NLP) problem in which network power-balance equations are enforced as
-	exact equalities, while controller equations and operational limits are treated as bounded
-	soft constraints through nonnegative slack variables. The model is implemented in Python with
-	Pyomo and solved with Ipopt. Validation against Anarede is performed on equivalent and
-	large-scale BIPS cases, including two power flow operating snapshots. Results show consistent 
-	operating points and robust convergence across the analyzed cases, with expected numerical differences
-	from modeling assumptions and solution strategy.
+	This paper presents an open-source optimization-based integrated AC/DC power flow model for the
+	Brazilian Interconnected Power System (BIPS). The formulation combines detailed AC network physics
+	with LCC and FACTS representations, while handling operational controls and limits through a single
+	nonlinear programming (NLP) model. Power-balance equations are enforced as exact equalities, and
+	controller equations are represented with bounded soft constraints so the model remains feasible under
+	stressed operating conditions. The implementation is developed in Python using Pyomo and solved with
+	Ipopt. Validation against the Brazilian software Anarede on equivalent planning and operational BIPS
+	power flow cases shows consistent operating points and robust convergence.
 \end{abstract}
 \endgroup
 
@@ -418,7 +416,7 @@ iteration/step limits, and control activation options.
 \begin{table}[htb]
 	\centering
 	\footnotesize
-	\caption{Default constants and power-flow options used by the proposed model.}
+	\caption{Default constants and power-flow options used by the proposed model and Anarede}
 	\label{tab:anarede_defaults}
 	\renewcommand{\arraystretch}{1.2}
 	\setlength{\tabcolsep}{2pt}

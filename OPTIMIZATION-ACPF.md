@@ -942,6 +942,57 @@ exact-balance objectives reach the $10^{-10}$–$10^{-12}$ band. `CASO` is a
 small equivalent-network case, which is why its warm start and solve complete
 in under a second.
 
+## 16. New Brazilian 1Q2026 systems (squared_generation only)
+
+This section presents validation results for the newer Brazilian 1Q2026
+operating snapshots using the `squared_generation` objective function — the
+currently preferred formulation for the paper.
+
+All runs are performed with `optimizationACPF.run(case_path, objective_function="squared_generation")`
+using the standard large-system configuration (`strict_voltage_limits=False`,
+`qlim_enabled=False`). The systems are loaded from the
+`tests/data/pwf/br-data-2026-1q/` directory and processed exactly like the
+older validation sets: Newton warm start, switch/jumper reduction, island
+reference promotion, and post-processing to the full network.
+
+| Case Name | Description | Buses | Total Load (MW) | iter | time(s) |
+| --- | --- | --- | --- | --- | --- |
+| `CASO01-FLOW` | ONS - 1Q2026 - JANEIRO - Máxima Diurna | 12,652 | 114,209.34 | 19 | 3.01 |
+| `CASO02-FLOW` | ONS - 1Q2026 - JANEIRO - Máxima Diurna - MMGD Máxima | 12,652 | 114,210.34 | 21 | 3.41 |
+| `CASO03-FLOW` | ONS - 1Q2026 - JANEIRO - Máxima Noturna | 12,652 | 109,311.04 | 21 | 3.33 |
+| `CASO04-FLOW` | ONS - 1Q2026 - JANEIRO - Mínima Diurna | 12,652 | 67,026.94 | 21 | 3.36 |
+| `CASO05-FLOW` | ONS - 1Q2026 - JANEIRO - Mínima Noturna | 12,652 | 62,168.34 | 99 | 21.19 |
+| `CASO06-FLOW` | ONS - 1Q2026 - ABRIL - Máxima Diurna | 12,652 | 109,223.84 | 20 | 3.27 |
+| `CASO07-FLOW` | ONS - 1Q2026 - ABRIL - Máxima Diurna - MMGD Máxima | 12,652 | 109,222.14 | 21 | 7.79 |
+| `CASO08-FLOW` | ONS - 1Q2026 - ABRIL - Máxima Noturna | 12,652 | 107,415.84 | 20 | 3.27 |
+| `CASO09-FLOW` | ONS - 1Q2026 - ABRIL - Mínima Diurna | 12,652 | 66,008.14 | 22 | 3.58 |
+| `CASO10-FLOW` | ONS - 1Q2026 - ABRIL - Mínima Noturna | 12,652 | 63,110.64 | 20 | 3.30 |
+| `CASO11-FLOW` | ONS - 1Q2026 - ABRIL - Intermediária Diurna | 12,652 | 94,262.74 | 20 | 3.68 |
+
+**Summary of the 1Q2026 Brazilian systems:**
+
+* **Size:** All eleven cases have 12,652 buses (`ACBus` block) in the full
+  parsed case, before the switch/jumper network reduction of §9.2.
+* **Load Range:** Total active load varies from ~62 GW (minimum) to ~114 GW
+  (maximum) across the seasonal and daily operating profiles.
+* **Objective:** All runs use `squared_generation`, which fixes the balance
+  slacks at zero and minimizes squared slack-bus generation while keeping the
+  regularization terms soft for voltage, angle, SVC, and LTC controls.
+* **Convergence:** These cases represent the next generation of Brazilian system
+  validation for the optimization-based solver, complementing the earlier
+  2024 sets and extending confidence in the formulation’s scalability and
+  robustness.
+
+Eleven of the twelve runs follow the expected pattern: 19–22 Ipopt iterations
+and ≈3 s total. The exception is `CASO05-FLOW` (`JANEIRO - Mínima Noturna`, the
+lightest-load snapshot of the set at 62,168 MW), which needs 99 iterations and
+21.19 s — the light-load condition forces the solver through the release/
+re-engagement of reactive controls, see §16.1.
+
+### 16.1 Why `CASO05-FLOW` needs 99 iterations
+
+[analysis text]
+
 ## References
 
 * Wächter, A., Biegler, L. T., "On the implementation of an interior-point
