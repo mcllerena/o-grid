@@ -6,13 +6,14 @@ from pathlib import Path
 
 from r2x_core import DataStore, PluginContext
 
-from o_grid import AnaredeConfig, AnaredeParser, ExportSolution
+from o_grid import AnaredeConfig, AnaredeParser, ExportSolution  # noqa: F401
 from o_grid.acpf import NewtonRaphsonPowerFlow, OptimizationACPowerFlow  # noqa: F401
-from o_grid.system import AnaredeSystem
+from o_grid.models.topology import ACBus
+from o_grid.system import AnaredeSystem  # noqa: F401
 
 # Parse PWF case and load infrasys system
-sys_name = "20240820_C_00-30"
-DATA_PATH = Path(f"tests/data/pwf/{sys_name}.pwf")
+sys_name = "20240820_C_00-00"
+DATA_PATH = Path(f"tests/data/pwf/br-data-2024/{sys_name}.pwf")
 
 parse_config = AnaredeConfig(
     system_name=sys_name,
@@ -24,6 +25,15 @@ parse_context = PluginContext(
 )
 parsed_system = AnaredeParser.from_context(parse_context).run().system
 
+total_load = 0.0
+for bus in parsed_system.get_components(ACBus):
+    total_load += bus.active_load.magnitude
+
+# MW Load = 85231.91700000002 -> CASO_FINAL_EQV2020
+# MW Load = 107532.08 -> LEN_A_4_2020_SECO_2023VM_SE_EXP_N
+# MW Load = 84088.955 -> 20240820_C_00-00
+# MW Load = 84088.955 -> 20240820_C_18-30
+
 # Run power flow on infrasys system
 # nr_pf = NewtonRaphsonPowerFlow(
 #     system=parsed_system,
@@ -34,17 +44,17 @@ parsed_system = AnaredeParser.from_context(parse_context).run().system
 # assert isinstance(nr_pf, AnaredeSystem)
 # assert nr_pf.power_flow_results is not None
 
-opt_pf = OptimizationACPowerFlow(
-    system=parsed_system,
-    objective_function="minimize_residuals",
-    max_iterations=100,
-    print_iterations=True,
-)
-assert isinstance(opt_pf, AnaredeSystem)
+# opt_pf = OptimizationACPowerFlow(
+#     system=parsed_system,
+#     objective_function="minimize_residuals",
+#     max_iterations=100,
+#     print_iterations=True,
+# )
+# assert isinstance(opt_pf, AnaredeSystem)
 
-# Export results to xlsx
-export_sys = ExportSolution(
-    system=opt_pf,
-    format="excel",
-    output_path=Path(f"tests/data/pwf/{sys_name}_solution.xlsx"),
-)
+# # Export results to xlsx
+# export_sys = ExportSolution(
+#     system=opt_pf,
+#     format="excel",
+#     output_path=Path(f"tests/data/pwf/{sys_name}_solution.xlsx"),
+# )

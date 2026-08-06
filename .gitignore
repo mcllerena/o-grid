@@ -42,3 +42,16 @@ tests/data/pwf/br-data-2024/*.pwf
 
 # Remove results .xlsx format outputs
 *.xlsx
+
+# Root-level LaTeX build artifacts
+/*.aux
+/*.log
+/*.out
+/*.fdb_latexmk
+/*.fls
+/*.synctex.gz
+/*.toc
+/*.bbl
+/*.blg
+/texput.log
+/bare_jrnl_new_sample4.pdf
