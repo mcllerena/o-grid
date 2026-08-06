@@ -55,7 +55,21 @@
 \begingroup
 \hbadness=10000
 \begin{abstract}
-	This paper introduces an open-source and optimization-based integrated AC/DC power flow model designed to analyze complex hybrid power grids, such as the Brazilian Interconnected Power System (BIPS). The BIPS is one of the biggest and most complex power grids that interconnects five regions and has high presence of Flexible AC Transmission System (FACTS) devices, including the Thyristor Controlled Series Capacitor (TCSC) and Static Var Compensator (SVC), bipolar point-to-point line-commutated converters (LCC), on-load tap-changing (LTC) transformers, phase-shifting transformers (PST), and switched shunt banks. The model is formulated as a nonlinear programming (NLP) problem in which the network physics, the LCC-HVDC and FACTS devices, and the discrete-type controls (LTC taps and switched shunts) are handled through soft constraints: the controller equations and operational limits are relaxed with bounded nonnegative slack variables, while the network power-balance equations hold as exact equalities. A squared-generation objective at the reference (slack) buses selects the minimum-loss feasible point, and small regularization terms keep the state close to the input operating point. Closed switches and low-impedance jumper branches are contracted before solving, and a Newton--Raphson warm start seeds the NLP from a consistent operating point. The model was implemented in Python using the Pyomo optimization framework and solved with the Ipopt solver, and validated against the Anarede software on a 247-bus BIPS equivalent and on large-scale models with up to 11,835 buses, including 2024 operating snapshots released by the Brazilian Independent System Operator. Results show consistent operating points with expected numerical differences due to different assumptions and solution strategies, while demonstrating robust convergence for all the analyzed cases under the squared-generation objective.
+	This paper introduces an open-source and optimization-based integrated AC/DC power flow 
+	model designed to analyze complex hybrid power grids, such as the Brazilian Interconnected 
+	Power System (BIPS). The BIPS is one of the biggest and most complex power grids that 
+	interconnects five regions and has high presence of Flexible AC Transmission System (FACTS) 
+	devices, High Voltage DC (HVDC) systems, specifically line-commutated converters (LCCs), and
+	many other voltage and power flow control components. The model is formulated as a nonlinear 
+	programming (NLP) problem in which the network physics, the LCCs and FACTS devices, and the 
+	voltage and power flow controls are handled through soft constraints: the controller equations 
+	and operational limits are relaxed with bounded nonnegative slack variables, while the 
+	network power-balance equations hold as exact equalities. The model was implemented in 
+	Python using the Pyomo optimization framework and solved with the Ipopt solver, and 
+	validated against the Anarede software on two BIPS equivalent and other two large-scale 
+	BIPS power flow cases, with low and high load scenarios. Results show consistent operating 
+	points with expected numerical differences due to different assumptions and solution 
+	strategies, while demonstrating robust convergence for all the analyzed cases.
 \end{abstract}
 \endgroup
 
@@ -92,16 +106,12 @@ such as the BIPS. This motivates the present work, an integrated optimization-ba
 LCC-HVDC, FACTS, LTC and PST representation, solved simultaneously and validated at both equivalent and full BIPS scale. The goal
 is to combine modeling realism with robust convergence for practical large-scale studies. The main contributions are summarized as follows:
 
-(i) Development and open-source implementation of an integrated nonlinear AC/DC power flow model that explicitly represents
- FACTS, LCC-HVDC, LTC transformers, PSTs, switched shunts and switch topology in their steady-state behavior, solved with the Ipopt
- solver \cite{ref8} in a single NLP framework. The network power-balance equations hold as exact equalities, while the controller
- equations and operational limits are posed as soft constraints with bounded slacks; a squared-generation objective at the reference
- buses selects the minimum-loss feasible point, so the solver always returns a physically meaningful operating point even under
- stressed conditions, while a Newton--Raphson warm start provides a consistent seed.
+(i) Development and open-source implementation of an integrated nonlinear AC/DC power flow model  with detailed representation
+ of network components and topology available in the original data file, solved with the Ipopt solver \cite{ref8} in a single NLP framework. 
 
 (ii) Validation of the proposed model with the Anarede software, a Brazilian power system analysis tool \cite{ref9},
-using both a system equivalent and the large-scale BIPS models, showing numerically consistent operating points and robust
-convergence for large-scale cases, including 2024 operating snapshots of the Brazilian Interconnected Power System.
+using both a system equivalent and a large-scale BIPS model, showing numerically consistent operating points and robust
+convergence for large-scale cases, including a high-load 2024 operating snapshot of the BIPS.
 % ====================================================================================================================================
 \section{Problem Formulation}
 The AC/DC power flow model is formulated as a NLP optimization problem. While traditional root-finding methods solve a rigid system of
@@ -665,25 +675,23 @@ with the total active and reactive generation and load ($P_g, Q_g, P_l, Q_l$) co
 \begin{table*}[!htbp]
 	\centering
 	\footnotesize
-	\caption{Summary of the analyzed cases: buses in the full parsed case and in the reduced case solved by the NLP, and total generation and load computed from the full-case bus data.}
+	\caption{Summary of the analyzed BIPS power flow cases.}
 	\label{tab:case_summary}
 	\renewcommand{\arraystretch}{1.2}
 	\setlength{\tabcolsep}{12pt}
 	\begin{tabular}{lccccc}
 		\hline
-		\textbf{Case} & \textbf{Buses (full $\rightarrow$ reduced)} & \textbf{$P_g$ (MW)} & \textbf{$Q_g$ (Mvar)} & \textbf{$P_l$ (MW)} & \textbf{$Q_l$ (Mvar)} \\ \hline
-		\texttt{LENA}     & 7\,282 $\rightarrow$ 6\,912 & 129\,789 & $-17$        & 125\,232 & 44\,656 \\
-		\texttt{LENABD}   & 7\,291 $\rightarrow$ 6\,895 & 105\,932 & $-3\,779$    & 102\,649 & 34\,563 \\
-		\texttt{C 00-00}  & 11\,835 $\rightarrow$ 11\,380 & 77\,975  & $-18\,745$   & 74\,843  & 19\,761 \\
-		\texttt{C 00-30}  & 11\,835 $\rightarrow$ 11\,372 & 76\,363  & $-19\,370$   & 73\,292  & 19\,519 \\
-		\texttt{C 06-30}  & 11\,835 $\rightarrow$ 11\,376 & 65\,388  & $-17\,437$   & 61\,609  & 15\,232 \\
-		\texttt{CASO}     & 247 $\rightarrow$ 240         & 110\,099 & 8\,031       & 109\,228 & $-7\,337$ \\ \hline
+		\textbf{Case} & \textbf{Buses} & \textbf{$P_g$ (MW)} & \textbf{$P_l$ (MW)} & \textbf{iter} & \textbf{time (s)}\\ \hline
+		\texttt{EQV-BIPS1}     & 247 & 110\,099     & 109\,228 & 17 & 2 \\
+		\texttt{EQV-BIPS2}     & 7\,282 & 129\,789 & 125\,232 & 25 & 37 \\
+		\texttt{BIPS 00-00}  & 11\,835 & 77\,975  & 74\,843 & 58 &  70 \\
+		\texttt{BIPS 00-30}  & 11\,835 & 76\,363  & 73\,292 & 83 & 120 \\ \hline
 	\end{tabular}
 
-	\footnotesize
-	\texttt{LENA} = \texttt{LEN\_A\_4\_2020\_SECO\_2023VM\_SE\_EXP\_N}, \texttt{LENABD} = \texttt{LENA\_BD0320R0\_2Q2020\_R1\_CASO\_12},
-	\texttt{C 00-00}/\texttt{C 00-30}/\texttt{C 06-30} = \texttt{20240820\_C\_00-00}/\texttt{\_00-30}/\texttt{\_06-30.pwf},
-	\texttt{CASO} = \texttt{CASO\_FINAL\_EQV2020.pwf}.
+	% \footnotesize
+	% \texttt{LENA} = \texttt{LEN\_A\_4\_2020\_SECO\_2023VM\_SE\_EXP\_N}, \texttt{LENABD} = \texttt{LENA\_BD0320R0\_2Q2020\_R1\_CASO\_12},
+	% \texttt{C 00-00}/\texttt{C 00-30}/\texttt{C 06-30} = \texttt{20240820\_C\_00-00}/\texttt{\_00-30}/\texttt{\_06-30.pwf},
+	% \texttt{CASO} = \texttt{CASO\_FINAL\_EQV2020.pwf}.
 \end{table*}
 
 \begin{table*}[!htbp]
