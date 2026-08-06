@@ -1,0 +1,23 @@
+# LaTeX compilation artefacts
+*.aux
+*.fdb_latexmk
+*.fls
+*.log
+*.synctex.gz
+*.out
+*.blg
+*.bbl
+*.toc
+*.lof
+*.lot
+*.nav
+*.snm
+*.vrb
+texput.*
+
+# Compiled PDFs at this level (figures in img/ are kept)
+bare_jrnl_new_sample4.pdf
+conference_paper_main.pdf
+t2.pdf
+t3.pdf
+t5.pdf
