@@ -12,7 +12,7 @@ from o_grid.models.topology import ACBus  # noqa: F401
 from o_grid.system import AnaredeSystem  # noqa: F401
 
 # Parse PWF case and load infrasys system
-sys_name = "CASO05-FLOW"
+sys_name = "CASO01-FLOW"
 DATA_PATH = Path(f"tests/data/pwf/br-data-2026-1q/{sys_name}.PWF")
 
 parse_config = AnaredeConfig(
@@ -50,7 +50,7 @@ opt_pf = OptimizationACPowerFlow(
     max_iterations=100,
     print_iterations=True,
 )
-assert isinstance(opt_pf, AnaredeSystem)
+# assert isinstance(opt_pf, AnaredeSystem)
 
 # Export results to xlsx
 export_sys = ExportSolution(
@@ -58,3 +58,12 @@ export_sys = ExportSolution(
     format="excel",
     output_path=Path(f"tests/data/pwf/{sys_name}_solution.xlsx"),
 )
+
+# Where to locate BESS, to help converge the system (with ACOPF)
+# Optimal location of BESS (having the ACPF already)
+# Electrolizer (dynamic loads that work on P and Q) -> Add constraints (Vlim, Ilim..)
+
+
+# NLR (ParaEMT Simulation to integrate) -> Input to Dynamic Simulation
+
+# How to improve voltage profiles/frequency stability (Need of Dyn. Sim.)

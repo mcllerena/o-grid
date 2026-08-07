@@ -955,19 +955,19 @@ using the standard large-system configuration (`strict_voltage_limits=False`,
 older validation sets: Newton warm start, switch/jumper reduction, island
 reference promotion, and post-processing to the full network.
 
-| Case Name | Description | Buses | Total Load (MW) | iter | time(s) |
+| Case Name | Description | Buses | Total Load (MW) | Model Iter | Model Time(s) | Anarede Iter | Anarede Time (s) 
 | --- | --- | --- | --- | --- | --- |
-| `CASO01-FLOW` | ONS - 1Q2026 - JANEIRO - Máxima Diurna | 12,652 | 114,209.34 | 19 | 3.01 |
-| `CASO02-FLOW` | ONS - 1Q2026 - JANEIRO - Máxima Diurna - MMGD Máxima | 12,652 | 114,210.34 | 21 | 3.41 |
-| `CASO03-FLOW` | ONS - 1Q2026 - JANEIRO - Máxima Noturna | 12,652 | 109,311.04 | 21 | 3.33 |
-| `CASO04-FLOW` | ONS - 1Q2026 - JANEIRO - Mínima Diurna | 12,652 | 67,026.94 | 21 | 3.36 |
-| `CASO05-FLOW` | ONS - 1Q2026 - JANEIRO - Mínima Noturna | 12,652 | 62,168.34 | 99 | 21.19 |
-| `CASO06-FLOW` | ONS - 1Q2026 - ABRIL - Máxima Diurna | 12,652 | 109,223.84 | 20 | 3.27 |
-| `CASO07-FLOW` | ONS - 1Q2026 - ABRIL - Máxima Diurna - MMGD Máxima | 12,652 | 109,222.14 | 21 | 7.79 |
-| `CASO08-FLOW` | ONS - 1Q2026 - ABRIL - Máxima Noturna | 12,652 | 107,415.84 | 20 | 3.27 |
-| `CASO09-FLOW` | ONS - 1Q2026 - ABRIL - Mínima Diurna | 12,652 | 66,008.14 | 22 | 3.58 |
-| `CASO10-FLOW` | ONS - 1Q2026 - ABRIL - Mínima Noturna | 12,652 | 63,110.64 | 20 | 3.30 |
-| `CASO11-FLOW` | ONS - 1Q2026 - ABRIL - Intermediária Diurna | 12,652 | 94,262.74 | 20 | 3.68 |
+| `CASO01-FLOW` | ONS - 1Q2026 - JANEIRO - Máxima Diurna | 12,652 | 114,209.34 | 19 | 3.01 | no convergence | no convergence
+| `CASO02-FLOW` | ONS - 1Q2026 - JANEIRO - Máxima Diurna - MMGD Máxima | 12,652 | 114,210.34 | 21 | 3.41 | 11 | 2.01
+| `CASO03-FLOW` | ONS - 1Q2026 - JANEIRO - Máxima Noturna | 12,652 | 109,311.04 | 21 | 3.33 | 9 | 1.10
+| `CASO04-FLOW` | ONS - 1Q2026 - JANEIRO - Mínima Diurna | 12,652 | 67,026.94 | 21 | 3.36 | no convergence | no convergence
+| `CASO05-FLOW` | ONS - 1Q2026 - JANEIRO - Mínima Noturna | 12,652 | 62,168.34 | 99 | 21.19 | no convergence | no convergence
+| `CASO06-FLOW` | ONS - 1Q2026 - ABRIL - Máxima Diurna | 12,652 | 109,223.84 | 20 | 3.27 | 9 | 1.11
+| `CASO07-FLOW` | ONS - 1Q2026 - ABRIL - Máxima Diurna - MMGD Máxima | 12,652 | 109,222.14 | 21 | 7.79 | 10 | 1.11
+| `CASO08-FLOW` | ONS - 1Q2026 - ABRIL - Máxima Noturna | 12,652 | 107,415.84 | 20 | 3.27 | 11 | 1.00
+| `CASO09-FLOW` | ONS - 1Q2026 - ABRIL - Mínima Diurna | 12,652 | 66,008.14 | 22 | 3.58 | 15 | 2.31
+| `CASO10-FLOW` | ONS - 1Q2026 - ABRIL - Mínima Noturna | 12,652 | 63,110.64 | 20 | 3.30 | 16 | 1.81
+| `CASO11-FLOW` | ONS - 1Q2026 - ABRIL - Intermediária Diurna | 12,652 | 94,262.74 | 20 | 3.68 | 8 | 1.11
 
 **Summary of the 1Q2026 Brazilian systems:**
 
@@ -983,15 +983,67 @@ reference promotion, and post-processing to the full network.
   2024 sets and extending confidence in the formulation’s scalability and
   robustness.
 
-Eleven of the twelve runs follow the expected pattern: 19–22 Ipopt iterations
-and ≈3 s total. The exception is `CASO05-FLOW` (`JANEIRO - Mínima Noturna`, the
-lightest-load snapshot of the set at 62,168 MW), which needs 99 iterations and
-21.19 s — the light-load condition forces the solver through the release/
-re-engagement of reactive controls, see §16.1.
+Ten of the eleven runs follow the expected pattern: 19–22 Ipopt iterations and
+3.0–3.7 s total (`CASO07-FLOW` is a mild time outlier at 7.79 s but keeps a
+normal 21-iteration count). The exception is `CASO05-FLOW` (`JANEIRO - Mínima
+Noturna`, the lightest snapshot of the set at 62,168 MW), which needs 99
+iterations and 21.19 s. It still terminates `Optimal`, but only after a long
+near-feasible plateau and a late control-state transition; §16.1 dissects the
+run trace.
 
 ### 16.1 Why `CASO05-FLOW` needs 99 iterations
 
-[analysis text]
+`CASO05-FLOW` does not fail — it exits with `Optimal Solution Found`
+(Ipopt 3.14.19 / MUMPS 5.8.0) and an exact active-power balance (max P/Q
+residual ≈ 1e-10 pu) — but at 99 iterations, roughly 5× more than any other
+case. The iteration count is machine-independent and was reproduced here; only
+wall time changes with hardware (~21 s on the reference machine vs 98 s of
+Ipopt time in this environment).
+
+Size is not the explanation. The NLP has 68,693 variables, 22,331 equality
+constraints, and 45,778 inequality constraints (all one-sided bound rows) —
+nearly identical to `CASO10-FLOW` (68,903 / 22,399 / 45,918), which converges
+in 20 iterations. The per-iteration `inf_pr` / `inf_du` trace shows three
+distinct phases:
+
+1. **Feasibility restoration (iterations 1–28).** The Newton warm start is a
+   valid power-flow point but not an NLP-feasible one: at iteration 0 the
+   infeasibility is `inf_pr = 3.85` with dual infeasibility `inf_du = 94.5`,
+   because the SVC droop rows and soft limit slacks start at unsatisfied
+   values. The first 28 iterations bring `inf_pr` below 1e-4 (`CASO10-FLOW`
+   needs only 13 for the same job).
+2. **Near-feasible plateau (iterations 29–90).** `inf_pr` oscillates between
+   1e-5 and 1e-3 — just above the `acceptable_tol = 1e-6` accept threshold —
+   while the objective grinds from ≈2,730 to ≈2,497. Dual infeasibility spikes
+   to 1e2–1e5 every few iterations. This is the signature of a flat,
+   ill-conditioned reactive-control subspace: with 40 of 47 SVCs at their
+   reactive limits (released droop rows) and the active-power dispatch pinned
+   by the case injections, the remaining freedom (generator reactive output,
+   released SVC droops, and which soft voltage slacks are active) is nearly
+   cost-neutral in the `squared_generation` objective, so the adaptive-barrier
+   path wanders.
+3. **Control-state transition and convergence (iterations 91–99).** At
+   iteration 91 the step norm jumps to ‖d‖ ≈ 35 pu and `inf_pr` spikes to
+   2.5e-2 — a control (an SVC at its reactive limit or a shunt boundary
+   crossing) flips its active state. A few iterations restore feasibility, and
+   by iteration 96 the overall NLP error drops below 1e-6; iteration 99
+   reaches 5.3e-9 < `tol = 1e-8`, and Ipopt exits `Optimal` — exactly one
+   iteration below the configured `max_iterations = 100`.
+
+The end state is qualitatively the same as in the fast cases: 40 of 47 SVC
+controls are released (`CASO10-FLOW`: 42/47), so the SVC droop residual stays
+at ≈ 4.6e-4 pu — above the 1e-4 control tolerance, i.e. the saturated SVCs
+cannot hold their voltage targets. The voltage report matches a light-load,
+wind-dominated January night: collector buses of the northeastern wind/solar
+belt (Piauí, Rio Grande do Norte, Ceará, Alagoas) sit slightly above 1.05 pu,
+weakly connected wind-plant terminals slightly below 0.95 pu, and 500/765 kV
+buses press their upper limits.
+
+In short, the 99 iterations are neither a failure nor a scalability issue:
+`CASO05-FLOW` is simply the hardest corner of the dataset — a January
+night-minimum snapshot in which nearly every SVC voltage regulator is
+saturated, leaving a long, almost flat reactive-control valley that Ipopt
+traverses slowly until the active set finally settles.
 
 ## References
 

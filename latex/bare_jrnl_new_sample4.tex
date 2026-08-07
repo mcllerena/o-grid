@@ -20,6 +20,9 @@
 \usepackage{url}
 \usepackage{verbatim}
 \usepackage{adjustbox}
+\usepackage{multirow}
+\usepackage{pifont}
+\newcommand{\xmark}{\ding{55}}
 \usepackage{graphicx}
 % Images live under latex/img/.  Allow the document to be compiled either from
 % the repository root (pdflatex latex/bare_jrnl_new_sample4.tex) or from the
@@ -72,12 +75,16 @@
 \hbadness=10000
 \begin{abstract}
 	This paper presents an open-source optimization-based integrated AC/DC power flow model for the
-	Brazilian Interconnected Power System (BIPS). The formulation combines detailed AC network physics
+	Brazilian Interconnected Power System (BIPS). The BIPS is one of the biggest and most complex power 
+	grids that interconnects five regions and has high presence of Flexible AC Transmission System (FACTS) devices, 
+	including the Thyristor Controlled Series Capacitor (TCSC) and Static Var Compensator (SVC), 
+	and bipolar point-to-point line-commutated converters (LCC). The formulation combines detailed AC network physics
 	with LCC and FACTS representations, while handling operational controls and limits through a single
 	nonlinear programming (NLP) model. Power-balance equations are enforced as exact equalities, and
-	controller equations are represented with bounded soft constraints so the model remains feasible under
-	stressed operating conditions. The implementation is developed in Python using Pyomo and solved with
-	Ipopt. Validation against the Brazilian software Anarede on equivalent planning and operational BIPS
+	control equations are represented with bounded soft constraints so the model remains feasible under
+	stressed operating conditions. A network reduction based on a reactance value treshold is applied to simplify the system while preserving essential characteristics.
+	The implementation is developed in Python using the Pyomo optimization framework and solved with
+	Ipopt. Validation against the Brazilian software Anarede on equivalent planning and operational large-scale BIPS
 	power flow cases shows consistent operating points and robust convergence.
 \end{abstract}
 \endgroup
@@ -106,26 +113,25 @@ injection-based representations, enabling their control actions and limits to be
 Discrete-type controls, such as the tap positions of on-load tap-changing (LTC) transformers and the switching of shunt banks, are commonly
 treated as continuous variables within the unified solution, and their discrete operating points are recovered in a post-solution step.
 
-To increase robustness, recent studies have moved toward NLP solvers to address this issues. Compared with traditional approaches,
+To increase robustness, recent studies have moved toward NLP solvers to address these issues. Compared with traditional approaches,
 NLP formulations are more flexible for adding limits and control equations. A common approach is the use of soft constraints with
 slack variables and penalty terms, which helps maintain convergence when strict feasibility is hard to satisfy in stressed operating
 conditions \cite{ref7}.
 
-Even with these advances, there are still few studies applying this level of detailed modeling to very large systems
-such as the BIPS. This motivates the present work, an integrated optimization-based AC/DC power flow model with detailed
-LCC, FACTS, LTC and PST representation, solved simultaneously and validated at both equivalent and full BIPS scale. The goal
+Although it demonstrates the robustness benefits of this strategy, evidence at the scale and control detail of very large
+systems such as the BIPS is still limited. This motivates the present work, an integrated optimization-based AC/DC power flow model with detailed
+LCC, FACTS and network control representation, solved simultaneously and validated at both equivalent and full BIPS scale. The goal
 is to combine modeling realism with robust convergence for practical large-scale studies. The main contributions are summarized as follows:
 
 (i) Development and open-source implementation of an integrated nonlinear AC/DC power flow model  with detailed representation
- of network components and topology available in the original data file, solved with the Ipopt solver \cite{ref8} in a single NLP framework. 
+ of network control components and topology enabled from the original data file, solved with the Ipopt solver \cite{ref8} in a single NLP framework. 
 
-(ii) Validation of the proposed model with the Anarede software, a Brazilian power system analysis tool \cite{ref9},
-using both a system equivalent and a large-scale BIPS model, showing numerically consistent operating points and robust
-convergence for large-scale cases, including a high-load 2024 operating snapshot of the BIPS.
+(ii) Validation against the Anarede software \cite{ref9} on two planning equivalent models and first-quarter 2026 large-scale BIPS
+operating scenarios, showing numerically consistent operating points and robust convergence.
 % ====================================================================================================================================
 \section{Problem Formulation}
-The AC/DC power flow model is formulated as a NLP optimization problem. While traditional root-finding methods solve a rigid system of
-non-linear equations, this optimization-based approach models physical system limits, such as voltage security margins and generator
+	The AC/DC power flow model is formulated as a NLP optimization problem. While traditional root-finding methods solve a rigid system of
+	non-linear equations, this optimization-based approach models physical system limits, such as voltage security margins and generator
 reactive power capabilities, directly as inequality constraints within the core network solution \cite{ref10}. The algebraic structure
 of the problem consists of continuous decision variables bounded by technical limits, governed by a set of equality and inequality
 constraints that represent the unified AC and DC network physics.
@@ -133,8 +139,8 @@ constraints that represent the unified AC and DC network physics.
 \subsection{Objective Function}
 In an optimization-based power flow, the objective function $f(\mathbf{x})$ can be defined as a constant to find any feasible
 point. In this work, the objective is defined as the squared active generation of the reference buses, whose setpoints are
-freed and redispatched by the solver. Because the AC power-balance equations hold as exact equalities, this criterion selects, among
-all feasible operating points, the one with minimum total active generation --- equivalently, minimum losses for a fixed load:
+freed and redispatched by the solver. Because the AC power-balance equations hold as exact equalities, among
+all feasible operating points, the one with minimum total active generation
 \begin{equation}
 	\min_{\mathbf{x}} \quad f(\mathbf{x}) = \sum_{g \in \mathcal{G}_s} (p_g)^2,
 	\label{eq:obj_squared_generation}
@@ -145,8 +151,7 @@ subject to:
 	\mathbf{h}(\mathbf{x}) & \leq \mathbf{0}. \label{eq:inequality_cons}
 \end{align}
 Where $\mathbf{x}$ is the state vector and $\mathcal{G}_s$ is the slack-generator set. The squared-generation dispatch criterion
-follows optimization-based power flow practice adopted in open-source tools such as in \cite{ref11}, and is used
-consistently for all results reported in Section~\ref{sec:results}.
+follows the optimization-based power flow practice adopted in open-source tools such as in \cite{ref11}.
 % ====================================================================================================================================
 \subsection{Optimization-based AC Power Flow}
 \label{sec:OB-ACPF}
@@ -200,8 +205,7 @@ $B_{ij} = b_{ij} + b_{ij}^{sh}/2$. Voltage-magnitude and angle operational limit
 \end{align}
 The slack variables are penalized in the objective, with $\theta^{\lim}=90^{\circ}$ by default. Variable bounds are
 kept wide enough to represent stressed operating points, and bus-type behavior is preserved by fixing the appropriate states:
-slack buses fix $v$ and $\theta$, standard PV buses fix $v$, Q-limited PV buses keep bounded $q_g$ with free $v$, and
-PQ buses remain fully free.
+slack buses fix $v$ and $\theta$, standard PV buses fix $v$, Q-limited PV buses keep bounded $q_g$ and leave $v$ as a decision variable, and PQ buses leave both states as decision variables.
 % ====================================================================================================================================
 \subsection{Thyristor Controlled Series Capacitor (TCSC)}
 \label{sec:tcsc}
@@ -217,7 +221,7 @@ the specified compensation defines an equivalent series reactance that is added 
 	\label{eq:csc_x}
 \end{equation}
 where $k_m$ is the compensation level (the ratio between the capacitive reactance provided by the device and the line reactance) and
-$x^{csc}_m$ is the (negative) reactance synthesized by the device. The series impedance of the branch then becomes $r_{ij} + j x^{e}_m$,
+$x^{csc}_m$ is the reactance of the device. The series impedance of the branch then becomes $r_{ij} + j x^{e}_m$,
 and the branch admittance used in the $\pi$-model of (\ref{eq:power_flow_3}) and (\ref{eq:power_flow_4}) is computed as:
 \begin{equation}
 	\label{eq:csc_y}
@@ -230,14 +234,13 @@ Because the device is purely series, it neither injects nor absorbs active or re
 	p^{csc}_m = 0, \qquad q^{csc}_m = 0, \quad \forall m \in \mathcal{C},
 \end{equation}
 so the nodal balance equations (\ref{eq:power_flow_1}) and (\ref{eq:power_flow_2}) do not contain explicit CSC injection terms:
-the effect of the compensation is captured entirely through the modified branch flows $P_i^{\ell}$ and $Q_i^{\ell}$. This equivalent
-representation keeps the NLP smooth and is consistent with how the device is reported by the input data.
+the effect of the compensation is captured entirely through the modified branch flows $P_i^{\ell}$ and $Q_i^{\ell}$. 
 % ====================================================================================================================================
 \subsection{Static VAR Compensator (SVC)}
 The reactive power injected or absorbed by the SVC is represented by a piecewise-linear function that captures both the control mode and the
 specific operating region of the device, these configurations are shown in Figure \ref{fig:svc_configurations}. Depending on whether the
 SVC $s \in \mathcal{S}$ is operating in reactive power control ($c^{svc}_{s}=0$) or injected current control ($c^{svc}_{s}=1$), different
-expressions are applied to characterize the interaction with the AC network, as defined in the Anarede functional specifications \cite{ref12}.
+expressions are applied to characterize the interaction with the AC network \cite{ref12}.
 The reactive power injection $q^{svc}_s$ is formulated as follows:
 \begin{gather}
 	\label{eq:svc_logic}
@@ -272,6 +275,7 @@ variables in the model.
 		\includegraphics[width=\textwidth]{svc_linear_with_i.png}
 		{\footnotesize (b) SVC linear with $I$.}
 	\end{minipage}
+	\vspace{0.8em}
 	\caption{SVC control modes configurations.}
 	\label{fig:svc_configurations}
 \end{figure}
@@ -280,8 +284,8 @@ variables in the model.
 \label{sec:controls}
 % --- LTC ---
 \subsubsection{On-load Tap Changers (LTC)}
-For each LTC transformer $\ell \in \mathcal{L}_{\mathrm{ltc}}$ --- identified in the input data by a nonzero tap range and a
-controlled bus --- the tap ratio $t_\ell$ is a continuous decision variable bounded by its mechanical limits:
+For each LTC transformer $\ell \in \mathcal{L}_{\mathrm{ltc}}$, identified in the input data by a nonzero tap range and a
+controlled bus, the tap ratio $t_\ell$ is a continuous decision variable bounded by specified limits:
 \begin{equation}
 	\label{eq:ltc_tap}
 	t^{\min}_\ell \le t_\ell \le t^{\max}_\ell, \quad \forall \ell \in \mathcal{L}_{\mathrm{ltc}}.
@@ -296,20 +300,21 @@ value $v^{ref}_\ell$; because the tap is continuous in the NLP, the voltage targ
 \end{equation}
 where $v_{c\ell}$ is the voltage magnitude of the controlled bus, $\varepsilon_{\mathrm{ctrl}}$ is the control tolerance, and the
 residual slacks are penalized in the objective together with a small quadratic regularization $(t_\ell - t_\ell^{0})^2$ that keeps the
-tap near the input setpoint. When tap optimization is disabled, $t_\ell$ is fixed at its input value and behaves as a parameter,
-which matches the fixed-tap case.
+tap near the input setpoint. 
+% When tap optimization is disabled, $t_\ell$ is fixed at its input value and behaves as a parameter,
+% which matches the fixed-tap case.
 % --- PST ---
 \subsubsection{Phase-Shifting Transformers (PST)}
 Phase-shifting transformers are represented by the fixed phase shift $\phi_\ell$ applied through the complex tap ratio in the
-$\pi$-model; the trigonometric terms $\cos(\theta_{ij}+\phi_{ij})$ and $\sin(\theta_{ij}+\phi_{ij})$ in
+$\pi$-model; the terms $\cos(\theta_{ij}+\phi_{ij})$ and $\sin(\theta_{ij}+\phi_{ij})$ in
 (\ref{eq:power_flow_3}) and (\ref{eq:power_flow_4}) directly embed the PST action in the branch flows, without additional state
-variables. The phase shift is read from the input data and kept fixed during the solution, which corresponds to a PST whose
-setpoint is defined before solving the power flow.
+variables. 
+% The phase shift is read from the input data and kept fixed during the solution, which corresponds to a PST whose
+% setpoint is defined before solving the power flow.
 % --- Switches ---
 \subsubsection{Switches and Network Reduction}
-Closed switches and electrically equivalent low-impedance breaker branches are contracted before the NLP is built. A switch or breaker
-branch is contracted when it connects buses that remain at the same voltage profile, that is, when the branch is an exact switch, or
-when its impedance is below the low-impedance threshold $Z_{\min}$ (default $0.001\%$) and the apparent flow through it exceeds
+Closed switches and electrically equivalent low-impedance breaker branches are reduced before the NLP is built. A switch or breaker
+branch is reduced when its impedance is below the low-impedance threshold $Z_{\min}$ (default $0.001\%$) and the apparent flow through it exceeds
 $125\%$ of its rating. The contraction merges the terminal buses with a union-find procedure: the generations, loads, and shunts of
 all merged buses are aggregated at the representative bus (the one with the highest bus-type priority and external degree),
 \begin{equation}
@@ -317,9 +322,9 @@ all merged buses are aggregated at the representative bus (the one with the high
 	P^{\mathrm{agg}}_i = \sum_{j \in \mathcal{M}_i} P^{\mathrm{orig}}_j, \qquad
 	Q^{\mathrm{agg}}_i = \sum_{j \in \mathcal{M}_i} Q^{\mathrm{orig}}_j,
 \end{equation}
-where $\mathcal{M}_i$ is the set of original buses merged into the representative bus $i$, and the contracted branches are removed
+where $\mathcal{M}_i$ is the set of original buses merged into the representative bus $i$, and the reduced branches are removed
 from the network. A mapping back to the original buses is retained so that the solved voltages and control states are expanded to the
-full, uncontracted topology for reporting. This step reduces the size of the NLP without changing the physics of the solved system.
+full topology for further analysis. This step reduces the size of the NLP without changing the physics of the solved system.
 % --- Switched shunts ---
 \subsubsection{Switched Shunts}
 Bus shunt banks with automatic switching are represented by a continuous control variable $q^{sh}_\ell$ for each controllable bank
@@ -343,7 +348,7 @@ so that the model reproduces the automatic switching behavior of the banks throu
  The steady-state modeling of LCC systems used in this work follows classical converter relationships, including converter-side voltages,
  current, control angles, and commutation effects. These relationships provide the analytical basis consistent with practical LCC rectifier
  and inverter operation used in AC/DC power flow studies.
-The LCC system is modeled using a unified set of equations for both rectifier ($k=r$) and inverter ($k=i$) terminals \cite{ref15}. For each
+The LCC system is modeled using a unified set of equations for both rectifier ($k=r$) and inverter ($k=i$) terminals \cite{ref13}. For each
 pole $h \in \mathcal{H}$, where $\mathcal{H}$ represents the set of all active DC poles, the DC voltage $V^{dc,h}_k$ is expressed as the ideal
 no-load voltage term plus the commutation reactance drop:
 \begin{align}
@@ -369,9 +374,9 @@ and power factor angle $\phi^h_k$ for each pole $h \in \mathcal{H}$ and terminal
 	{\cos(2\theta^h_k)-\cos(2\theta^h_k+2\mu^h_k)}
 	\right).
 \end{align}
-To guarantee mathematical and physical consistency within the NLP optimization framework, the argument of the inverse cosine in
-\eqref{eq:overlap_angle_fix} is strictly constrained to the domain $[-1, 1]$, preventing non-convergence during high DC current or depressed
-AC voltage states.
+% To guarantee mathematical and physical consistency within the NLP optimization framework, the argument of the inverse cosine in
+% \eqref{eq:overlap_angle_fix} is strictly constrained to the domain $[-1, 1]$, preventing non-convergence during high DC current or depressed
+% AC voltage states.
 
 The \textit{RMS} AC current $I^{ac,h}_k$ at the converter transformer is proportional to the DC current, while the reactive power
 variable $Q^{ac,h}_k$ at the AC interface is derived for all $h \in \mathcal{H}$ and $k \in \{r,i\}$ as follows:
@@ -383,15 +388,15 @@ In the nodal balance, the active power terms $P^{ac,h}_{r}$ and $P^{ac,h}_{i}$ a
 representing a withdrawal at the rectifier bus and an injection at the inverter bus, respectively. Conversely, because line-commutated converters
 inherently consume reactive power regardless of power flow direction, both $Q^{ac,h}_{r}$ and $Q^{ac,h}_{i}$ are modeled strictly as reactive power
 withdrawals. These variables are directly integrated into the nodal power balance equations \eqref{eq:power_flow_1} and \eqref{eq:power_flow_2}.
-The two-terminal DC link closes its own circuit balance: one converter is designated as the slack (folga) terminal and fixes the DC voltage
-of the pole, while the other terminal sets the transferred power (or current). The DC line resistance $R^{dc,h}$ allocates the losses and the
+In the two-terminal DC link, one converter is designated as the slack terminal and fixes the DC voltage of the pole, while the other 
+terminal sets the transferred power (or current). The DC line resistance $R^{dc,h}$ allocates the losses and the
 terminal voltage drop:
 \begin{align}
 	P^{dc,h}_{r} & = P^{dc,h}_{i} + (I^{dc,h})^2 R^{dc,h}, \label{eq:dc_power_balance} \\
 	V^{dc,h}_{r} & = V^{dc,h}_{i} + I^{dc,h} R^{dc,h}.                    \label{eq:dc_voltage_drop}
 \end{align}
 Finally,
-operational feasibility and equipment limits are enforced across all components by:
+operational feasibility and variable limits are enforced across all components by:
 \begin{align}
 	T^{\min,h}_k      & \leq T^h_k \leq T^{\max,h}_k, \quad \forall h \in \mathcal{H}, \, k\in\{r,i\}, \\
 	\alpha^{\min,h}_r & \leq \alpha^h_r \leq \alpha^{\max,h}_r, \quad \forall h \in \mathcal{H},       \\
@@ -402,14 +407,12 @@ $\alpha^h_r$ and $\gamma^h_i$ remain in secure operating ranges with controlled 
 % ====================================================================================================================================
 \section{Simulation Process}
 
-The model is implemented in Python/Pyomo and solved with Ipopt. The execution pipeline has four stages: (i) parsing and network reduction,
-(ii) Newton--Raphson warm start, (iii) NLP build and solve, and (iv) post-solution restoration of control states for reporting.
+The model is implemented in Pyomo and solved with Ipopt. The execution pipeline starts with the parsing of the BIPS data file and reduced
+by the closed switch/breaker network reduction. Then, a Newton--Raphson solve provides a warm start for Ipopt. The NLP of 
+Section~\ref{sec:OB-ACPF} is solved from this seed, and solved control states are expanded back to the original
+topology for further analysis.
 
-The~.pwf file is first parsed and reduced by closed-switch/breaker contraction. Then, a Newton--Raphson solve provides a warm start for
-Ipopt. The NLP of Section~\ref{sec:OB-ACPF} is solved from this seed, and solved control states are expanded back to the original
-topology for reporting.
-
-The model reads default values and execution options directly from the input records to reproduce Anarede behavior.
+The model reads the default values and execution options directly from the input data file to reproduce Anarede behavior.
 Table~\ref{tab:anarede_defaults} summarizes the numerical values used by the NLP and warm-start steps for tolerances,
 iteration/step limits, and control activation options.
 
@@ -433,11 +436,7 @@ iteration/step limits, and control activation options.
 		0.05 rad & Maximum angle step          & NR step limit                         \\
 		5\%      & Maximum voltage step        & NR step limit                         \\
 		5\%      & Maximum CSC step            & NR step limit                         \\
-		0.001\%  & Low-impedance threshold     & Switch/breaker contraction            \\
-		option   & Reactive limits on PV buses & Q-limited PV variables                \\
-		option   & LTC tap control             & LTC tap optimization                  \\
-		option   & Shunt auto switching        & Switched-shunt variables              \\
-		option   & PST phase-shift control     & PST setpoint read from data           \\ \hline
+		0.001\%  & Low-impedance threshold     & Switch/breaker contraction            \\ \hline
 	\end{tabular}
 \end{table}
 
@@ -446,17 +445,14 @@ iteration/step limits, and control activation options.
 
 \subsection{BIPS Data Model}
 
-The study uses cases released by the Brazilian Independent System Operator~\cite{ref16}, grouped as equivalent planning models and
-full operating snapshots. The planning set contains two 7k-bus models, while the 2024 snapshots contain 11,835 buses before
-closed-switch contraction. An additional 247-bus equivalent case is used for detailed comparison against Anarede. Together, these
-cases cover the main LCC corridors and representative FACTS controls of the BIPS.
-TCSCs, SVCs, LTC transformers, PSTs, switched shunt banks, and bus and line capacitor/reactor banks.
+The case studies used by the Brazilian Independent System Operator (ISO)~\cite{ref14}, comprising two planning cases for
+the equivalent BIPS and eleven first-quarter 2026 operating scenarios of the full BIPS, are considered. 
+The planning cases feature a low bus count but carry an increased, aggregated load. These cases include the main LCC corridors and representative FACTS controls.
 
 As part of this study, the main LCC corridors currently relevant to BIPS operation are explicitly modeled. These include the Itaipu
 link (Foz do Igua\c{c}u--Ibi\'una), the Madeira complex (Santo Ant\^onio--Araraquara, ABB and Areva bipoles), and the Belo Monte transmission
-link (Xingu--Estreito and Xingu--Terminal Rio). In total, the implemented set comprises 12 poles organized as three major LCC schemes: four poles
-at 600~kV for Foz/Ibi\'una, four poles at 600~kV for Santo Ant\^onio/Araraquara, and four poles at 800~kV for the Xingu corridors, with nominal pole
-powers in the range of approximately 1566--2000~MW. Their representative operating settings are summarized in Table~\ref{tab:summary_lcc_links}.
+link (Xingu--Estreito and Xingu--Terminal Rio). In total, the implemented set comprises 12 poles organized as three major LCC HVDC system.
+Their representative operating settings are summarized in Table~\ref{tab:summary_lcc_links}.
 
 \begin{table}[htb]
 	\centering
@@ -481,11 +477,28 @@ powers in the range of approximately 1566--2000~MW. Their representative operati
 \end{table}
 
 \subsection{Model Validation}
-Validation is performed on equivalent and full BIPS cases with LCC links from Table~\ref{tab:summary_lcc_links}. For the equivalent case,
+Validation is performed on the equivalent and full BIPS cases summarized in Table~\ref{tab:validation_cases}, with LCC links from Table~\ref{tab:summary_lcc_links}. For the equivalent case,
 the AC side starts from a flat profile and one converter terminal per link keeps DC voltage reference. The proposed model reproduces the
 operational trends observed in Anarede for voltages, angles, generator outputs, branch flows, and control setpoints. To make this
 comparison explicit, Figs.~\ref{fig:equivalent_bips_model_ac_components} and \ref{fig:equivalent_bips_model_dc_components}
 show the equivalent-case AC and DC validation results, respectively.
+
+\begin{table}[htb]
+	\centering
+	\scriptsize
+	\caption{Summary of the two BIPS equivalent validation cases.}
+	\label{tab:validation_cases}
+	\renewcommand{\arraystretch}{1.2}
+	\setlength{\tabcolsep}{4pt}
+	\begin{tabular}{lcccccc}
+		\hline
+		\textbf{Case} & \textbf{Buses} & \textbf{$P_l$ (MW)} & \multicolumn{2}{c}{\textbf{Model}} & \multicolumn{2}{c}{\textbf{Anarede}} \\
+		\cline{4-5}\cline{6-7}
+		& & & \textbf{Iter} & \textbf{Time (s)} & \textbf{Iter} & \textbf{Time (s)}\\ \hline
+		\texttt{BIPS-EQV1} & 247 & 109\,228 & 17 & 2.1 & 5 & 1.5 \\
+		\texttt{BIPS-EQV2} & 7\,282 & 125\,232 & 25 & 15.2 & 7 & 2.0 \\ \hline
+	\end{tabular}
+\end{table}
 
 \begin{figure}[!htbp]
 	\centering
@@ -523,49 +536,60 @@ Transformer taps and converter controls stay within limits, and FACTS/LCC formul
 
 \subsection{Convergence and Performance}
 \label{sec:convergence}
-This section reports convergence on all analyzed cases using the full optimization-based workflow.
-Each run contracts closed switches, warm-starts with Newton--Raphson, and solves the NLP with Ipopt under the squared-generation
-objective (Section~\ref{sec:OB-ACPF}). Table~\ref{tab:case_summary} summarizes the system data of each case, reporting the number of buses in the
-full parsed case (the \texttt{DBAR} block, before the network reduction) and in the reduced case that the NLP is actually solved on, together
-with the total active and reactive generation and load ($P_g, Q_g, P_l, Q_l$) computed from the per-bus values of the full case.
+Table~\ref{tab:model_anarede} compares the proposed model against Anarede on the eleven
+first-quarter (1Q) of 2026 operating snapshots of the BIPS, each with 12,652 buses in total.
 
 \begin{table}[!htbp]
 	\centering
 	\scriptsize
-	\caption{Summary of the analyzed BIPS power flow cases}
-	\label{tab:case_summary}
+	\caption{Convergence comparison between the proposed model and Anarede on the 1Q2026 Brazilian operating snapshots.}
+	\label{tab:model_anarede}
 	\renewcommand{\arraystretch}{1.2}
 	\setlength{\tabcolsep}{4pt}
 	\begin{adjustbox}{width=\columnwidth}
-	\begin{tabular}{lccccc}
+	\begin{tabular}{ccccccc}
 		\hline
-		\textbf{Case} & \textbf{Buses} & \textbf{$P_g$ (MW)} & \textbf{$P_l$ (MW)} & \textbf{iter} & \textbf{time (s)}\\ \hline
-		\texttt{EQV-BIPS1}     & 247 & 85\,231     & 109\,228 & 17 & 2 \\
-		\texttt{EQV-BIPS2}     & 7\,282 & 107\,532 & 125\,232 & 25 & 37 \\
-		\texttt{BIPS 00-00}  & 11\,835 & 70\,310  & 74\,843 & 58 &  70 \\
-		\texttt{BIPS 06-30}  & 11\,835 & 84\,088  & 73\,292 & 83 & 120 \\ \hline
+		\textbf{Month} & \textbf{Scenario} & \textbf{$P_l$ (MW)} & \multicolumn{2}{c}{\textbf{Model}} & \multicolumn{2}{c}{\textbf{Anarede}} \\
+		\cline{4-5}\cline{6-7}
+		& & & \textbf{Iter} & \textbf{Time (s)} & \textbf{Iter} & \textbf{Time (s)}\\ \hline
+		\multirow{5}{*}{January} & Max. Daytime & 114\,209.34 & 19 & 3.01 & \xmark & \xmark \\
+		& Max. Daytime + MMGD & 114\,210.34 & 21 & 3.41 & 11 & 2.01 \\
+		& Max. Nighttime & 109\,311.04 & 21 & 3.33 & 9 & 1.10 \\
+		& Min. Daytime & 67\,026.94 & 21 & 3.36 & \xmark & \xmark \\
+		& Min. Nighttime & 62\,168.34 & 99 & 21.19 & \xmark & \xmark \\ \cline{2-7}
+		\multirow{6}{*}{April} & Max. Daytime & 109\,223.84 & 20 & 3.27 & 9 & 1.11 \\
+		& Max. Daytime + MMGD & 109\,222.14 & 21 & 7.79 & 10 & 1.11 \\
+		& Max. Nighttime & 107\,415.84 & 20 & 3.27 & 11 & 1.00 \\
+		& Min. Daytime & 66\,008.14 & 22 & 3.58 & 15 & 2.31 \\
+		& Min. Nighttime & 63\,110.64 & 20 & 3.30 & 16 & 1.81 \\
+		& Intermediate Daytime & 94\,262.74 & 20 & 3.68 & 8 & 1.11 \\ \hline
 	\end{tabular}
 	\end{adjustbox}
 
-	% \footnotesize
-	% \texttt{LENA} = \texttt{LEN\_A\_4\_2020\_SECO\_2023VM\_SE\_EXP\_N}, \texttt{LENABD} = \texttt{LENA\_BD0320R0\_2Q2020\_R1\_CASO\_12},
-	% \texttt{C 00-00}/\texttt{C 00-30}/\texttt{C 06-30} = \texttt{20240820\_C\_00-00}/\texttt{\_00-30}/\texttt{\_06-30.pwf},
-	% \texttt{CASO} = \texttt{CASO\_FINAL\_EQV2020.pwf}.
+	{\footnotesize Note: \xmark = scenario did not converge.}
 \end{table}
 
-All cases in Table~\ref{tab:case_summary} converged to an \texttt{optimal} Ipopt solution under the squared-generation objective,
-with exact AC power-balance equations and bounded controller residuals. The equivalent cases converge quickly, while the 2024 full
-snapshots are computationally dominated by the Newton--Raphson warm start due to size and operating stress. Even so, all snapshots
-reach feasible, physically consistent operating points without retuning model weights.
+The proposed model converged optimally on all eleven snapshots, with exact AC power-balance
+equations and bounded control residuals, while Anarede failed to converge on three of them. Model convergence times are around
+3--4~s for most snapshots and about 21~s for the hardest one, the January minimum-nighttime case. At this
+light-load, night-minimum scenario nearly all SVC voltage controls saturate at their reactive limits, so the solver spends
+a long near-feasible convergence tail yet still terminates optimally.
 
 % ===========================================================================================
 \section{Conclusions}
 
-This paper presented an open-source optimization-based integrated AC/DC power flow model for large-scale BIPS studies with detailed
-LCC and FACTS representations. The formulation converged to feasible \texttt{optimal} solutions on equivalent and full-scale cases,
-including 2024 operating snapshots, while maintaining numerically consistent trends against Anarede. These results indicate that the
-proposed model is a practical basis for large-system AC/DC analysis. As future work, additional strategies to reduce iteration count
-and total solve time will be investigated.
+This paper presents an open-source, optimization-based integrated AC/DC power flow model that is capable of effectively solving
+large-scale BIPS operating snapshots with detailed LCC-HVDC and FACTS representations. The proposed formulation is generic and can
+incorporate arbitrary AC/DC networks, with no restriction on the number of LCC converter terminals or on the structure of the DC
+grid, and it models TCSC and SVC devices without discrete variables by posing their piecewise control characteristics through
+bounded soft constraints. The model preserves the accuracy of the AC/DC power flow problem, where the AC grid is represented by fully
+nonlinear power balance equations, the converter controls follow their physical characteristics, and the power-balance equalities
+are enforced exactly while operational limits are softly enforced. Moreover, operational controls and limits are handled within a
+single NLP problem, so the solver can simultaneously redispatch generation and adjust control setpoints under stressed conditions.
+The proposed model has been validated against the commercial software Anarede. Numerical simulations confirm the model's robustness
+in solving the equivalent BIPS cases and the eleven first-quarter 2026 full-scale snapshots, converging on
+all of them, with consistent operating points and robust convergence. Future work will focus on
+reducing the iteration count and the total solve time, and on extending the model to additional operating periods and contingencies.
 
 % ==============================================================================================================
 \begingroup
@@ -615,12 +639,6 @@ and total solve time will be investigated.
 	J. Arrillaga, "High Voltage Direct Current Transmission", 2nd ed. London, U.K.: The Institution of Engineering and Technology, 2008.
 
 	\bibitem{ref14}
-	J. Arrillaga and B. Smith, "AC-DC Power System Analysis". London, U.K.: The Institution of Electrical Engineers, 1998.
-
-	\bibitem{ref15}
-	PTI, Inc., "PSS\textsuperscript{\textregistered}E 34.9.5 Program Application Guide, Volume 1". Schenectady, NY, USA: Siemens Power Technologies International, May 2022.
-
-	\bibitem{ref16}
 	Operador Nacional do Sistema Elétrico (ONS), "ONS (Operador Nacional do Sistema Elétrico)", 2025. [Online]. Available: https://www.ons.org.br/. Accessed: Apr. 20, 2025.
 
 \end{thebibliography}
