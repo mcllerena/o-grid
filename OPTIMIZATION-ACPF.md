@@ -955,7 +955,7 @@ using the standard large-system configuration (`strict_voltage_limits=False`,
 older validation sets: Newton warm start, switch/jumper reduction, island
 reference promotion, and post-processing to the full network.
 
-| Case Name | Description | Buses | Total Load (MW) | Model Iter | Model Time(s) | Anarede Iter | Anarede Time (s) 
+| Case Name | Description | Buses | Total Load (MW) | Model Iter | Model Time(s) | Anarede Iter | Anarede Time (s)
 | --- | --- | --- | --- | --- | --- |
 | `CASO01-FLOW` | ONS - 1Q2026 - JANEIRO - Máxima Diurna | 12,652 | 114,209.34 | 19 | 3.01 | no convergence | no convergence
 | `CASO02-FLOW` | ONS - 1Q2026 - JANEIRO - Máxima Diurna - MMGD Máxima | 12,652 | 114,210.34 | 21 | 3.41 | 11 | 2.01

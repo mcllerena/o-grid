@@ -1,5 +1,5 @@
 version = 1
-revision = 2
+revision = 3
 requires-python = ">=3.11"
 resolution-markers = [
     "python_full_version >= '3.14' and sys_platform == 'win32'",
@@ -348,6 +348,20 @@ wheels = [
 ]
 
 [[package]]
+name = "matpowercaseframes"
+version = "2.1.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
+    { name = "numpy", version = "2.5.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
+    { name = "pandas" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/22/35/d9156d95078810a58ab518c2fb97a1dc2c90db06ebaa2f0961e6eff56da1/matpowercaseframes-2.1.1.tar.gz", hash = "sha256:bd4211c9bddad0974a3554e777f082123aea516db97126352e2da5fc479f679c", size = 26241, upload-time = "2026-06-29T08:49:10.589Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/15/de/157ccc9b261569c8b790b572cfa60806845e87a5fc7ed28fcb7efdca623c/matpowercaseframes-2.1.1-py3-none-any.whl", hash = "sha256:7dac79d559aabec28324fd31eac750463834dfa90842f4f80ee343bfcbfa91de", size = 20379, upload-time = "2026-06-29T08:49:09.634Z" },
+]
+
+[[package]]
 name = "mdurl"
 version = "0.1.2"
 source = { registry = "https://pypi.org/simple" }
@@ -506,6 +520,7 @@ source = { editable = "." }
 dependencies = [
     { name = "infrasys" },
     { name = "loguru" },
+    { name = "matpowercaseframes" },
     { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
     { name = "numpy", version = "2.5.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
     { name = "openpyxl" },
@@ -531,6 +546,7 @@ dev = [
 requires-dist = [
     { name = "infrasys", specifier = ">=1.2.0,<2.0.0" },
     { name = "loguru", specifier = ">=0.7.3,<1.0.0" },
+    { name = "matpowercaseframes", specifier = ">=2.1.1,<3.0.0" },
     { name = "numpy", specifier = ">=2.0" },
     { name = "openpyxl", specifier = ">=3.1,<4.0" },
     { name = "pydantic", specifier = ">=2.11.0,<3.0.0" },
