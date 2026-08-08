@@ -3,6 +3,7 @@
 extend-exclude = ["src/o_grid/config/gen_type_mapping.json"]
 
 [default.extend-words]
+ACTIV = "ACTIV"
 commutated = "commutated"
 Inicial = "Inicial"
 MOR = "MOR"

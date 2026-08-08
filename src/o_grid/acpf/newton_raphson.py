@@ -54,13 +54,19 @@ def solve_newton_raphson(
             pv_pq,
             pq,
         )
-        parsed_residual = _maximum_absolute(
+        parsed_dp = _maximum_absolute(
             specified_no_svc.real[pv_pq] - calculate_power(ybus, parsed_seed).real[pv_pq]
         )
-        flat_residual = _maximum_absolute(
+        parsed_dq = _maximum_absolute(
+            specified_no_svc.imag[pq] - calculate_power(ybus, parsed_seed).imag[pq]
+        )
+        flat_dp = _maximum_absolute(
             specified_no_svc.real[pv_pq] - calculate_power(ybus, flat_seed).real[pv_pq]
         )
-        voltage = flat_seed if flat_residual < parsed_residual else parsed_seed
+        flat_dq = _maximum_absolute(
+            specified_no_svc.imag[pq] - calculate_power(ybus, flat_seed).imag[pq]
+        )
+        voltage = flat_seed if flat_dp + flat_dq < parsed_dp + parsed_dq else parsed_seed
     trace: list[IterationPowerFlowResult] = []
 
     for iteration in range(max_iterations + 1):

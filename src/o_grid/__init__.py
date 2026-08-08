@@ -29,14 +29,15 @@ from o_grid.constants import (
     SWITCH_IMPEDANCE_MNEMONIC,
 )
 from o_grid.exporter import ExportSolution, export_rows
+from o_grid.matpower import MatpowerInfrasysParser, parse_matpower_system
 from o_grid.parser import (
     AnaredeInfrasysParser,
     ParsedAnaredeSystem,
     parse_anarede_system,
     parse_rows,
 )
-from o_grid.plugin_config import AnaredeConfig
-from o_grid.plugin_parser import AnaredeParser
+from o_grid.plugin_config import AnaredeConfig, MatpowerConfig
+from o_grid.plugin_parser import AnaredeParser, MatPowerParser
 
 __all__ = [
     "ACBusResults",
@@ -50,6 +51,9 @@ __all__ = [
     "FastDecoupledPowerFlow",
     "GeneratorResults",
     "LTCTransformerResults",
+    "MatPowerParser",
+    "MatpowerConfig",
+    "MatpowerInfrasysParser",
     "NewtonRaphsonPowerFlow",
     "OptimizationACPowerFlow",
     "ParsedAnaredeSystem",
@@ -62,6 +66,7 @@ __all__ = [
     "TransformerResults",
     "export_rows",
     "parse_anarede_system",
+    "parse_matpower_system",
     "parse_rows",
     "BUS_INTERNAL_GROUP_BLOCKS",
     "DEFAULT_SWITCH_IMPEDANCE_THRESHOLD",

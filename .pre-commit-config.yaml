@@ -8,7 +8,7 @@ default_install_hook_types:
   - commit-msg
   - pre-push
 
-exclude: ^latex/
+exclude: ^(latex/|.*\.m$)
 
 repos:
   - repo: builtin
