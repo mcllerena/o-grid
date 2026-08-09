@@ -1,13 +1,18 @@
 ---
 title: o-grid documentation
-description: Parse ANAREDE power-flow cases into typed infrasys systems with o-grid.
+description: Parse ANAREDE (.pwf) and MATPOWER (.m) power-flow cases into typed infrasys systems with o-grid.
 head: []
 ---
 
 `o-grid` is an open power system modeling and optimization framework. Its parser
-reads Brazilian **ANAREDE** power-flow cases (`.pwf`) and converts each execution
-block into a typed [`infrasys`](https://pypi.org/project/infrasys/) component,
-producing a validated, queryable `System`.
+reads power-flow cases in two formats and converts them into a typed
+[`infrasys`](https://pypi.org/project/infrasys/) component, producing a
+validated, queryable `System`:
+
+- **ANAREDE** power-flow cases (`.pwf`) — each execution block is converted into
+  a typed component.
+- **MATPOWER** cases (`.m`) — the `bus`, `gen`, and `branch` tables are converted
+  into the same typed components.
 
 This documentation is organized by user need.
 
@@ -19,9 +24,9 @@ This documentation is organized by user need.
 
 - [Write your first ANAREDE parser](/tutorials/write-a-parser/) if you want a guided
   introduction that builds on [`examples/parser_script.py`](https://github.com/mcllerena/o-grid/blob/main/examples/parser_script.py).
-- [Run an AC power flow](/tutorials/run-power-flow/) to solve a parsed system with
-  Newton-Raphson or Fast-Decoupled, then query the attached result components or
-  export them to Excel.
+- [Run an AC power flow](/tutorials/run-power-flow/) to solve a parsed ANAREDE or
+  MATPOWER system with Newton-Raphson or Fast-Decoupled, then query the attached
+  result components or export them to Excel.
 - [ANAREDE blocks reference](/reference/anarede-blocks/) if you need to know which
   execution codes the parser handles and how they map to components.
 - [Power system models reference](/reference/models/) if you need the fields and
@@ -34,9 +39,10 @@ This documentation is organized by user need.
 | Module | Purpose |
 | --- | --- |
 | `o_grid.parser` | Column-driven ANAREDE reader that populates an `infrasys` `System`. |
+| `o_grid.matpower` | MATPOWER `.m` reader (`parse_matpower_system`, `MatpowerInfrasysParser`) that populates the same `System` model. |
 | `o_grid.models` | Typed power-system component models (buses, branches, generators, loads, control). |
-| `o_grid.plugin_parser` | `r2x-core` plugin wrapper (`AnaredeParser`) exposing the parser. |
-| `o_grid.plugin_config` | `AnaredeConfig`, the configuration model for the parser plugin. |
+| `o_grid.plugin_parser` | `r2x-core` plugin wrappers (`AnaredeParser`, `MatPowerParser`) exposing the parsers. |
+| `o_grid.plugin_config` | `AnaredeConfig` and `MatpowerConfig`, the configuration models for the parser plugins. |
 | `o_grid.exporter` | Writes solved power-flow results to Excel workbooks (`ExportSolution`) and delimited text (`export_rows`). |
 | `o_grid.config` | Declarative column mapping (`anarede_mapping.json`) and generator type mapping. |
 

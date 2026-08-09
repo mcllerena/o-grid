@@ -2,17 +2,29 @@
 
 Open Power System Modeling & Optimization Framework.
 
-`o-grid` reads Brazilian **ANAREDE**/**Organon** power-flow cases (`.pwf`) and turns them into
-a typed, in-memory [`infrasys`](https://pypi.org/project/infrasys/) `System`. Each
-PWF execution block is mapped to a strongly-typed component model, so the raw
-fixed-width text becomes queryable, validated Python objects that downstream
-modeling and optimization code can consume.
+`o-grid` reads power-flow cases and turns them into a typed, in-memory
+[`infrasys`](https://pypi.org/project/infrasys/) `System`. Two source formats are
+supported:
+
+- **ANAREDE**/**Organon** `.pwf` files — fixed-width text where each execution
+  block (`DBAR`, `DLIN`, `DGER`, ...) is mapped to a strongly-typed component
+  model, so the raw text becomes queryable, validated Python objects.
+- **MATPOWER** `.m` files (via [`matpowercaseframes`](https://pypi.org/project/matpowercaseframes/))
+  — the `bus`, `gen`, and `branch` tables are converted into the same typed
+  component models, including bus shunt susceptance (`BS`), branch impedances,
+  and transformer taps/phase shifts.
+
+Either way, downstream modeling and optimization code consumes the same validated
+`System`.
 
 ## The parser approach
 
-The parser is column-driven and declarative. Rather than hand-coding readers for
-every ANAREDE block, `o-grid` describes each block once in a JSON mapping and
-resolves the values into typed components:
+The ANAREDE parser is column-driven and declarative. Rather than hand-coding
+readers for every ANAREDE block, `o-grid` describes each block once in a JSON
+mapping and resolves the values into typed components. The MATPOWER parser
+(`o_grid.matpower`) follows the same "tables to typed components" idea, but reads
+the tabular `bus`/`gen`/`branch` data with `matpowercaseframes` instead of column
+slicing.
 
 1. **Read** the `.pwf` text and split it into execution-code blocks
    (`DBAR`, `DLIN`, `DGER`, ...).
@@ -61,6 +73,40 @@ system = AnaredeParser.from_context(context).run().system
 The returned `system` is a standard `infrasys` `System`; query it with
 `system.get_components(ACBus)` and friends. See the
 [documentation](docs/) for a full walkthrough.
+
+### Parse a MATPOWER case
+
+MATPOWER `.m` cases are parsed with the same `System` API via
+`parse_matpower_system` or the `MatPowerParser` plugin:
+
+```python
+from pathlib import Path
+
+from o_grid import parse_matpower_system
+
+data_path = Path("tests/data/mat/case_ACTIVSg10k.m")
+
+parsed = parse_matpower_system(data_path)
+system = parsed.system
+```
+
+`parse_matpower_system` returns a `ParsedAnaredeSystem` whose `.system` is a
+standard `infrasys` `System` with the same typed components as the ANAREDE path,
+so the power-flow and export steps below apply unchanged. The parser reads the
+`bus`, `gen`, `branch`, and (when present) `dcline` tables, deriving
+transformers, phase-shifting transformers, and switches from the branch records.
+Bus shunt susceptance (`BS`) and conductance (`GS`) columns are mapped into the
+bus shunt model.
+
+```python
+from o_grid import MatpowerConfig
+from o_grid.plugin_parser import MatPowerParser
+from r2x_core import DataStore, PluginContext
+
+config = MatpowerConfig(system_name="case_ACTIVSg10k", pwf_path=str(data_path))
+context = PluginContext(config=config, store=DataStore(path=data_path.parent))
+system = MatPowerParser.from_context(context).run().system
+```
 
 ### Run an AC power flow
 
@@ -111,8 +157,10 @@ delimited text.
 
 ## PWF blocks handled by the parser
 
-The parser recognizes the following PWF execution codes. Each block is sliced
+The ANAREDE parser recognizes the following PWF execution codes. Each block is sliced
 by its column mapping and resolved into the typed component model shown below.
+(MATPOWER cases use the same component models but are driven by the
+`o_grid.matpower` table parser instead.)
 
 | Block | Component model | Purpose |
 | --- | --- | --- |

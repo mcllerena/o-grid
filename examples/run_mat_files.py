@@ -18,7 +18,7 @@ from o_grid.plugin_parser import MatPowerParser
 
 DATA_PATH = Path(__file__).resolve().parents[1] / "tests" / "data" / "mat"
 
-sys_name = "case_ACTIVSg10k"
+sys_name = "case_SyntheticUSA"
 pwf_path = DATA_PATH / f"{sys_name}.m"
 if not pwf_path.exists():
     raise FileNotFoundError(f"MATPOWER case file not found: {pwf_path}")
@@ -42,4 +42,4 @@ opt_pf = NewtonRaphsonPowerFlow(
 )
 output_path = DATA_PATH.parent / "mat" / f"{sys_name}_solution.xlsx"
 ExportSolution(system=opt_pf, format="excel", output_path=output_path)
-print(f"Solution exported to {output_path}")
+# print(f"Solution exported to {output_path}")

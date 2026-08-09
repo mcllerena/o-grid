@@ -133,9 +133,7 @@ def test_branch_classification() -> None:
 
 def test_newton_raphson_solves_case5_dc() -> None:
     parsed = parse_matpower_system(MATPOWER_DATA / "case5_dc.m")
-    solved = NewtonRaphsonPowerFlow(
-        system=parsed.system, max_iterations=30, max_control_passes=0
-    )
+    solved = NewtonRaphsonPowerFlow(system=parsed.system, max_iterations=30, max_control_passes=0)
     results = solved.power_flow_results
     assert results.information.converged is True
     assert results.information.total_load_mw == pytest.approx(1015.0)
@@ -143,30 +141,81 @@ def test_newton_raphson_solves_case5_dc() -> None:
     assert results.information.line_flow_overloads == 0
 
 
-# def test_newton_raphson_solves_large_activitys_case() -> None:
-#     parsed = parse_matpower_system(MATPOWER_DATA / "case_ACTIVSg10k.m")
-#     solved = NewtonRaphsonPowerFlow(
-#         system=parsed.system, max_iterations=30, max_control_passes=0
-#     )
-#     information = solved.power_flow_results.information
+def test_newton_raphson_solves_large_activitys_case() -> None:
+    parsed = parse_matpower_system(MATPOWER_DATA / "case_ACTIVSg10k.m")
+    solved = NewtonRaphsonPowerFlow(system=parsed.system, max_iterations=30, max_control_passes=0)
+    information = solved.power_flow_results.information
 
-#     assert information.converged is True
-#     assert information.solver == "newton-raphson"
-#     assert information.bus_count == 10000
-#     assert information.max_mismatch_pu <= 0.001
+    assert information.converged is True
+    assert information.solver == "newton-raphson"
+    assert information.bus_count == 10000
+    assert information.max_mismatch_pu <= 0.001
 
 
-# def test_fast_decoupled_solves_large_activitys_case_via_fallback() -> None:
-#     parsed = parse_matpower_system(MATPOWER_DATA / "case_ACTIVSg10k.m")
-#     solved = FastDecoupledPowerFlow(
-#         system=parsed.system, max_iterations=30, max_control_passes=0
-#     )
-#     information = solved.power_flow_results.information
+def test_fast_decoupled_solves_large_activitys_case_via_fallback() -> None:
+    parsed = parse_matpower_system(MATPOWER_DATA / "case_ACTIVSg10k.m")
+    solved = FastDecoupledPowerFlow(system=parsed.system, max_iterations=30, max_control_passes=0)
+    information = solved.power_flow_results.information
 
-#     assert information.converged is True
-#     assert information.solver == "fast-decoupled"
-#     assert information.bus_count == 10000
-#     assert information.max_mismatch_pu <= 0.001
+    assert information.converged is True
+    assert information.solver == "fast-decoupled"
+    assert information.bus_count == 10000
+    assert information.max_mismatch_pu <= 0.001
+
+
+def test_newton_raphson_solves_large_activitys70k_case_with_shunts() -> None:
+    parsed = parse_matpower_system(MATPOWER_DATA / "case_ACTIVSg70k.m")
+    solved = NewtonRaphsonPowerFlow(system=parsed.system, max_iterations=30, max_control_passes=0)
+    information = solved.power_flow_results.information
+
+    assert information.converged is True
+    assert information.solver == "newton-raphson"
+    assert information.bus_count == 70000
+    assert information.max_mismatch_pu <= 0.001
+    assert information.solved_generation_mw == pytest.approx(612959.4, rel=1e-3)
+    assert information.branch_active_losses_mw == pytest.approx(18243.0, rel=0.05)
+    assert information.power_balance_mw == pytest.approx(0.0, abs=1e-3)
+
+
+def test_acbuses_parses_matpower_bus_shunt_bs() -> None:
+    from o_grid.models.m_models.topology import ACBuses
+
+    buses, _ = ACBuses(
+        [
+            {
+                "BUS_I": 26989.0,
+                "BUS_TYPE": 1.0,
+                "PD": 0.0,
+                "QD": 0.0,
+                "GS": 0.0,
+                "BS": -1599.68,
+                "BUS_AREA": 22.0,
+                "VM": 1.039,
+                "VA": -50.26,
+                "BASE_KV": 765.0,
+                "VMAX": 1.1,
+                "VMIN": 0.9,
+            },
+            {
+                "BUS_I": 2.0,
+                "BUS_TYPE": 1.0,
+                "PD": 0.0,
+                "QD": 0.0,
+                "GS": 0.0,
+                "BS": 0.0,
+                "BUS_AREA": 22.0,
+                "VM": 1.0,
+                "VA": 0.0,
+                "BASE_KV": 765.0,
+                "VMAX": 1.1,
+                "VMIN": 0.9,
+            },
+        ],
+        base_mva=100.0,
+    )
+
+    assert buses[0].capacitor_reactor.magnitude == pytest.approx(-1599.68)
+    assert buses[1].capacitor_reactor.magnitude == pytest.approx(0.0)
 
 
 def test_optimization_solves_case5_dc() -> None:

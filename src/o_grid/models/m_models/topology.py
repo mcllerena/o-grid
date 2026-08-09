@@ -64,9 +64,12 @@ def ACBuses(
             ),
             active_load=ActivePower(_number(row.get("PD", 0.0)), "MW"),
             reactive_load=ReactivePower(_number(row.get("QD", 0.0)), "MVAr"),
-            capacitor_reactor=ReactivePower(_number(row.get("GS", 0.0)) * base_mva, "MVAr"),
-            min_reactive_generation=_reactive_limits(generator_records, number, "QMIN"),
-            max_reactive_generation=_reactive_limits(generator_records, number, "QMAX"),
+            capacitor_reactor=ReactivePower(
+                _number(row.get("GS", 0.0)) * base_mva + _number(row.get("BS", 0.0)),
+                "MVAr",
+            ),
+            min_reactive_generation=_reactive_limits(bus_generators, "QMIN"),
+            max_reactive_generation=_reactive_limits(bus_generators, "QMAX"),
         )
         component.ext["pwf_values"] = {"name": str(number), "area": area_number}
         bus_components.append(component)
@@ -74,15 +77,10 @@ def ACBuses(
 
 
 def _reactive_limits(
-    records: Sequence[Mapping[str, Any]],
-    bus_number: int,
+    generator_rows: Sequence[Mapping[str, Any]],
     field: str,
 ) -> ReactivePower | None:
-    values = [
-        _number(row[field])
-        for row in records
-        if _int(row.get("GEN_BUS")) == bus_number and row.get(field) is not None
-    ]
+    values = [_number(row[field]) for row in generator_rows if row.get(field) is not None]
     if not values:
         return None
     return ReactivePower(sum(values), "MVAr")

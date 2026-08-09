@@ -108,6 +108,28 @@ buses to areas, shunts to controllers).
 - **Composability.** The parser is wrapped as an `r2x-core` plugin
   (`AnaredeParser` + `AnaredeConfig`), so it plugs into larger data pipelines.
 
+## MATPOWER support
+
+`o-grid` also parses **MATPOWER** `.m` cases into the same `System` model. The
+ANAREDE column-slicing machinery is specific to fixed-width `.pwf` text, so the
+MATPOWER path (`o_grid.matpower`) instead reads the tabular `bus`, `gen`, and
+`branch` datasets with `matpowercaseframes` and feeds each row through the same
+typed models in `o_grid.models` (`ACBuses`, `Branch`, `Generators`, `DCLines`).
+
+The shared component models are what make the two formats interchangeable:
+
+- `ACBuses` maps the MATPOWER `bus` columns (`BUS_TYPE`, `PD`/`QD`, `GS`/`BS`,
+  `VM`/`VA`, `BASE_KV`, `VMAX`/`VMIN`) onto `ACBus`, including bus shunt
+  susceptance.
+- `Branch` classifies each `branch` row into `ACLine`, `LTCTransformer`,
+  `PhaseShiftingTransformer`, `TransformerDevice`, or `SwitchDevice` — the same
+  polymorphic derivation used for `DLIN` records.
+- `Generators` maps the `gen` columns (`PG`, `QG`, `QMIN`/`QMAX`, `VG`) onto
+  `Generator`.
+
+The result is a parser-first pipeline where a `.pwf` or `.m` case produces the
+same typed `System` and can be solved with the same power-flow solvers.
+
 ## Extending the parser
 
 - **Add a field to a block:** add its column range, default, and description to the

@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/icons">
+        <file alias="o-grid.png">../img/o-grid.png</file>
+    </qresource>
+</RCC>

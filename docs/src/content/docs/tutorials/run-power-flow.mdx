@@ -1,18 +1,19 @@
 ---
 title: Run an AC power flow
-description: Parse an ANAREDE case, solve it with Newton-Raphson or Fast-Decoupled, and inspect the attached infrasys results.
+description: Parse an ANAREDE or MATPOWER case, solve it with Newton-Raphson or Fast-Decoupled, and inspect the attached infrasys results.
 head: []
 ---
 
-This tutorial parses an ANAREDE `.pwf` case and solves the resulting `infrasys`
-system with one of the pure-Python AC power-flow algorithms. It follows the
-runnable [`examples/run_power_flow.py`](https://github.com/mcllerena/o-grid/blob/main/examples/run_power_flow.py).
+This tutorial parses an ANAREDE `.pwf` case (or a MATPOWER `.m` case) and solves
+the resulting `infrasys` system with one of the pure-Python AC power-flow
+algorithms. It follows the runnable
+[`examples/run_power_flow.py`](https://github.com/mcllerena/o-grid/blob/main/examples/run_power_flow.py).
 
 ## What you'll build
 
 A parser-first script that:
 
-- creates an `AnaredeSystem` from a PWF case,
+- creates an `AnaredeSystem` from a PWF or MATPOWER case,
 - runs Newton-Raphson or Fast-Decoupled power flow,
 - optionally prints the iteration convergence trace,
 - displays system and solver statistics,
@@ -69,6 +70,45 @@ uv run python tmp_power_flow.py
 Solved bus states, branch flows, component result rows, and solver statistics are
 attached to that system. `print_iterations=True` prints the numerical convergence
 trace; omit it or set it to `False` for a quiet solve.
+
+## Solve a MATPOWER case
+
+MATPOWER `.m` cases produce the same `AnaredeSystem` and accept the same solvers.
+Use `parse_matpower_system` for a one-liner, or the `MatPowerParser` plugin for
+the `r2x-core` pipeline:
+
+```python
+from o_grid import parse_matpower_system
+from o_grid.acpf import NewtonRaphsonPowerFlow
+
+parsed = parse_matpower_system("tests/data/mat/case_ACTIVSg10k.m")
+
+solved_system = NewtonRaphsonPowerFlow(system=parsed.system)
+```
+
+```python
+from r2x_core import DataStore, PluginContext
+
+from o_grid import MatpowerConfig
+from o_grid.plugin_parser import MatPowerParser
+
+config = MatpowerConfig(
+    system_name="case_ACTIVSg10k",
+    pwf_path="tests/data/mat/case_ACTIVSg10k.m",
+)
+parse_context = PluginContext(
+    config=config,
+    store=DataStore(path=Path("tests/data/mat")),
+)
+parsed = MatPowerParser.from_context(parse_context).run()
+solved_system = NewtonRaphsonPowerFlow(system=parsed.system)
+```
+
+The MATPOWER parser maps the `bus`, `gen`, `branch`, and `dcline` tables onto the
+same typed components used by the ANAREDE path — including bus shunt susceptance
+(`BS`), generator reactive limits, branch impedances/charging, and transformer
+taps/phase shifts — so the statistics, result querying, and export steps below
+are identical for both formats.
 
 ## Use the Fast-Decoupled algorithm
 

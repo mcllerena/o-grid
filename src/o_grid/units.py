@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from functools import lru_cache
+
 from infrasys.base_quantity import BaseQuantity, ureg
 from pint import Quantity
 
@@ -20,6 +22,10 @@ _define_unit(
     "MVAr",
 )
 _define_unit("pu = [] = per_unit", "pu")
+
+# Pint re-parses unit strings on every quantity construction; cache the parsed
+# units so building large systems does not pay the parse cost per component.
+setattr(ureg, "parse_units", lru_cache(maxsize=None)(ureg.parse_units))
 
 
 class Distance(BaseQuantity):

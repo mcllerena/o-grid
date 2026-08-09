@@ -90,7 +90,8 @@
 \endgroup
 
 \begin{IEEEkeywords}
-	AC/DC power flow, BIPS, FACTS, LCC, nonlinear programming, open-source software, optimization, 
+	AC/DC power flow, large-scale power systems, line-commutated converter, nonlinear programming, 
+	open-source software, static var compensator, thyristor-controlled series capacitor, FACTS,
 	network control components, power flow snapshots.
 \end{IEEEkeywords}
 
@@ -480,7 +481,7 @@ Their representative operating settings are summarized in Table~\ref{tab:summary
 Validation is performed on the equivalent and full BIPS cases summarized in Table~\ref{tab:validation_cases}, with LCC links from Table~\ref{tab:summary_lcc_links}. For the equivalent case,
 the AC side starts from a flat profile and one converter terminal per link keeps DC voltage reference. The proposed model reproduces the
 operational trends observed in Anarede for voltages, angles, generator outputs, branch flows, and control setpoints. To make this
-comparison explicit, Figs.~\ref{fig:equivalent_bips_model_ac_components} and \ref{fig:equivalent_bips_model_dc_components}
+comparison explicit, Figure~\ref{fig:equivalent_bips_model_ac_components} and \ref{fig:equivalent_bips_model_dc_components}
 show the equivalent-case AC and DC validation results, respectively.
 
 \begin{table}[htb]
@@ -531,8 +532,8 @@ including firing/extinction angles in practical ranges.
 	\label{fig:bus_validation}
 \end{figure}
 
-For large-scale snapshots, bus and generation profiles remain inside operational ranges and support the expected stressed-transfer behavior.
-Transformer taps and converter controls stay within limits, and FACTS/LCC formulations maintain feasible operation without discrete switching.
+For large-scale snapshots, Figure~\ref{fig:bus_validation} shows that bus and generation profiles remain inside operational ranges and support the expected stressed-transfer behavior.
+Transformer taps and converter controls stay within limits, and FACTS/LCC formulations maintain feasible operation without saturation.
 
 \subsection{Convergence and Performance}
 \label{sec:convergence}
