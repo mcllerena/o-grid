@@ -1,6 +1,9 @@
 #pragma once
 
 #include <QMainWindow>
+#include <QPalette>
+#include <QProcess>
+#include <QString>
 
 #include "PowerFlowSettings.h"
 
@@ -21,6 +24,9 @@ private slots:
     void runPowerFlow();
     void setLightMode();
     void setDarkMode();
+    void onBackendOutput();
+    void onBackendError();
+    void onBackendFinished(int exitCode, QProcess::ExitStatus exitStatus);
 
 private:
     void createActions();
@@ -29,6 +35,11 @@ private:
     void appendLog(const QString& line);
     void applyLightPalette();
     void applyDarkPalette();
+    void setAppPalette(const QPalette& palette);
+    QString backendMethodArg() const;
+    QString backendScriptPath() const;
+    QString pythonExecutable() const;
+    void launchBackend();
 
     PowerFlowSettings settings_;
     QString currentCasePath_;
@@ -44,4 +55,7 @@ private:
     QTextEdit* logView_ = nullptr;
     QPushButton* runButton_ = nullptr;
     QPushButton* settingsButton_ = nullptr;
+
+    QProcess* backendProcess_ = nullptr;
+    QString backendStdoutBuffer_;
 };
