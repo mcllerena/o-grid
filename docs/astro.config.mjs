@@ -62,6 +62,7 @@ export default defineConfig({
           items: [
             { label: "Parser architecture", link: "/explanation/parser-architecture/" },
             { label: "DC power flow", link: "/explanation/dc-power-flow/" },
+            { label: "Dynamic stability", link: "/explanation/stability-dynamics/" },
             { label: "Optimization-based AC power flow", link: "/explanation/optimization-acpf/" },
           ],
         },

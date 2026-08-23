@@ -74,9 +74,7 @@ def test_stability_study_runs_reduced_order_simulation() -> None:
     study = StabilityStudy(
         NTW_PATH,
         DYN_PATH,
-        config=StabilityConfig(
-            duration=0.2, time_step=0.1, fault_time=0.05, clearing_time=0.1
-        ),
+        config=StabilityConfig(duration=0.2, time_step=0.1, fault_time=0.05, clearing_time=0.1),
     )
 
     result = study.run()

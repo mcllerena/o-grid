@@ -1,0 +1,187 @@
+---
+title: Reduced-order dynamic stability
+description: The DYN and EVT parsers and the reduced-order swing-equation stability study.
+head: []
+---
+
+`o_grid.dynamics` parses ANAREDE dynamic-model (`.dyn`) and dynamic-contingency
+(`.evt`) files, then provides `StabilityStudy` for a reduced-order transient
+and small-signal analysis. The study is intentionally not a full transient-
+stability program: it uses one independent classical swing equation per usable
+`SMxx` model and represents network disturbances with a scalar transfer factor.
+
+## Complete workflow
+
+`StabilityStudy.run()` performs the following steps:
+
+1. Parse the NTW, DYN, and optional EVT sources, unless parsed objects were
+   supplied directly.
+2. Run `NewtonRaphsonPowerFlow(max_control_passes=0)` or the supplied custom
+   power-flow solver.
+3. Match each `SMxx` model to a static generator and solved bus by bus number.
+4. Read inertia and damping from the first later model record with at least 15
+   values.
+5. Initialize rotor angles from solved bus angles and speed deviations to zero.
+6. Integrate the swing equations with SciPy `solve_ivp` using `rtol=10^{-7}`
+   and `atol=10^{-9}`.
+7. Return trajectories, modal eigenvalues, and the stability classification in
+   `StabilityResult`.
+
+## Classical swing equations
+
+For each initialized machine $m$, the state is rotor angle $\delta_m$ and speed
+deviation $\omega_m$:
+
+$$
+\frac{d\delta_m}{dt}=\omega_m,
+$$
+
+$$
+\frac{d\omega_m}{dt}
+=\frac{P_{m,m}-P_{e,m}(\delta_m,t)-D_m\omega_m}{2H_m}.
+$$
+
+$H_m$ is inertia, $D_m$ is damping, and $P_{m,m}$ is the static generator
+active power in per unit. Inertia and damping are read from DYN data and
+clamped to non-negative values; inertia has a minimum of $0.05$.
+
+The electrical power approximation is
+
+$$
+P_{e,m}(\delta_m,t)=K(t)P^{max}_m\sin(\delta_m),
+$$
+
+where $K(t)$ is the aggregate network factor. The power-angle limit is derived
+from the initial static operating point:
+
+$$
+s_m=\max\left(|\sin(\delta_{m,0})|,0.1\right),
+$$
+
+$$
+P^{max}_m
+=\max\left(\frac{|P_{m,m}|}{s_m},1.2|P_{m,m}|,0.1\right).
+$$
+
+Initial conditions are
+
+$$
+\delta_m(0)=\delta_{m,0},\qquad \omega_m(0)=0.
+$$
+
+The sampled time points are $t_k=k\Delta t$ through duration $T$, with the
+endpoint included within a half-step tolerance.
+
+## Temporary fault factor
+
+Without an EVT file, `StabilityConfig` defines
+
+$$
+K(t)=
+\begin{cases}
+K_{fault}, & t_{fault}\leq t<t_{clear},\\
+K_{post}, & \text{otherwise}.
+\end{cases}
+$$
+
+These terms correspond to `fault_factor`, `post_fault_factor`, `fault_time`,
+and `clearing_time`. Configuration validation requires positive duration and
+time step, ordered times inside the simulation, factors in $(0,1]$, and a
+positive `frequency_hz`. The current swing equation does not otherwise use
+`frequency_hz`; it is retained for future frequency-dependent models.
+
+## EVT-driven factor
+
+When a contingency is selected, the factor starts at `post_fault_factor` and
+applies events in file order for which `event_time <= t`:
+
+| Event types | Action |
+| --- | --- |
+| 3, 4 | Set `fault_factor`. |
+| 5, 6, 8 | Set `post_fault_factor`. |
+| 7, 9, 10, 11 | Set the minimum of the current value and `0.8 * post_fault_factor`. |
+| Other types | Leave the factor unchanged. |
+
+This is an aggregate approximation. The parser keeps the complete event
+records, but the study does not yet mutate network topology or device states.
+
+## Small-signal eigenvalues and classification
+
+Around each initial angle, the independent linearization uses
+
+$$
+S_m=P^{max}_m\cos(\delta_{m,0}),\qquad
+d_m=\frac{D_m}{2H_m},\qquad
+k_m=\frac{S_m}{2H_m}.
+$$
+
+The two modal eigenvalues for machine $m$ are the roots of
+
+$$
+\lambda^2+d_m\lambda+k_m=0.
+$$
+
+The study reports stable only if every eigenvalue has a strictly negative real
+part and every sampled rotor angle remains below $\pi$ radians:
+
+$$
+\operatorname{stable}
+=\left(\forall\lambda: \Re(\lambda)<0\right)
+\land
+\left(\max_{m,t}|\delta_m(t)|<\pi\right).
+$$
+
+`StabilityResult.maximum_angle` reports the maximum sampled angle magnitude, and
+`damping_ratios` reports
+
+$$
+\zeta_i=-\frac{\Re(\lambda_i)}{|\lambda_i|},
+$$
+
+with non-finite values converted to zero.
+
+## DYN and EVT representations
+
+`DynFileParser` preserves the DYN version, model headers, comment headers,
+records, source line numbers, and raw lines. Numeric record tokens become
+floats; identifiers remain strings. `EvtFileParser` preserves total simulation
+time, contingency headers, typed ten-field events, event times, source line
+numbers, and raw lines. Event parameter 3 is exposed as
+`DynamicEvent.event_time`.
+
+```python
+from pathlib import Path
+
+from o_grid.dynamics import DynFileParser, EvtFileParser
+
+dynamic_file = DynFileParser(Path("case.dyn")).file
+event_file = EvtFileParser(Path("case.evt")).file
+print(dynamic_file.version, len(dynamic_file.models))
+print(event_file.total_simulation_time, len(event_file.contingencies))
+```
+
+## Example
+
+```python
+from pathlib import Path
+
+from o_grid.dynamics import StabilityConfig, StabilityStudy, plot_stability_result
+
+study = StabilityStudy(
+    Path("case.ntw"),
+    Path("case.dyn"),
+    event_file=Path("case.evt"),
+    contingency=2,
+    config=StabilityConfig(duration=10.0, time_step=0.01),
+)
+result = study.run()
+print(result.stable, result.maximum_angle)
+plot_stability_result(result).savefig("stability.png", dpi=150)
+```
+
+## Scope
+
+The current model does not simulate AVR, governor, PSS, inverter, detailed
+network algebraic states, branch impedance changes, bus shunts, or generator
+tripping. Those records are parsed and preserved as extension points for a
+future full-order differential-algebraic model.

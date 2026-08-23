@@ -4,6 +4,7 @@ from pathlib import Path
 
 import pytest
 
+from o_grid.acpf.models import build_power_flow_case
 from o_grid.dcopf import DCOPFParameters, DCOptimalPowerFlow
 from o_grid.dcopf.solver import (
     _branch_key,
@@ -12,7 +13,6 @@ from o_grid.dcopf.solver import (
     _dcpf_parameters,
     _hot_parameters,
 )
-from o_grid.acpf.models import build_power_flow_case
 from o_grid.parser import AnaredeInfrasysParser
 
 DATA = Path(__file__).parent / "data" / "pwf"
@@ -69,9 +69,7 @@ def test_dcopf_optimal_uses_supplied_parameters() -> None:
     parsed = _parsed_case()
     case = build_power_flow_case(parsed)
     cold = _cold_parameters(case)
-    parameters = DCOPFParameters(
-        b=cold.b.copy(), gamma=cold.gamma.copy(), rho=cold.rho.copy()
-    )
+    parameters = DCOPFParameters(b=cold.b.copy(), gamma=cold.gamma.copy(), rho=cold.rho.copy())
 
     run = DCOptimalPowerFlow(
         param_opt="optimal",

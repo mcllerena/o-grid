@@ -165,10 +165,13 @@ class DCOptimalPowerFlow:
         generation = np.zeros(bus_count)
         for index, generator in enumerate(generators):
             generation[buses[generator[0]]] += result.x[index] * case.base_mva
-        injections = np.array(
-            [generation[index] - bus.active_load for index, bus in enumerate(case.buses)],
-            dtype=float,
-        ) / case.base_mva
+        injections = (
+            np.array(
+                [generation[index] - bus.active_load for index, bus in enumerate(case.buses)],
+                dtype=float,
+            )
+            / case.base_mva
+        )
         bus_results = [
             BusPowerFlowResult(
                 id=bus.number,
@@ -187,10 +190,16 @@ class DCOptimalPowerFlow:
             iterations=1,
             max_mismatch=float(np.max(np.abs(np.array(equality_rows) @ result.x - equality_rhs))),
             base_mva=case.base_mva,
-            iteration_trace=[IterationPowerFlowResult(
-                iteration=1, max_dp=0.0, max_dq=0.0, max_control_residual=0.0,
-                max_residual=0.0, max_step=0.0,
-            )],
+            iteration_trace=[
+                IterationPowerFlowResult(
+                    iteration=1,
+                    max_dp=0.0,
+                    max_dq=0.0,
+                    max_control_residual=0.0,
+                    max_residual=0.0,
+                    max_step=0.0,
+                )
+            ],
             buses=bus_results,
             branches=branch_results,
         )
@@ -201,7 +210,9 @@ class DCOptimalPowerFlow:
             setter(component_results)
         logger.success(
             "DC-OPF ({}) converged with HiGHS in {} iteration(s); objective {:.6g}.",
-            self.param_opt, result_model.iterations, float(result.fun),
+            self.param_opt,
+            result_model.iterations,
+            float(result.fun),
         )
         return PowerFlowRun(parsed=parsed, result=result_model, stdout="")
 
@@ -259,9 +270,10 @@ def _hot_parameters(case, cold) -> DCOPFParameters:
     nominal = calculate_branch_results(case, case.initial_voltage)
     for branch, flow in zip(case.branches, nominal, strict=True):
         key = _branch_key(branch)
-        delta = case.buses[case.bus_index[branch.from_bus]].angle - case.buses[
-            case.bus_index[branch.to_bus]
-        ].angle
+        delta = (
+            case.buses[case.bus_index[branch.from_bus]].angle
+            - case.buses[case.bus_index[branch.to_bus]].angle
+        )
         if abs(delta) > 1e-10:
             parameters.b[key] = flow.active_from_mw / case.base_mva / delta
         parameters.rho[key] = flow.active_from_mw / case.base_mva - parameters.b[key] * delta
@@ -271,25 +283,35 @@ def _hot_parameters(case, cold) -> DCOPFParameters:
         net[case.bus_index[flow.to_bus]] += flow.active_to_mw / case.base_mva
     for index, bus in enumerate(case.buses):
         parameters.gamma[bus.number] = (
-            (bus.active_generation - bus.active_load) / case.base_mva - net[index]
-        )
+            bus.active_generation - bus.active_load
+        ) / case.base_mva - net[index]
     return parameters
 
 
 def _branch_results(case, angles, parameters):
     results = []
     for branch in case.branches:
-        flow = parameters.b[_branch_key(branch)] * (
-            angles[case.bus_index[branch.from_bus]] - angles[case.bus_index[branch.to_bus]]
-        ) + parameters.rho[_branch_key(branch)]
+        flow = (
+            parameters.b[_branch_key(branch)]
+            * (angles[case.bus_index[branch.from_bus]] - angles[case.bus_index[branch.to_bus]])
+            + parameters.rho[_branch_key(branch)]
+        )
         flow_mw = flow * case.base_mva
         loading = abs(flow_mw) / branch.rating * 100.0 if branch.rating > 0 else 0.0
-        results.append(BranchPowerFlowResult(
-            from_bus=branch.from_bus, to_bus=branch.to_bus, circuit=branch.circuit,
-            active_from_mw=float(flow_mw), reactive_from_mvar=0.0,
-            active_to_mw=float(-flow_mw), reactive_to_mvar=0.0,
-            loading_percent=float(loading), active_loss_mw=0.0, reactive_loss_mvar=0.0,
-        ))
+        results.append(
+            BranchPowerFlowResult(
+                from_bus=branch.from_bus,
+                to_bus=branch.to_bus,
+                circuit=branch.circuit,
+                active_from_mw=float(flow_mw),
+                reactive_from_mvar=0.0,
+                active_to_mw=float(-flow_mw),
+                reactive_to_mvar=0.0,
+                loading_percent=float(loading),
+                active_loss_mw=0.0,
+                reactive_loss_mvar=0.0,
+            )
+        )
     return results
 
 
