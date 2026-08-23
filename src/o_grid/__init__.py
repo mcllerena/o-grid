@@ -30,6 +30,7 @@ from o_grid.constants import (
     REQUIRED_KEYS,
     SWITCH_IMPEDANCE_MNEMONIC,
 )
+from o_grid.dcopf import DCOPFParameters, DCOptimalPowerFlow
 from o_grid.dcpf import DCPowerFlow
 from o_grid.exporter import ExportSolution, export_rows
 from o_grid.matpower import MatpowerInfrasysParser, parse_matpower_system
@@ -53,6 +54,8 @@ __all__ = [
     "ControllableSeriesCompensatorResults",
     "DCLineResults",
     "DCPowerFlow",
+    "DCOPFParameters",
+    "DCOptimalPowerFlow",
     "ExportSolution",
     "FastDecoupledPowerFlow",
     "PrimeDualOPF",

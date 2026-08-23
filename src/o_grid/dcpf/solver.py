@@ -7,6 +7,7 @@ from typing import Self
 
 import numpy as np
 from infrasys import System
+from loguru import logger
 from scipy.sparse import csc_matrix, lil_matrix
 from scipy.sparse.linalg import spsolve
 
@@ -77,11 +78,12 @@ class DCPowerFlow:
             if self.lossy_flows
             else _calculate_lossless_branch_results(case, voltage)
         )
+        balance_branches = _calculate_lossless_branch_results(case, voltage)
         injections = case.specified_power.copy()
-        branch_injections = _branch_net_injections(case, branches)
+        branch_injections = _branch_net_injections(case, balance_branches)
         injections[case.slack_indices] = branch_injections[case.slack_indices]
         bus_results = _calculate_bus_results(case, voltage, injections)
-        mismatch = _maximum_mismatch(case, injections, branches)
+        mismatch = _maximum_mismatch(case, injections, balance_branches)
         trace = [
             IterationPowerFlowResult(
                 iteration=0,
@@ -96,7 +98,7 @@ class DCPowerFlow:
             solver=self.solver_name,
             converged=True,
             diverged=False,
-            iterations=0,
+            iterations=1,
             max_mismatch=mismatch,
             base_mva=case.base_mva,
             iteration_trace=trace,
@@ -108,6 +110,18 @@ class DCPowerFlow:
         set_results = getattr(parsed.system, "set_power_flow_results", None)
         if callable(set_results):
             set_results(component_results)
+        if result.converged:
+            logger.success(
+                "DC power flow converged in {} iteration(s); max mismatch {:.4e} pu.",
+                result.iterations,
+                result.max_mismatch or 0.0,
+            )
+        else:
+            logger.error(
+                "DC power flow did not converge after {} iteration(s); max mismatch {:.4e} pu.",
+                result.iterations,
+                result.max_mismatch or 0.0,
+            )
         return PowerFlowRun(parsed=parsed, result=result, stdout="")
 
 

@@ -65,7 +65,7 @@ class StabilityStudy:
         )
         self.contingency = self._select_contingency(contingency)
         self.power_flow_solver = cast(
-            PowerFlowSolver,
+            "PowerFlowSolver",
             power_flow_solver or NewtonRaphsonPowerFlow(max_control_passes=0),
         )
         self.power_flow: PowerFlowRun | None = None

@@ -1,0 +1,145 @@
+---
+title: DC optimal power flow
+description: HiGHS-backed linear DC-OPF and the four parameterization modes.
+head: []
+---
+
+`DCOptimalPowerFlow` solves a linear DC optimal power-flow problem. Unlike
+`DCPowerFlow`, which evaluates fixed injections, DC-OPF chooses generator active
+power outputs to minimize cost subject to network and operating constraints.
+
+The implementation uses SciPy's `linprog(method="highs")`, which invokes the
+open-source HiGHS linear-programming engine.
+
+## Formulation
+
+For generator outputs $p_g$, bus angles $\theta$, branch coefficients $b$, bus
+injection biases $\gamma$, and branch flow biases $\rho$, the model is solved
+in per unit on the case base power $S_{base}$. Generator limits and branch
+ratings are converted from MW before they enter the LP.
+
+$$
+\begin{aligned}
+\min_{p_g,\theta}\quad & c^T p_g \\
+	ext{where}\quad & c_g=c_{1,g}+2c_{2,g}p^{init}_g.
+\end{aligned}
+$$
+
+$$
+\underline p_g\leq p_g\leq\overline p_g.
+$$
+
+$$
+\sum_{g\in\mathcal{G}_i}p_g-p_{d,i}-\gamma_i
+=\sum_{(i,j)\in\mathcal{E}}\left[b_{ij}(\theta_i-\theta_j)+\rho_{ij}\right].
+$$
+
+The stored branch orientation is from bus $i$ to bus $j$, with flow
+
+$$
+f_{ij}=b_{ij}(\theta_i-\theta_j)+\rho_{ij}.
+$$
+
+An entering branch contributes $-f_{ij}$ to the balance of its receiving bus.
+When enabled, thermal limits are represented by two linear inequalities:
+
+$$
+-\overline f_{ij}\leq f_{ij}\leq\overline f_{ij},
+\qquad
+\overline f_{ij}=\frac{\text{rating}_{ij}}{S_{base}}.
+$$
+
+Reference/slack bus angles are fixed to their input values. Other angles are
+bounded to $[-\pi,\pi]$. Thus the complete problem is a linear program in
+generator outputs and bus angles. `enforce_branch_limits=False` removes only
+the thermal inequalities and is intended for diagnosing infeasible input
+ratings, not for producing a constrained OPF result.
+
+## Parameterizations
+
+The four `param_opt` modes implement the following coefficient choices from
+Taheri and Molzahn (arXiv:2410.11725):
+
+| Mode | $b_{ij}$ | $\gamma_i$ and $\rho_{ij}$ |
+| --- | --- | --- |
+| `cold_start` | $\frac{x_{ij}}{r_{ij}^2+x_{ij}^2}\frac{1}{\tau_{ij}}$ | $\gamma_i=0$, $\rho_{ij}=-b_{ij}\phi_{ij}$ |
+| `hot_start` | Fitted to nominal AC flow $f^{AC}_{ij}/(\theta_i-\theta_j)$ when defined | Fitted flow bias and nominal bus mismatch |
+| `dcpf` | $\frac{1}{x_{ij}\tau_{ij}}$ | Zero bus bias and cold-start phase-shift bias |
+| `optimal` | Supplied offline-trained values | Supplied offline-trained values |
+
+For `hot_start`, the fitted expressions are
+
+$$
+b_{ij}=\frac{f^{AC}_{ij}}{\theta_i-\theta_j},
+\qquad
+\rho_{ij}=f^{AC}_{ij}-b_{ij}(\theta_i-\theta_j),
+$$
+
+and $\gamma_i$ accounts for the remaining nominal AC injection mismatch. The
+`optimal` mode requires `DCOPFParameters(b=..., gamma=..., rho=...)`; this
+package applies trained parameters but does not perform the paper's offline
+bilevel training.
+
+## Optimal parameter training
+
+The `optimal` approach learns the linearization parameters offline over
+representative scenarios $\mathcal{S}$. Let $p^{AC\text{-}OPF}_s$ be the
+generator setpoints from a reference AC-OPF and let
+$p^{DC\text{-}OPF}_s(b,\gamma,\rho)$ be the setpoints returned by the lower-level
+DC-OPF. The upper-level fitting problem is:
+
+$$
+\begin{aligned}
+\min_{b,\gamma,\rho}\quad
+& \frac{1}{|\mathcal{S}|}\sum_{s\in\mathcal{S}}
+\left\|p^{DC\text{-}OPF}_s(b,\gamma,\rho)
+	-p^{AC\text{-}OPF}_s\right\|_2^2 \\
+	ext{subject to}\quad
+& p^{DC\text{-}OPF}_s(b,\gamma,\rho) \\
+&\qquad\in \operatorname*{argmin}_{p_g,\theta}\ c^T p_g,
+\quad \forall s\in\mathcal{S}.
+\end{aligned}
+$$
+
+The lower-level problem is the DC-OPF defined above, with scenario-specific
+loads, generator bounds, reference angles, and branch ratings. Once learned,
+the parameters replace the physical coefficients in the online model:
+
+$$
+f_{ij}^{optimal}=b_{ij}^{optimal}(\theta_i-\theta_j)+\rho_{ij}^{optimal},
+$$
+
+$$
+\sum_{g\in\mathcal{G}_i}p_g-p_{d,i}-\gamma_i^{optimal}
+=\sum_{(i,j)\in\mathcal{E}}f_{ij}^{optimal}.
+$$
+
+This repository implements the online lower-level solve and accepts learned
+values through `DCOPFParameters(b=..., gamma=..., rho=...)`; it does not run
+the offline bilevel training or generate those values automatically.
+
+## Parameter modes
+
+| `param_opt` | Meaning |
+| --- | --- |
+| `cold_start` | Physical line susceptance from resistance and reactance, with zero injection bias. |
+| `hot_start` | Fits coefficients and biases to nominal AC branch flows. |
+| `dcpf` | Traditional `1 / (x * tap)` DCPF coefficient. |
+| `optimal` | Applies offline-trained `b`, `gamma`, and `rho` values. |
+
+The paper's optimal mode is an offline bilevel training problem: its upper level
+tunes $b$, $\gamma$, and $\rho$ against AC-OPF generator setpoints across
+representative scenarios, while each lower-level problem is a convex DC-OPF.
+This package exposes the trained-parameter online stage through
+`param_opt="optimal"`; the lower-level solve is always performed by HiGHS.
+
+## Example
+
+```python
+from o_grid import DCOptimalPowerFlow
+
+run = DCOptimalPowerFlow(param_opt="cold_start").run(system)
+print(run.result.converged, run.result.iterations)
+```
+
+Run the complete parser and export workflow with `examples/run_dcopf.py`.

@@ -231,6 +231,32 @@ operating point. See the
 [primal-dual AC/DC OPF explanation](docs/src/content/docs/explanation/optimization-acpf.mdx)
 for the formulation and convergence details.
 
+### Run a HiGHS DC-OPF
+
+`DCOptimalPowerFlow` solves a linear DC optimal power-flow problem with
+SciPy's open-source HiGHS backend. It dispatches active-power generators while
+enforcing generator limits, nodal balance, reference angles, and branch-flow
+limits.
+
+```python
+from o_grid import DCOptimalPowerFlow
+
+run = DCOptimalPowerFlow(param_opt="cold_start").run(system)
+print(run.result.converged, run.result.iterations)
+```
+
+The `param_opt` modes are `cold_start`, `hot_start`, `dcpf`, and `optimal`.
+The first three implement the paper's cold-start, hot-start, and optimized-DCPF
+parameter choices. `optimal` applies offline-trained `b`, `gamma`, and `rho`
+values supplied through `DCOPFParameters`.
+
+Branch thermal limits are enforced by default. If HiGHS reports infeasibility,
+check the parsed generator and branch ratings; `enforce_branch_limits=False`
+provides an explicit unconstrained-dispatch diagnostic mode.
+
+See [DC optimal power flow](docs/src/content/docs/explanation/dc-optimal-power-flow.mdx)
+and [examples/run_dcopf.py](examples/run_dcopf.py) for details.
+
 ### Export solved results to Excel
 
 Write the solved power-flow results to an Excel workbook that follows the

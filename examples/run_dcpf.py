@@ -21,12 +21,11 @@ parse_context = PluginContext(
 )
 parsed_system = AnaredeParser.from_context(parse_context).run().system
 
-dcpf = DCPowerFlow(
-    system=parsed_system,
-    lossy_flows=True,
-)
+dcpf_run = DCPowerFlow(lossy_flows=True).run(parsed_system)
+dcpf = dcpf_run.system
+print(f"DCPF iterations: {dcpf_run.result.iterations}")
 
-ExportSolution(
+dcpf_export = ExportSolution(
     system=dcpf,
     format="excel",
     output_path=data_path.with_name(f"{sys_name}_solution_dcpf.xlsx"),
