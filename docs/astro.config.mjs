@@ -53,6 +53,7 @@ export default defineConfig({
             { label: "ANAREDE blocks", link: "/reference/anarede-blocks/" },
             { label: "ANAREDE NTW parser", link: "/reference/ntw-parser/" },
             { label: "ANAREDE dynamic parser", link: "/reference/dyn-parser/" },
+            { label: "ANAREDE event parser", link: "/reference/evt-parser/" },
             { label: "Power system models", link: "/reference/models/" },
           ],
         },
@@ -60,6 +61,7 @@ export default defineConfig({
           label: "Explanation",
           items: [
             { label: "Parser architecture", link: "/explanation/parser-architecture/" },
+            { label: "DC power flow", link: "/explanation/dc-power-flow/" },
             { label: "Optimization-based AC power flow", link: "/explanation/optimization-acpf/" },
           ],
         },

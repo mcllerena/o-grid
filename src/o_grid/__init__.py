@@ -3,6 +3,7 @@
 from o_grid.acpf import (
     ACBusResults,
     ACLineResults,
+    ACOptimalPowerFlow,
     ControllableSeriesCompensatorResults,
     DCLineResults,
     FastDecoupledPowerFlow,
@@ -12,6 +13,7 @@ from o_grid.acpf import (
     OptimizationACPowerFlow,
     PhaseShiftingTransformerResults,
     PowerFlowResults,
+    PrimeDualOPF,
     ResultsInformation,
     StaticVARCompensatorResults,
     StatisticResultsInformation,
@@ -28,6 +30,7 @@ from o_grid.constants import (
     REQUIRED_KEYS,
     SWITCH_IMPEDANCE_MNEMONIC,
 )
+from o_grid.dcpf import DCPowerFlow
 from o_grid.exporter import ExportSolution, export_rows
 from o_grid.matpower import MatpowerInfrasysParser, parse_matpower_system
 from o_grid.plugin_config import AnaredeConfig, MatpowerConfig
@@ -42,14 +45,17 @@ from o_grid.statics.pwf_parser import (
 
 __all__ = [
     "ACBusResults",
+    "ACOptimalPowerFlow",
     "ACLineResults",
     "AnaredeConfig",
     "AnaredeInfrasysParser",
     "AnaredeParser",
     "ControllableSeriesCompensatorResults",
     "DCLineResults",
+    "DCPowerFlow",
     "ExportSolution",
     "FastDecoupledPowerFlow",
+    "PrimeDualOPF",
     "GeneratorResults",
     "LTCTransformerResults",
     "MatPowerParser",

@@ -391,6 +391,118 @@ def build_optimization_model(
             ) / base_mva - bus.reactive_load / base_mva
     model_any.q_spec = pyo.Param(model_any.BUS, initialize=q_spec)
 
+    lcc_indices = [
+        index
+        for index, lcc in enumerate(case.lccs or [])
+        if lcc.pdc_mw > TOLERANCE
+        and lcc.vbase_kv > TOLERANCE
+        and lcc.vdc_rectifier_kv > TOLERANCE
+        and lcc.vdc_inverter_kv > TOLERANCE
+    ]
+    lcc_data = [(case.lccs or [])[index] for index in lcc_indices]
+    lcc_ids = list(range(len(lcc_data)))
+    model_any.LCC = pyo.Set(initialize=lcc_ids, ordered=True)
+    lcc_rectifier_bus = {index: lcc.rectifier_bus for index, lcc in enumerate(lcc_data)}
+    lcc_inverter_bus = {index: lcc.inverter_bus for index, lcc in enumerate(lcc_data)}
+    lcc_power_initial = {index: lcc.pdc_mw / base_mva for index, lcc in enumerate(lcc_data)}
+    lcc_power_max = {
+        index: max(1.5 * value, value + 1.0) for index, value in lcc_power_initial.items()
+    }
+    lcc_vdc_rect_initial = {index: lcc.vdc_rectifier_kv for index, lcc in enumerate(lcc_data)}
+    lcc_vdc_inv_initial = {index: lcc.vdc_inverter_kv for index, lcc in enumerate(lcc_data)}
+    lcc_rdc = {}
+    lcc_rectifier_gain = {}
+    lcc_inverter_gain = {}
+    lcc_rectifier_q_factor = {}
+    lcc_inverter_q_factor = {}
+    for index, lcc in enumerate(lcc_data):
+        vrect = max(lcc.vdc_rectifier_kv / max(lcc.vbase_kv, 1.0), 1.0e-6)
+        vinv = max(lcc.vdc_inverter_kv / max(lcc.vbase_kv, 1.0), 1.0e-6)
+        pdc = max(lcc.pdc_mw / base_mva, 1.0e-6)
+        current = pdc / vrect
+        lcc_rdc[index] = max((vrect - vinv) / max(current, 1.0e-6), 0.0)
+        lcc_rectifier_gain[index] = vrect
+        lcc_inverter_gain[index] = vinv
+        lcc_rectifier_q_factor[index] = lcc.q_rectifier_mvar / base_mva / pdc
+        lcc_inverter_q_factor[index] = lcc.q_inverter_mvar / base_mva / pdc
+    lcc_vbase = {index: max(lcc.vbase_kv, 1.0) for index, lcc in enumerate(lcc_data)}
+    lcc_alpha_initial = {index: math.radians(lcc.alpha_deg) for index, lcc in enumerate(lcc_data)}
+    lcc_gamma_initial = {index: math.radians(lcc.gamma_deg) for index, lcc in enumerate(lcc_data)}
+    lcc_q_rect_initial = {
+        index: lcc.q_rectifier_mvar / base_mva for index, lcc in enumerate(lcc_data)
+    }
+    lcc_q_inv_initial = {
+        index: lcc.q_inverter_mvar / base_mva for index, lcc in enumerate(lcc_data)
+    }
+    lcc_p_rect_initial = {
+        index: lcc.p_rectifier_mw / base_mva for index, lcc in enumerate(lcc_data)
+    }
+    lcc_p_inv_initial = {index: lcc.p_inverter_mw / base_mva for index, lcc in enumerate(lcc_data)}
+    model_any.lcc_rectifier_bus = pyo.Param(model_any.LCC, initialize=lcc_rectifier_bus)
+    model_any.lcc_inverter_bus = pyo.Param(model_any.LCC, initialize=lcc_inverter_bus)
+    model_any._lcc_indices = lcc_indices
+    model_any.pdc_initial = pyo.Param(model_any.LCC, initialize=lcc_power_initial)
+    model_any.vdc_rect_initial = pyo.Param(
+        model_any.LCC,
+        initialize={
+            index: value / lcc_vbase[index] for index, value in lcc_vdc_rect_initial.items()
+        },
+    )
+    model_any.vdc_inv_initial = pyo.Param(
+        model_any.LCC,
+        initialize={
+            index: value / lcc_vbase[index] for index, value in lcc_vdc_inv_initial.items()
+        },
+    )
+    model_any.lcc_rdc = pyo.Param(model_any.LCC, initialize=lcc_rdc)
+    model_any.lcc_vbase = pyo.Param(model_any.LCC, initialize=lcc_vbase)
+    model_any.lcc_rectifier_gain = pyo.Param(model_any.LCC, initialize=lcc_rectifier_gain)
+    model_any.lcc_inverter_gain = pyo.Param(model_any.LCC, initialize=lcc_inverter_gain)
+    model_any.lcc_rectifier_q_factor = pyo.Param(model_any.LCC, initialize=lcc_rectifier_q_factor)
+    model_any.lcc_inverter_q_factor = pyo.Param(model_any.LCC, initialize=lcc_inverter_q_factor)
+    model_any.pdc = pyo.Var(
+        model_any.LCC,
+        initialize=lcc_power_initial,
+        bounds=lambda m, index: (0.0, lcc_power_max[index]),
+        within=pyo.NonNegativeReals,
+    )
+    model_any.idc = pyo.Var(
+        model_any.LCC,
+        initialize=lambda m, index: max(lcc_power_initial[index], 1.0e-6),
+        bounds=(1.0e-6, None),
+        within=pyo.NonNegativeReals,
+    )
+    model_any.vdc_rect = pyo.Var(
+        model_any.LCC,
+        initialize={
+            index: value / lcc_vbase[index] for index, value in lcc_vdc_rect_initial.items()
+        },
+        bounds=(0.5, 1.5),
+        within=pyo.PositiveReals,
+    )
+    model_any.vdc_inv = pyo.Var(
+        model_any.LCC,
+        initialize={
+            index: value / lcc_vbase[index] for index, value in lcc_vdc_inv_initial.items()
+        },
+        bounds=(0.5, 1.5),
+        within=pyo.PositiveReals,
+    )
+    model_any.alpha = pyo.Var(
+        model_any.LCC,
+        initialize=lcc_alpha_initial,
+        bounds=(math.radians(5.0), math.radians(85.0)),
+        within=pyo.NonNegativeReals,
+    )
+    model_any.gamma = pyo.Var(
+        model_any.LCC,
+        initialize=lcc_gamma_initial,
+        bounds=(math.radians(5.0), math.radians(85.0)),
+        within=pyo.NonNegativeReals,
+    )
+    model_any.qdc_rect = pyo.Var(model_any.LCC, initialize=0.0, within=pyo.Reals)
+    model_any.qdc_inv = pyo.Var(model_any.LCC, initialize=0.0, within=pyo.Reals)
+
     bus_vm_bounds = {}
     bus_va_bounds = {}
     vm_seed = {}
@@ -693,8 +805,18 @@ def build_optimization_model(
         data = bus_by_id[bus]
         if _bus_type_code(data.kind) == SLACK:
             return pyo.Constraint.Skip
+        p_lcc_delta = sum(
+            (lcc_p_rect_initial[index] - (m.pdc[index] + m.lcc_rdc[index] * m.idc[index] ** 2))
+            for index in m.LCC
+            if lcc_rectifier_bus[index] == bus
+        ) + sum(
+            (m.pdc[index] - lcc_p_inv_initial[index])
+            for index in m.LCC
+            if lcc_inverter_bus[index] == bus
+        )
         return (
-            m.p_spec[bus] - m.calculated_p_injection[bus] == m.p_slack_pos[bus] - m.p_slack_neg[bus]
+            m.p_spec[bus] + p_lcc_delta - m.calculated_p_injection[bus]
+            == m.p_slack_pos[bus] - m.p_slack_neg[bus]
         )
 
     def q_balance_rule(m: Any, bus: int):
@@ -703,6 +825,16 @@ def build_optimization_model(
         if _bus_type_code(data.kind) != PQ and not q_limited_pv:
             return pyo.Constraint.Skip
         q_spec = m.q_spec[bus]
+        q_lcc_delta = sum(
+            (lcc_q_rect_initial[index] - m.qdc_rect[index])
+            for index in m.LCC
+            if lcc_rectifier_bus[index] == bus
+        ) + sum(
+            (lcc_q_inv_initial[index] - m.qdc_inv[index])
+            for index in m.LCC
+            if lcc_inverter_bus[index] == bus
+        )
+        q_spec = q_spec + q_lcc_delta
         if q_limited_pv:
             q_spec = q_spec + m.qg_qpv[bus]
         for svc_index in svcs_by_bus.get(bus, []):
@@ -713,6 +845,55 @@ def build_optimization_model(
 
     model_any.active_power_balance = pyo.Constraint(model_any.BUS, rule=p_balance_rule)
     model_any.reactive_power_balance = pyo.Constraint(model_any.BUS, rule=q_balance_rule)
+
+    def dc_current_rule(m: Any, index: int):
+        return m.pdc[index] == m.idc[index] * m.vdc_rect[index]
+
+    def dc_voltage_drop_rule(m: Any, index: int):
+        return m.vdc_rect[index] - m.vdc_inv[index] == m.lcc_rdc[index] * m.idc[index]
+
+    def rectifier_voltage_rule(m: Any, index: int):
+        lcc = lcc_data[index]
+        return m.vdc_rect[index] == (
+            m.lcc_rectifier_gain[index]
+            * m.vm[lcc.rectifier_bus]
+            * pyo.cos(m.alpha[index])
+            / max(math.cos(math.radians(lcc.alpha_deg)), 1.0e-6)
+        )
+
+    def inverter_voltage_rule(m: Any, index: int):
+        lcc = lcc_data[index]
+        return m.vdc_inv[index] == (
+            m.lcc_inverter_gain[index]
+            * m.vm[lcc.inverter_bus]
+            * pyo.cos(m.gamma[index])
+            / max(math.cos(math.radians(lcc.gamma_deg)), 1.0e-6)
+        )
+
+    def rectifier_reactive_rule(m: Any, index: int):
+        return (
+            m.qdc_rect[index]
+            == (m.pdc[index] + m.lcc_rdc[index] * m.idc[index] ** 2)
+            * m.lcc_rectifier_q_factor[index]
+        )
+
+    def inverter_reactive_rule(m: Any, index: int):
+        return m.qdc_inv[index] == m.pdc[index] * m.lcc_inverter_q_factor[index]
+
+    model_any.dc_current_balance = pyo.Constraint(model_any.LCC, rule=dc_current_rule)
+    model_any.dc_voltage_drop = pyo.Constraint(model_any.LCC, rule=dc_voltage_drop_rule)
+    model_any.rectifier_converter_equation = pyo.Constraint(
+        model_any.LCC, rule=rectifier_voltage_rule
+    )
+    model_any.inverter_converter_equation = pyo.Constraint(
+        model_any.LCC, rule=inverter_voltage_rule
+    )
+    model_any.rectifier_reactive_exchange = pyo.Constraint(
+        model_any.LCC, rule=rectifier_reactive_rule
+    )
+    model_any.inverter_reactive_exchange = pyo.Constraint(
+        model_any.LCC, rule=inverter_reactive_rule
+    )
 
     def active_tolerance_rule(m: Any, bus: int):
         if _bus_type_code(bus_by_id[bus].kind) == SLACK:
@@ -865,6 +1046,12 @@ def build_optimization_model(
         reactive_generation_regularization = sum(
             (m.qg_qpv[bus] - qg_initial[bus]) ** 2 for bus in m.QPV
         )
+        lcc_regularization = sum(
+            (m.pdc[index] - lcc_power_initial[index]) ** 2
+            + (m.vdc_rect[index] - pyo.value(m.vdc_rect_initial[index])) ** 2
+            + (m.vdc_inv[index] - pyo.value(m.vdc_inv_initial[index])) ** 2
+            for index in m.LCC
+        )
         return (
             power_slacks
             + m.weight_svc * svc_slacks
@@ -875,6 +1062,7 @@ def build_optimization_model(
             + m.weight_angle * angle_regularization
             + m.weight_ltc * ltc_regularization
             + reactive_generation_regularization
+            + lcc_regularization
         )
 
     model_any._case = case
@@ -1014,6 +1202,31 @@ def _sync_optimization_control_state(model: pyo.ConcreteModel, case: PowerFlowCa
             break
         branch = case.branches[index]
         branch.tap = _value_or_default(model_any.tap[index], branch.tap)
+    for index, case_index in enumerate(getattr(model_any, "_lcc_indices", [])):
+        lcc = (case.lccs or [])[case_index]
+        pdc = _value_or_default(model_any.pdc[index]) * case.base_mva
+        idc = _value_or_default(model_any.idc[index])
+        q_rect = _value_or_default(model_any.qdc_rect[index]) * case.base_mva
+        q_inv = _value_or_default(model_any.qdc_inv[index]) * case.base_mva
+        p_rect = (
+            _value_or_default(model_any.pdc[index])
+            + _value_or_default(model_any.lcc_rdc[index]) * idc * idc
+        ) * case.base_mva
+        rectifier = buses_by_number[lcc.rectifier_bus]
+        inverter = buses_by_number[lcc.inverter_bus]
+        rectifier.active_load += p_rect - lcc.p_rectifier_mw
+        rectifier.reactive_load += q_rect - lcc.q_rectifier_mvar
+        inverter.active_generation += pdc - lcc.p_inverter_mw
+        inverter.reactive_load += q_inv - lcc.q_inverter_mvar
+        lcc.pdc_mw = pdc
+        lcc.p_rectifier_mw = p_rect
+        lcc.p_inverter_mw = pdc
+        lcc.q_rectifier_mvar = q_rect
+        lcc.q_inverter_mvar = q_inv
+        lcc.vdc_rectifier_kv = _value_or_default(model_any.vdc_rect[index]) * lcc.vbase_kv
+        lcc.vdc_inverter_kv = _value_or_default(model_any.vdc_inv[index]) * lcc.vbase_kv
+        lcc.alpha_deg = math.degrees(_value_or_default(model_any.alpha[index]))
+        lcc.gamma_deg = math.degrees(_value_or_default(model_any.gamma[index]))
 
 
 def solution_metrics(model: pyo.ConcreteModel) -> dict[str, float | bool]:
@@ -1033,6 +1246,7 @@ def solution_metrics(model: pyo.ConcreteModel) -> dict[str, float | bool]:
     """
     model_any = cast(Any, model)
     case = cast(PowerFlowCase, model_any._case)
+    lcc_data = [(case.lccs or [])[index] for index in getattr(model_any, "_lcc_indices", [])]
     active_tolerance = pyo.value(model_any.active_tolerance)
     reactive_tolerance = pyo.value(model_any.reactive_tolerance)
     control_tolerance = pyo.value(model_any.control_tolerance)
@@ -1054,6 +1268,15 @@ def solution_metrics(model: pyo.ConcreteModel) -> dict[str, float | bool]:
 
     def reactive_residual(bus: int) -> float:
         expr = _value_or_default(model_any.q_spec[bus])
+        for index, lcc in enumerate(lcc_data):
+            if lcc.rectifier_bus == bus:
+                expr += lcc.q_rectifier_mvar / case.base_mva - _value_or_default(
+                    model_any.qdc_rect[index]
+                )
+            elif lcc.inverter_bus == bus:
+                expr += lcc.q_inverter_mvar / case.base_mva - _value_or_default(
+                    model_any.qdc_inv[index]
+                )
         if bus in model_any.QPV:
             expr += _value_or_default(model_any.qg_qpv[bus])
         for index in svcs_by_bus.get(bus, []):
@@ -1087,6 +1310,21 @@ def solution_metrics(model: pyo.ConcreteModel) -> dict[str, float | bool]:
             max_p,
             abs(
                 _value_or_default(model_any.p_spec[bus.number])
+                + sum(
+                    lcc.p_rectifier_mw / case.base_mva
+                    - (
+                        _value_or_default(model_any.pdc[index])
+                        + _value_or_default(model_any.lcc_rdc[index])
+                        * _value_or_default(model_any.idc[index]) ** 2
+                    )
+                    for index, lcc in enumerate(lcc_data)
+                    if lcc.rectifier_bus == bus.number
+                )
+                + sum(
+                    _value_or_default(model_any.pdc[index]) - lcc.p_inverter_mw / case.base_mva
+                    for index, lcc in enumerate(lcc_data)
+                    if lcc.inverter_bus == bus.number
+                )
                 - _value_or_default(model_any.calculated_p_injection[bus.number])
             ),
         )
@@ -1121,6 +1359,21 @@ def solution_metrics(model: pyo.ConcreteModel) -> dict[str, float | bool]:
         max_svc = max(max_svc, abs(droop))
     aggregate_p = sum(
         _value_or_default(model_any.p_spec[bus])
+        + sum(
+            lcc.p_rectifier_mw / case.base_mva
+            - (
+                _value_or_default(model_any.pdc[index])
+                + _value_or_default(model_any.lcc_rdc[index])
+                * _value_or_default(model_any.idc[index]) ** 2
+            )
+            for index, lcc in enumerate(lcc_data)
+            if lcc.rectifier_bus == bus
+        )
+        + sum(
+            _value_or_default(model_any.pdc[index]) - lcc.p_inverter_mw / case.base_mva
+            for index, lcc in enumerate(lcc_data)
+            if lcc.inverter_bus == bus
+        )
         - _value_or_default(model_any.calculated_p_injection[bus])
         for bus in active_residual_buses
     )
@@ -1342,13 +1595,14 @@ class OptimizationACPowerFlow(PowerFlowSolver):
             base_mva=case.base_mva,
             iteration_trace=[
                 IterationPowerFlowResult(
-                    iteration=1,
+                    iteration=index,
                     max_dp=metrics["max_p"],
                     max_dq=metrics["max_q"],
                     max_control_residual=metrics["max_svc"],
                     max_residual=max_mismatch,
                     max_step=0.0,
                 )
+                for index in range(iterations + 1)
             ],
             buses=calculate_bus_results(case, result_ybus, expanded_voltage),
             branches=calculate_branch_results(case, expanded_voltage),
@@ -1365,14 +1619,26 @@ class OptimizationACPowerFlow(PowerFlowSolver):
         if callable(set_results):
             set_results(component_results)
         if converged:
+            solver_label = (
+                "Primal-dual OPF"
+                if self.solver_name == "primal-dual"
+                else "Optimization AC power flow"
+            )
             logger.success(
-                "Optimization AC power flow converged in {} iteration(s); max mismatch {:.4e} pu.",
+                "{} converged in {} iteration(s); max mismatch {:.4e} pu.",
+                solver_label,
                 iterations,
                 max_mismatch,
             )
         else:
+            solver_label = (
+                "Primal-dual OPF"
+                if self.solver_name == "primal-dual"
+                else "Optimization AC power flow"
+            )
             logger.error(
-                "Optimization AC power flow is {} after {} iteration(s); max mismatch {:.4e} pu.",
+                "{} is {} after {} iteration(s); max mismatch {:.4e} pu.",
+                solver_label,
                 _optimization_failure_state(termination),
                 iterations,
                 max_mismatch,

@@ -32,15 +32,25 @@ from o_grid.acpf.solver import (
     FastDecoupledPowerFlow,
     NewtonRaphsonPowerFlow,
     PowerFlowSolver,
+    PrimeDualOPF,
 )
+
+
+class ACOptimalPowerFlow(OptimizationACPowerFlow):
+    """Primal-dual AC/DC optimal power-flow solver."""
+
+    solver_name = "primal-dual"
+
 
 __all__ = [
     "ACPowerFlowResult",
+    "ACOptimalPowerFlow",
     "ACBusResults",
     "ACLineResults",
     "BranchPowerFlowResult",
     "BusPowerFlowResult",
     "FastDecoupledPowerFlow",
+    "PrimeDualOPF",
     "ControllableSeriesCompensatorResults",
     "DCLineResults",
     "GeneratorResults",

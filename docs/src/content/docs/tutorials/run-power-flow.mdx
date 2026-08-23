@@ -126,6 +126,37 @@ solved_system = FastDecoupledPowerFlow(
 Both algorithms use the same system input, attach the same result component
 classes, and log whether the solve converged or failed.
 
+## Run the primal-dual AC/DC OPF
+
+Use `ACOptimalPowerFlow` to solve the constrained primal-dual formulation with
+Pyomo and Ipopt:
+
+```python
+from o_grid.acpf import ACOptimalPowerFlow
+
+solved_system = ACOptimalPowerFlow(
+    system=parsed_system,
+    max_iterations=100,
+    print_iterations=True,
+)
+```
+
+The model optimizes AC voltage magnitudes and angles, bounded generator
+reactive power, device controls, and residual slacks. When the case contains
+valid LCC-HVDC data, it also optimizes DC power, current, rectifier/inverter
+voltages, converter angles, and reactive exchange in the same nonlinear
+program. LCC voltage-drop, converter, reactive-exchange, and AC/DC balance
+equations are enforced together, so the solve is a coupled AC/DC OPF.
+
+Ipopt uses a primal-dual interior-point method: barrier terms handle bounds,
+the objective drives residuals and soft violations down, and regularization
+keeps the solution near the parsed operating point. The resulting typed AC,
+HVDC, and summary result components remain attached to `solved_system` and can
+be exported using the Excel step below.
+
+For the complete sets, variables, equations, objective modes, and convergence
+classification, see the [primal-dual AC/DC OPF explanation](/explanation/optimization-acpf/).
+
 ## Inspect system statistics
 
 Calling `solved_system.info()` renders the normal infrasys tables followed by:

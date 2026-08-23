@@ -10,12 +10,14 @@ from o_grid import ACBusResults as TopLevelACBusResults
 from o_grid.acpf import (
     ACBusResults,
     ACLineResults,
+    ACOptimalPowerFlow,
     ControllableSeriesCompensatorResults,
     DCLineResults,
     FastDecoupledPowerFlow,
     LTCTransformerResults,
     NewtonRaphsonPowerFlow,
     PhaseShiftingTransformerResults,
+    PrimeDualOPF,
     ResultsInformation,
     StaticVARCompensatorResults,
     StatisticResultsInformation,
@@ -316,6 +318,33 @@ def test_solver_defaults_to_thirty_iterations() -> None:
     assert isinstance(solver, NewtonRaphsonPowerFlow)
     assert solver.max_iterations == 30
     assert solver.max_control_passes == 12
+
+
+def test_prime_dual_solver_reports_its_own_iterations(capsys) -> None:
+    parsed = AnaredeInfrasysParser().parse(DATA / "d_9nodes.pwf")
+
+    run = PrimeDualOPF(max_iterations=20, print_iterations=True).run(parsed)
+
+    output = capsys.readouterr().out
+    assert run.result.solver == "primal-dual"
+    assert "Iteration-by-iteration convergence trace (Primal-dual OPF)" in output
+    assert "Iteration-by-iteration convergence trace (Newton-Raphson)" not in output
+    assert "  0  " in output
+
+
+def test_primal_dual_opf_converges_and_attaches_results() -> None:
+    parsed = AnaredeInfrasysParser().parse(DATA / "d_9nodes.pwf")
+
+    run = ACOptimalPowerFlow(max_iterations=20).run(parsed)
+
+    assert run.result.solver == "primal-dual"
+    assert run.result.converged is True
+    assert run.result.diverged is False
+    assert run.result.iterations > 0
+    assert run.result.max_mismatch is not None
+    assert run.result.max_mismatch < 1.0e-3
+    assert len(run.result.iteration_trace) == run.result.iterations + 1
+    assert all(bus.solved_voltage is not None for bus in parsed.components_by_block["DBAR"])
 
 
 def test_solver_runs_from_pwf_path() -> None:

@@ -1,15 +1,20 @@
 ---
-title: Optimization-based AC power flow
-description: The optimization-based AC power-flow solver of o-grid — full NLP formulation (sets, parameters, variables, constraints, objective), how it converges, and its differences with Newton-Raphson and Fast-Decoupled.
+title: Primal-dual AC/DC optimal power flow
+description: The primal-dual AC/DC optimal power-flow solver of o-grid — its NLP formulation, LCC-HVDC coupling, Ipopt solve path, and convergence behavior.
 head: []
 ---
 
-The optimization-based AC power-flow solver poses the power flow as a
-**nonlinear program (NLP)** and solves it with Pyomo + Ipopt, as an alternative
-to the direct (equation-based) Newton-Raphson and Fast-Decoupled methods.
-Instead of iterating on the power-mismatch equations, it writes the balance
-residuals as **decision variables**, bounds them by the declared convergence
-tolerances, and minimizes a weighted least-squares objective.
+The primal-dual solver poses the AC/DC optimal power flow as a **nonlinear
+program (NLP)** and solves it with Pyomo and Ipopt. Instead of iterating only
+on the power-mismatch equations, it optimizes the network state, device
+controls, and bounded residual variables together. Ipopt's primal-dual
+interior-point algorithm searches this constrained problem while its barrier
+terms keep bounded variables inside their operational ranges.
+
+For a case containing valid LCC-HVDC records, the AC and DC states are solved
+in the same NLP. LCC power, current, terminal voltages, converter angles, and
+reactive exchange are decision variables, and their equations contribute
+directly to the AC bus balances.
 
 The implementation lives in
 [`src/o_grid/acpf/optimization.py`](https://github.com/mcllerena/o-grid/blob/main/src/o_grid/acpf/optimization.py).
@@ -295,32 +300,46 @@ maxima, mirroring the Newton mismatch), `max_p_slack`, `max_q_slack`,
 
 ### HVDC links (LCC)
 
-HVDC links enter as **fixed AC injections**, not NLP variables. At case
-construction the rectifier bus gets `active_load += P_rec` and
-`reactive_load += Q_rec`, the inverter bus gets `active_generation += P_inv` and
-`reactive_load += Q_inv`, folded into `p_spec`/`q_spec`. The DC pattern comes
-from the LCC operating point, with pole current $I_{dc} = P_{dc}/V_{dc}^{ref}$
-and losses $\Delta P = I_{dc}^2 R_{dc}$:
+Valid LCC links are part of the same NLP as the AC network. Incomplete records
+with missing or zero DC power/base voltage are excluded from the optimization
+index set rather than producing artificial DC equations. The model uses
+per-unit power and normalized DC voltages, with parsed MW, kV, and angle values
+used to initialize and scale the variables.
+
+For each link $d$, the decision variables are DC power $P_{dc,d}$, current
+$I_{dc,d}$, rectifier and inverter voltages $V^r_{dc,d}$ and $V^i_{dc,d}$,
+converter angles $\alpha_d$ and $\gamma_d$, and reactive exchanges
+$Q^r_{dc,d}$ and $Q^i_{dc,d}$. The core DC equations are:
 
 $$
-\text{rectifier slack:}\quad
-P_{rec} = P_{dc} + \Delta P,\quad
-P_{inv} = P_{dc},\quad
-V_{dc,rec} = V_{dc,inv} + I_{dc} R_{dc},
+P_{dc,d} = I_{dc,d} V^r_{dc,d},
+\qquad
+V^r_{dc,d} - V^i_{dc,d} = R_{dc,d} I_{dc,d}.
 $$
 
+The converter equations couple terminal AC voltage magnitude to DC voltage:
+
 $$
-\text{inverter slack:}\quad
-P_{rec} = P_{dc},\quad
-P_{inv} = \max(0,\, P_{dc} - \Delta P),\quad
-V_{dc,inv} = \max(0,\, V_{dc,rec} - I_{dc} R_{dc}),
+V^r_{dc,d} = G^r_d V_{r(d)}
+\frac{\cos(\alpha_d)}{\cos(\alpha^0_d)},
+\qquad
+V^i_{dc,d} = G^i_d V_{i(d)}
+\frac{\cos(\gamma_d)}{\cos(\gamma^0_d)}.
 $$
 
-and terminal reactive powers $Q_{rec} = P_{rec}\tan(\alpha + \mu_{rec}/2)$ and
-$Q_{inv} = P_{inv}\tan(\gamma + \mu_{inv}/2)$. The optimization solver does not
-run the damped LCC outer loop of the direct solvers; after the solve
-`refresh_lcc_reporting_state` recomputes the DC voltages and overlap angles from
-the accepted AC solution.
+Reactive exchange is represented by operating-point-calibrated factors:
+
+$$
+Q^r_{dc,d} = (P_{dc,d} + R_{dc,d}I_{dc,d}^2)k^r_d,
+\qquad
+Q^i_{dc,d} = P_{dc,d}k^i_d.
+$$
+
+The changes in rectifier active/reactive exchange and inverter active/reactive
+exchange are included in the AC bus balance equations. Therefore Ipopt solves
+the AC voltages and the LCC operating point simultaneously. The post-solve
+reporting step synchronizes the optimized LCC state back to the typed system;
+it is not a separate DC power-flow solve.
 
 ### Controllable series compensators (CSC)
 

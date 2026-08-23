@@ -9,6 +9,7 @@ from typing import ClassVar, Self
 from infrasys import System
 from loguru import logger
 
+from o_grid.acopf.acopf import solve_acopf
 from o_grid.acpf.controls import apply_bus_limit_controls
 from o_grid.acpf.fast_decoupled import solve_fast_decoupled
 from o_grid.acpf.models import (
@@ -29,6 +30,7 @@ from o_grid.acpf.utils import (
     calculate_branch_results,
     calculate_bus_results,
 )
+from o_grid.statics.ntw_parser import NtwFileParser
 from o_grid.statics.pwf_parser import AnaredeInfrasysParser, ParsedAnaredeSystem
 
 
@@ -89,8 +91,12 @@ class PowerFlowSolver:
             parsed = ParsedAnaredeSystem.from_system(pwf_path)
         else:
             source = Path(pwf_path).resolve()
-            parser = AnaredeInfrasysParser(system_name=system_name or source.stem)
-            parsed = parser.parse(source)
+            if source.suffix.lower() == ".ntw":
+                system = NtwFileParser(source, system_name=system_name or source.stem).system
+                parsed = ParsedAnaredeSystem.from_system(system)
+            else:
+                parser = AnaredeInfrasysParser(system_name=system_name or source.stem)
+                parsed = parser.parse(source)
 
         case = build_power_flow_case(parsed)
         settings = build_power_flow_settings(
@@ -103,10 +109,23 @@ class PowerFlowSolver:
         ybus = build_ybus(numerical_case)
         assign_island_reference_buses(numerical_case, ybus)
         has_lcc = bool(numerical_case.lccs)
+        use_primal_dual = self.solver_name == "primal-dual"
         use_newton = self.solver_name == "newton-raphson" or has_lcc
-        solve = solve_newton_raphson if use_newton else solve_fast_decoupled
+        solve = (
+            solve_acopf
+            if use_primal_dual
+            else solve_newton_raphson
+            if use_newton
+            else solve_fast_decoupled
+        )
         live_reporter = (
-            LiveIterationReporter("newton-raphson" if use_newton else "fast-decoupled")
+            LiveIterationReporter(
+                self.solver_name
+                if use_primal_dual
+                else "newton-raphson"
+                if use_newton
+                else "fast-decoupled"
+            )
             if self.print_iterations
             else None
         )
@@ -165,7 +184,16 @@ class PowerFlowSolver:
                 trial_ybus = build_ybus(numerical_case)
                 phase = f"Control pass {control_pass + 1}: {control_name}"
                 trial_trace = []
-                if use_newton:
+                if use_primal_dual:
+                    next_solution = solve_acopf(
+                        numerical_case,
+                        trial_ybus,
+                        tolerance=min(settings.active_tolerance, settings.reactive_tolerance),
+                        max_iterations=settings.max_iterations,
+                        initial_voltage=trial_voltage,
+                        iteration_callback=trial_trace.append if live_reporter else None,
+                    )
+                elif use_newton:
                     next_solution = solve_newton_raphson(
                         numerical_case,
                         trial_ybus,
@@ -255,16 +283,22 @@ class PowerFlowSolver:
             set_results(component_results)
         report = live_reporter.finish() if live_reporter is not None else ""
         if result.converged:
+            solver_label = (
+                "Primal-dual OPF" if use_primal_dual else f"{self.solver_name} power flow"
+            )
             logger.success(
-                "{} power flow converged in {} iteration(s); max mismatch {:.4e} pu.",
-                self.solver_name,
+                "{} converged in {} iteration(s); max mismatch {:.4e} pu.",
+                solver_label,
                 result.iterations + 1,
                 result.max_mismatch or 0.0,
             )
         else:
+            solver_label = (
+                "Primal-dual OPF" if use_primal_dual else f"{self.solver_name} power flow"
+            )
             logger.error(
-                "{} power flow {} after {} iteration(s); max mismatch {:.4e} pu.",
-                self.solver_name,
+                "{} {} after {} iteration(s); max mismatch {:.4e} pu.",
+                solver_label,
                 "diverged" if result.diverged else "did not converge",
                 result.iterations + 1,
                 result.max_mismatch or 0.0,
@@ -282,3 +316,17 @@ class FastDecoupledPowerFlow(PowerFlowSolver):
     """Sparse fast-decoupled AC power-flow solver."""
 
     solver_name = "fast-decoupled"
+
+
+class PrimeDualOPF(PowerFlowSolver):
+    """Primal-dual bounded AC power-flow subproblem solver.
+
+    This is not yet a complete ACOPF because dispatch, control, cost, and
+    branch-security variables are not included in its optimization state.
+    """
+
+    solver_name = "primal-dual"
+
+
+class ACOptimalPowerFlow(PrimeDualOPF):
+    """Compatibility name for the current primal-dual AC solver."""

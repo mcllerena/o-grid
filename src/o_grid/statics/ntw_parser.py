@@ -414,6 +414,9 @@ class NtwFileParser:
                 row_index += 1
             if continuation_rows:
                 transformer.ext["ntw_continuation_values"] = continuation_rows
+                first_continuation = continuation_rows[0]
+                transformer.r = Percentage(self._float(first_continuation[1]) * 100.0, "%")
+                transformer.x = Percentage(self._float(first_continuation[2]) * 100.0, "%")
             result.append(transformer)
         return result
 

@@ -1,0 +1,218 @@
+---
+title: DC power flow
+description: The linear DC power-flow formulation and implementation used by o-grid.
+head: []
+---
+
+`DCPowerFlow` computes a linear approximation of active-power network behavior.
+It assumes unit voltage magnitudes, neglects reactive power in the solve, and
+calculates the voltage angles of non-reference buses from a sparse linear
+system. The implementation is in
+[`src/o_grid/dcpf/solver.py`](https://github.com/mcllerena/o-grid/blob/main/src/o_grid/dcpf/solver.py).
+
+## Assumptions
+
+The DC approximation uses these assumptions:
+
+- $|V_i| = 1$ p.u. for every bus;
+- voltage-angle differences are small;
+- resistance, shunt elements, and reactive power do not affect the angle solve;
+- active-power injections are positive for generation and negative for load; and
+- reference-bus angles are fixed while the other angles are solved.
+
+The method does not solve voltage magnitudes, reactive power, generator reactive
+limits, or voltage-control equations.
+
+## Input preparation
+
+`DCPowerFlow.run` accepts a `ParsedAnaredeSystem`, an infrasys `System`, or a
+PWF/NTW path. `_as_parsed_system` normalizes each input to the parsed-system
+representation. `build_power_flow_case` converts parsed components into
+numerical `BusData` and `BranchData` records.
+
+For bus $i$, the scheduled per-unit active-power injection is:
+
+$$
+P_i = \frac{P_{g,i} - P_{l,i}}{S_{base}}.
+$$
+
+The case also provides the bus numbering, bus types, initial reference angles,
+branch reactances, tap ratios, phase shifts, branch ratings, and system base
+power.
+
+## Reference buses and islands
+
+The AC network admittance matrix is used only to identify disconnected islands.
+`assign_island_reference_buses` ensures that every island has a reference bus.
+For an island without one, it selects the PV bus with the largest scheduled
+generation, or an available bus when the island contains no PV bus.
+
+The selected reference angles are read from the parsed case. They are not
+included among the unknown angle variables.
+
+## Susceptance matrix
+
+For branch $k$ connecting buses $i$ and $j$, let $x_k$ be its series reactance
+and $\tau_k$ its tap ratio. `_build_dc_matrix` computes the branch
+susceptance:
+
+$$
+b_k = \frac{1}{x_k\tau_k}.
+$$
+
+The branch contributes to the nodal matrix $B$ as:
+
+$$
+B_{ii} \mathrel{+}= b_k, \qquad
+B_{jj} \mathrel{+}= b_k,
+$$
+
+$$
+B_{ij} \mathrel{-}= b_k, \qquad
+B_{ji} \mathrel{-}= b_k.
+$$
+
+This is a series-reactance DC matrix. It is intentionally different from the
+full AC $-\operatorname{Im}(Y_{bus})$ matrix: resistance, line charging, and
+bus shunts are not included in the linear angle equations. A zero-reactance
+branch raises an error because its susceptance is undefined.
+
+## Phase-shift transformers
+
+For a branch phase shift $\phi_k$, `_phase_shift_injections` creates the
+equivalent injection vector $h$:
+
+$$
+h_i \mathrel{+}= b_k\phi_k, \qquad
+h_j \mathrel{-}= b_k\phi_k.
+$$
+
+The resulting branch active-power equation is:
+
+$$
+P_{ij} = S_{base}b_k(\theta_i - \theta_j - \phi_k).
+$$
+
+Consequently, the nodal DC equation is:
+
+$$
+B\theta = P + h.
+$$
+
+## Reduced linear solve
+
+`_solve_angles` divides the buses into reference buses $r$ and non-reference
+buses $n$. Partitioning the nodal equation gives:
+
+$$
+B_{nn}\theta_n = P_n + h_n - B_{nr}\theta_r.
+$$
+
+The implementation solves this reduced sparse system with SciPy's `spsolve`.
+The complete angle vector is initialized to zero, reference entries are set to
+their parsed values, and the solved values are placed in the non-reference
+entries.
+
+The voltage vector used for reporting is reconstructed as:
+
+$$
+V_i = e^{j\theta_i}.
+$$
+
+All reported voltage magnitudes are therefore $1$ p.u.
+
+## Lossless branch flows
+
+The default `lossy_flows=False` path uses `_calculate_lossless_branch_results`.
+For each branch, the forward active-power flow is:
+
+$$
+P_{ij} = S_{base}
+\frac{\theta_i - \theta_j - \phi_k}{x_k\tau_k}.
+$$
+
+The reverse flow and loss are:
+
+$$
+P_{ji} = -P_{ij}, \qquad P_{loss,k}=0.
+$$
+
+Reactive terminal flows are reported as zero. Loading is calculated from the
+absolute active flow and branch rating:
+
+$$
+\operatorname{loading}_k =
+100\frac{|P_{ij}|}{S_{rating,k}}.
+$$
+
+## Lossy branch flows
+
+With `lossy_flows=True`, the angle solve remains linear, but
+`calculate_branch_results` evaluates each branch's AC admittance model at the
+unit-magnitude voltage vector. For series impedance
+$z_k=r_k+jx_k$, half-line charging $b_{c,k}$, and complex tap
+$t_k=\tau_ke^{j\phi_k}$:
+
+$$
+y_k = \frac{1}{r_k+jx_k},
+$$
+
+$$
+I_{ij} = \frac{y_k + j b_{c,k}/2}{|t_k|^2}V_i
+         - \frac{y_k}{t_k^*}V_j,
+$$
+
+$$
+I_{ji} = -\frac{y_k}{t_k}V_i
+         + \left(y_k + j b_{c,k}/2\right)V_j.
+$$
+
+Terminal powers and real-power loss are:
+
+$$
+S_{ij}=V_iI_{ij}^*S_{base}, \qquad
+S_{ji}=V_jI_{ji}^*S_{base},
+$$
+
+$$
+P_{loss,k}=\operatorname{Re}(S_{ij}+S_{ji}).
+$$
+
+This option affects terminal-flow and loss reporting. It does not turn the DC
+angle calculation into a nonlinear AC power-flow solve.
+
+## Slack balancing and mismatch
+
+`_branch_net_injections` sums terminal active-power flows at each bus. Scheduled
+injections are retained at non-reference buses. Reference-bus injections are
+replaced by the corresponding network injections so that the solved system
+balances the branch flows, including reported losses in lossy mode.
+
+`_maximum_mismatch` computes:
+
+$$
+\epsilon_P = \max_i
+\left|P_{i,\mathrm{injection}} - P_{i,\mathrm{branch}}\right|.
+$$
+
+The direct DC solve records one `IterationPowerFlowResult` with this mismatch;
+there is no nonlinear iteration loop.
+
+## Results and export
+
+`_calculate_bus_results` creates unit-magnitude bus results with solved angles
+and active injections. `apply_power_flow_result` attaches those values to the
+parsed components. `build_component_results` creates the shared typed result
+model used by the AC solvers and Excel exporter.
+
+```python
+from o_grid import DCPowerFlow, ExportSolution
+
+run = DCPowerFlow(lossy_flows=True).run(parsed_system)
+
+ExportSolution(
+    system=run.system,
+    format="excel",
+    output_path="case_solution_dcpf.xlsx",
+)
+```

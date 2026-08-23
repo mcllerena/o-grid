@@ -82,6 +82,7 @@ def _solver_title(solver: str) -> str:
     return {
         "newton-raphson": "Newton-Raphson",
         "fast-decoupled": "Fast-decoupled",
+        "primal-dual": "Primal-dual OPF",
     }.get(solver, solver)
 
 

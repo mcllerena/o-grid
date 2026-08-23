@@ -410,6 +410,12 @@ class Transformer(BaseTransformer):
         ),
     ] = None
     circuit_identifier: Annotated[str, Field(description="Transformer circuit identifier.")] = ""
+    r: Annotated[
+        Percentage | None, Field(description="Positive-sequence resistance in percent.")
+    ] = None
+    x: Annotated[
+        Percentage | None, Field(description="Positive-sequence reactance in percent.")
+    ] = None
     magnetizing_conductance: Annotated[
         PerUnit | None, Field(description="Magnetizing conductance in p.u. on the system base.")
     ] = None

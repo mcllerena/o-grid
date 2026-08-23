@@ -19,6 +19,8 @@ supported:
 
 ANAREDE dynamic-model `.dyn` files are also supported through a lossless
 structured parser that returns dynamic model headers and records.
+ANAREDE event `.evt` files are parsed into contingencies and ordered dynamic
+events, and can drive the reduced-order stability simulation.
 
 Across these paths, downstream modeling and optimization code consumes the same validated
 `System`.
@@ -150,6 +152,34 @@ The `.dyn` parser preserves model headers, raw slash-terminated records, source
 line numbers, and values converted to numeric types where possible. Unlike the
 static parsers, it returns a `DynFile` rather than an `infrasys.System`.
 
+### Run a stability study with an EVT contingency
+
+```python
+from pathlib import Path
+
+from o_grid.dynamics import StabilityConfig, StabilityStudy, plot_stability_result
+
+study = StabilityStudy(
+   Path("tests/data/ntw/9bus.ntw"),
+   Path("tests/data/dyn/9bus.dyn"),
+   event_file=Path("tests/data/evt/9bus.evt"),
+   contingency=2,
+   config=StabilityConfig(duration=10.0, time_step=0.01, fault_factor=0.2),
+)
+
+power_flow = study.run_power_flow()
+result = study.run()
+figure = plot_stability_result(result)
+figure.savefig("stability_9bus.png", dpi=150)
+```
+
+`StabilityStudy` solves the NTW operating point, initializes synchronous
+machines from the DYN records, applies the selected EVT event timeline, and
+returns time-domain trajectories and small-signal eigenvalues. The current
+engine is a reduced-order classical swing-equation model: event records are
+used to change the aggregate electrical transfer factor. Full network topology
+mutation and detailed AVR, governor, PSS, and inverter models are future work.
+
 ### Run an AC power flow
 
 Pass the parsed system directly to either pure-Python solver. The solver returns
@@ -173,6 +203,33 @@ fast-decoupled algorithm. `print_iterations=True` prints the convergence trace;
 `solved_system.info()` renders component counts and the attached **Statistic
 Results Information** table. See [Run an AC power flow](docs/src/content/docs/tutorials/run-power-flow.mdx)
 for the complete parser-to-solution example.
+
+### Run the primal-dual AC/DC OPF
+
+`ACOptimalPowerFlow` formulates the network as a constrained nonlinear program
+and solves it with Pyomo and Ipopt. The primal-dual interior-point method
+optimizes AC voltage magnitudes and angles together with bounded reactive
+generation, controls, and residual slacks. For cases with valid LCC HVDC data,
+the same NLP also includes DC power, current, rectifier/inverter voltages,
+converter angles, and reactive exchange. These equations are coupled directly
+to the AC active and reactive power balances, making this an AC/DC OPF rather
+than a sequential AC power flow followed by a DC update.
+
+```python
+from o_grid.acpf import ACOptimalPowerFlow
+
+solved_system = ACOptimalPowerFlow(
+   system=system,
+   max_iterations=100,
+   print_iterations=True,
+)
+```
+
+The objective minimizes power-balance residuals and penalizes voltage, angle,
+and control violations while regularizing the solution around the parsed
+operating point. See the
+[primal-dual AC/DC OPF explanation](docs/src/content/docs/explanation/optimization-acpf.mdx)
+for the formulation and convergence details.
 
 ### Export solved results to Excel
 
