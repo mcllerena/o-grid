@@ -51,6 +51,8 @@ export default defineConfig({
           label: "Reference",
           items: [
             { label: "ANAREDE blocks", link: "/reference/anarede-blocks/" },
+            { label: "ANAREDE NTW parser", link: "/reference/ntw-parser/" },
+            { label: "ANAREDE dynamic parser", link: "/reference/dyn-parser/" },
             { label: "Power system models", link: "/reference/models/" },
           ],
         },

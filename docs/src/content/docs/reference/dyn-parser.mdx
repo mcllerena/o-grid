@@ -1,0 +1,57 @@
+---
+title: ANAREDE dynamic parser
+description: Parse ANAREDE dynamic-model files into structured, lossless records.
+head: []
+---
+
+`DynFileParser` reads ANAREDE dynamic-model files with the `.dyn` extension and
+returns a `DynFile`. Import it from `o_grid.dynamics`:
+
+```python
+from pathlib import Path
+
+from o_grid.dynamics import DynFileParser
+
+dynamic_file = DynFileParser(Path("case.dyn")).file
+for model in dynamic_file.models:
+    print(model.model, model.name, len(model.records))
+```
+
+## File structure
+
+A dynamic file starts with a `VERSION` declaration and contains one or more
+model sections. Each model begins with an `SMxx` identifier and a model name.
+Lines beginning with `!` describe the following record, and data records end at
+`/`.
+
+The parser returns these structured types:
+
+| Type | Contents |
+| --- | --- |
+| `DynFile` | Source path, file version, and the ordered dynamic models. |
+| `DynModel` | Model identifier, name, headers, records, and starting line. |
+| `DynDataRecord` | Source line number, parsed values, and the original raw line. |
+
+Values that can be represented as numbers are converted to `float`; identifiers
+and sentinel values remain strings. The original record text is always retained
+in `DynDataRecord.raw`, making the parser suitable for inspection and later
+model-specific interpretation.
+
+## Example inspection
+
+```python
+from o_grid.dynamics import DynFileParser
+
+parsed = DynFileParser("tests/data/dyn/9bus.dyn").file
+print(parsed.version)
+
+first_model = parsed.models[0]
+print(first_model.model, first_model.name)
+print(first_model.headers)
+print(first_model.records[0].raw)
+```
+
+Unlike the PWF, MATPOWER, and NTW static parsers, the dynamic parser does not
+construct an `infrasys.System`. It provides a lossless, model-oriented
+representation that can be connected to static components by a future
+model-specific workflow.

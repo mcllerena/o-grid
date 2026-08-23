@@ -1,0 +1,71 @@
+---
+title: ANAREDE NTW parser
+description: Parse ANAREDE NTW network files into typed infrasys components.
+head: []
+---
+
+`NtwFileParser` reads ANAREDE `.NTW` files and returns an `AnaredeSystem` with
+queryable, typed components. Import it from `o_grid.statics`:
+
+```python
+from pathlib import Path
+
+from o_grid.statics import FACTSDevice, NtwFileParser, ShuntDevice
+
+system = NtwFileParser(Path("case.NTW")).system
+shunts = list(system.get_components(ShuntDevice))
+facts = list(system.get_components(FACTSDevice))
+```
+
+## Input handling
+
+The parser supports the formats used by production NTW cases:
+
+- CP1252 text encoding.
+- Comma-separated records with quoted names and trailing `/` terminators.
+- Whitespace-separated records, including mutual-impedance and FACTS records.
+- Parenthesized and `!` field headers.
+- Section transitions embedded in `END OF ... BEGIN ...` lines.
+- NTW versions greater than 7 using the Version 6 component layout.
+- Transformer identification records followed by continuation records, retained in
+  the transformer's `ext["ntw_continuation_values"]` metadata.
+
+## Supported sections
+
+| NTW section | Component model | Parser block |
+| --- | --- | --- |
+| BUS | `ACBus` | `DBAR` |
+| LOAD | `Load` | `DCAI` |
+| GENERATOR | `Generator` | `DGER` |
+| SHUNT / SWITCHED SHUNT | `ShuntDevice` | `DSHUNT` |
+| TRANSMISSION LINE | `TransmissionLine` | `DLIN` |
+| TRANSFORMER | `Transformer` | `DLIN_TRANSFORMER` |
+| SERIES CAPACITOR | `SeriesCapacitor` | `DSERIES_CAPACITOR` |
+| DCLINK | `DCLink` | `DDCLINK` |
+| AREA | `Area` | `DARE` |
+| ZONE | `Zone` | `DZONE` |
+| OWNER | `Owner` | `DOWNER` |
+| SUBSTATION | `Substation` | `DSUBSTATION` |
+| TRANSFORMER IMPEDANCE CORRECTION | `ImpedanceCorrection` | `DIMPEDANCE_CORRECTION` |
+| LINE MUTUAL IMPEDANCE | `LineMutualImpedance` | `DLINE_MUTUAL_IMPEDANCE` |
+| INDUCTION MOTOR | `InductionMotor` | `DINDUCTION_MOTOR` |
+| BREAKER CONFIGURATION | `BreakerConfiguration` | `DBREAKER_CONFIGURATION` |
+| FACTS | `FACTSDevice` | `DFACTS` |
+
+Empty sections are still recognized but produce no components. Each populated
+component keeps its source line number, raw record, and normalized values in
+`component.ext`.
+
+## Logging
+
+Parsing uses the project's Loguru logger. Every populated section emits an
+informational record, followed by a success record with the total number of
+components:
+
+```text
+Parsed DSHUNT section: 1064 record(s)
+Successfully parsed 12345 component(s).
+```
+
+Applications can configure Loguru sinks and levels according to their normal
+logging policy; the parser does not require a separate logging configuration.

@@ -5,7 +5,7 @@ head: []
 ---
 
 `o-grid` is an open power system modeling and optimization framework. Its parser
-reads power-flow cases in two formats and converts them into a typed
+reads power-system cases in multiple formats and converts supported static cases into a typed
 [`infrasys`](https://pypi.org/project/infrasys/) component, producing a
 validated, queryable `System`:
 
@@ -13,6 +13,10 @@ validated, queryable `System`:
   a typed component.
 - **MATPOWER** cases (`.m`) — the `bus`, `gen`, and `branch` tables are converted
   into the same typed components.
+- **ANAREDE NTW** cases (`.NTW`) — network sections are converted into dedicated
+  models such as `ShuntDevice`, `SeriesCapacitor`, and `FACTSDevice`.
+- **ANAREDE dynamic models** (`.dyn`) — model headers and slash-terminated records
+  are preserved in a structured `DynFile` representation.
 
 This documentation is organized by user need.
 
@@ -29,6 +33,10 @@ This documentation is organized by user need.
   result components or export them to Excel.
 - [ANAREDE blocks reference](/reference/anarede-blocks/) if you need to know which
   execution codes the parser handles and how they map to components.
+- [ANAREDE NTW parser reference](/reference/ntw-parser/) for NTW input handling,
+  supported sections, typed devices, and parser logging.
+- [ANAREDE dynamic parser reference](/reference/dyn-parser/) for reading and
+  inspecting lossless `.dyn` model records.
 - [Power system models reference](/reference/models/) if you need the fields and
   purpose of each component in `o_grid.models`.
 - [Parser architecture](/explanation/parser-architecture/) if you want the design
@@ -40,6 +48,8 @@ This documentation is organized by user need.
 | --- | --- |
 | `o_grid.parser` | Column-driven ANAREDE reader that populates an `infrasys` `System`. |
 | `o_grid.matpower` | MATPOWER `.m` reader (`parse_matpower_system`, `MatpowerInfrasysParser`) that populates the same `System` model. |
+| `o_grid.statics.ntw_parser` | ANAREDE `.NTW` reader (`NtwFileParser`) for typed NTW network components. |
+| `o_grid.dynamics` | ANAREDE `.dyn` reader (`DynFileParser`) for structured dynamic model records. |
 | `o_grid.models` | Typed power-system component models (buses, branches, generators, loads, control). |
 | `o_grid.plugin_parser` | `r2x-core` plugin wrappers (`AnaredeParser`, `MatPowerParser`) exposing the parsers. |
 | `o_grid.plugin_config` | `AnaredeConfig` and `MatpowerConfig`, the configuration models for the parser plugins. |

@@ -3,7 +3,7 @@
 Open Power System Modeling & Optimization Framework.
 
 `o-grid` reads power-flow cases and turns them into a typed, in-memory
-[`infrasys`](https://pypi.org/project/infrasys/) `System`. Two source formats are
+[`infrasys`](https://pypi.org/project/infrasys/) `System`. Three static source formats are
 supported:
 
 - **ANAREDE**/**Organon** `.pwf` files — fixed-width text where each execution
@@ -13,8 +13,14 @@ supported:
   — the `bus`, `gen`, and `branch` tables are converted into the same typed
   component models, including bus shunt susceptance (`BS`), branch impedances,
   and transformer taps/phase shifts.
+- **Organon** `.ntw` files — CSV-like network records mapped to dedicated NTW
+   models such as `ShuntDevice`, `SeriesCapacitor`, `DCLink`, `Transformer`,
+   `LineMutualImpedance`, and `FACTSDevice`.
 
-Either way, downstream modeling and optimization code consumes the same validated
+ANAREDE dynamic-model `.dyn` files are also supported through a lossless
+structured parser that returns dynamic model headers and records.
+
+Across these paths, downstream modeling and optimization code consumes the same validated
 `System`.
 
 ## The parser approach
@@ -25,6 +31,11 @@ mapping and resolves the values into typed components. The MATPOWER parser
 (`o_grid.matpower`) follows the same "tables to typed components" idea, but reads
 the tabular `bus`/`gen`/`branch` data with `matpowercaseframes` instead of column
 slicing.
+
+NTW files use the dedicated `NtwFileParser` in `o_grid.statics`. It supports
+CP1252-encoded records, comma- and whitespace-delimited layouts, section
+transitions, and transformer continuation records. Parsing logs each populated
+section and the final component count through Loguru.
 
 1. **Read** the `.pwf` text and split it into execution-code blocks
    (`DBAR`, `DLIN`, `DGER`, ...).
@@ -107,6 +118,37 @@ config = MatpowerConfig(system_name="case_ACTIVSg10k", pwf_path=str(data_path))
 context = PluginContext(config=config, store=DataStore(path=data_path.parent))
 system = MatPowerParser.from_context(context).run().system
 ```
+
+### Parse an ANAREDE NTW case
+
+```python
+from pathlib import Path
+
+from o_grid.statics import FACTSDevice, NtwFileParser, ShuntDevice
+
+system = NtwFileParser(Path("case.NTW")).system
+shunts = list(system.get_components(ShuntDevice))
+facts = list(system.get_components(FACTSDevice))
+```
+
+The NTW parser reports populated sections and the final component count through
+the project's Loguru logger.
+
+### Parse an ANAREDE dynamic model file
+
+```python
+from pathlib import Path
+
+from o_grid.dynamics import DynFileParser
+
+dynamic_file = DynFileParser(Path("case.dyn")).file
+for model in dynamic_file.models:
+   print(model.model, model.name, len(model.records))
+```
+
+The `.dyn` parser preserves model headers, raw slash-terminated records, source
+line numbers, and values converted to numeric types where possible. Unlike the
+static parsers, it returns a `DynFile` rather than an `infrasys.System`.
 
 ### Run an AC power flow
 
