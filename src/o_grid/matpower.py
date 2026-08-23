@@ -19,7 +19,7 @@ from o_grid.models.m_models import (
     ProgramConstants,
     branch_block,
 )
-from o_grid.parser import ParsedAnaredeSystem
+from o_grid.statics.pwf_parser import ParsedAnaredeSystem
 from o_grid.system import AnaredeSystem
 
 _matpowercaseframes: ModuleType | None

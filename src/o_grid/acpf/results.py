@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from pydantic import BaseModel
 
 from o_grid.models import ACBus
-from o_grid.parser import ParsedAnaredeSystem
+from o_grid.statics.pwf_parser import ParsedAnaredeSystem
 from o_grid.units import ActivePower, Angle, PerUnit, ReactivePower
 
 

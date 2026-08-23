@@ -25,7 +25,7 @@ from o_grid.acpf.models.results import (
     TransformerResults,
 )
 from o_grid.acpf.results import ACPowerFlowResult, BranchPowerFlowResult, BusPowerFlowResult
-from o_grid.parser import ParsedAnaredeSystem
+from o_grid.statics.pwf_parser import ParsedAnaredeSystem
 from o_grid.units import get_magnitude
 
 

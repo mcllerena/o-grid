@@ -27,7 +27,7 @@ from o_grid.models import (
     SwitchDevice,
     TransformerDevice,
 )
-from o_grid.parser import ParsedAnaredeSystem
+from o_grid.statics.pwf_parser import ParsedAnaredeSystem
 from o_grid.units import get_magnitude
 
 

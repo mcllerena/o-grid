@@ -29,7 +29,7 @@ from o_grid.acpf.utils import (
     calculate_branch_results,
     calculate_bus_results,
 )
-from o_grid.parser import AnaredeInfrasysParser, ParsedAnaredeSystem
+from o_grid.statics.pwf_parser import AnaredeInfrasysParser, ParsedAnaredeSystem
 
 
 class PowerFlowSolver:

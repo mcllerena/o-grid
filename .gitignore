@@ -40,6 +40,8 @@ tests/data/pwf/ONS_2Q2020_MAIO_MEDIA.pwf
 tests/data/pwf/LEN_A_4_2020_SECO_2023VM_SE_EXP_N.pwf
 tests/data/pwf/br-data-2024/*.pwf
 tests/data/pwf/br-data-2026-1q/*.PWF
+tests/data/ntw/*.NTW
+tests/data/ntw/*.ntw
 
 # Remove results .xlsx format outputs
 *.xlsx

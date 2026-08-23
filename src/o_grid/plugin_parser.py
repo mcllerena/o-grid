@@ -9,8 +9,8 @@ from r2x_core import Plugin
 from rust_ok import Err, Ok, Result
 
 from o_grid.matpower import parse_matpower_system
-from o_grid.parser import parse_anarede_system
 from o_grid.plugin_config import AnaredeConfig, MatpowerConfig
+from o_grid.statics.pwf_parser import parse_anarede_system
 
 
 class AnaredeParser(Plugin[AnaredeConfig]):

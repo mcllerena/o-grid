@@ -1,6 +1,6 @@
 VERSION  1
-! 
- SM04     UNNAMED             
+!
+ SM04     UNNAMED
 ! Bus  ID  AVR   PSS  UEL  OEL   SCL  Gov   Ctrl Bus  Rc(pu)  Xc(pu)  Tr(s)  Bus-Name  CtrBus-Name
   1    10  AVR03 0    0    OEL02 0    GOV03 1         0.      -0.050  0.     xxx       xxx /
 ! Xd(pu)  Xld(pu)  Xlld(pu) Xq(pu)  Xlq(pu)  Xllq(pu)  Ra(pu)  Base(MVA)  Xl(pu)  Xt(pu)  Tld(s)  Tlld(s)    H(MW/MVA.s)  D(pu/pu)  Tllq(s) Ag     Bg       Cg
@@ -11,8 +11,8 @@ VERSION  1
   210.40 130.40 1.10  1.60  0.020  100. 0.050  10.    2.     -10.  0. /
 ! At   Tg(s)  Tw(s)  Rt>0  Tr(s)>0  Rp    Tf(s)  Lmin   Lmax   Vmin   Vmax   qnl   Kd  Td(s)  Dt   D
  1.250 0.50   1.50   0.380 7.       0.050 0.050  -2.    2.     0.0010 0.9840 0.150 0.  1.     0.50 1. /
-! 
- SM05     UNNAMED             
+!
+ SM05     UNNAMED
 ! Bus  ID  AVR   PSS   UEL  OEL   SCL  Gov   Ctrl Bus  Rc(pu)  Xc(pu)  Tr(s)  Bus-Name  CtrBus-Name
   2    10  AVR26 PSS06 0    OEL02 0    GOV11 2         0.      0.      0.     xxx       xxx
 ! Xd(pu)  Xld(pu)  Xlld(pu)  Xq(pu)  Xlq(pu)  Xllq(pu)  Ra(pu)  Base(MVA)  Xl(pu)  Xt(pu)  Tld(s)  Tlld(s)  Tlq(s)  H(MW/MVA.s)  D(pu/pu)  Tllq(pu)  S1.0   S1.2  Cg
@@ -25,8 +25,8 @@ VERSION  1
   163.20 101.20 1.10  1.60  0.020  100. 0.050  10.    2.     -10.  0. /
 ! R>0    T1(s)>0  T2(s)  T3(s)  Plim  Ka  Pmax(pu)  Pmin(pu)
   0.0570 0.020    0.40   0.20   1.    10. 1.        0. /
-! 
- SM05     UNNAMED             
+!
+ SM05     UNNAMED
 ! Bus  ID  AVR   PSS   UEL  OEL   SCL  Gov   Ctrl Bus  Rc(pu)  Xc(pu)  Tr(s)  Bus-Name  CtrBus-Name
   3    10  AVR26 PSS06 0    OEL02 0    GOV17 3         0.      0.      0.     xxx       xxx
 ! Xd(pu)  Xld(pu)  Xlld(pu)  Xq(pu)  Xlq(pu)  Xllq(pu)  Ra(pu)  Base(MVA)  Xl(pu)  Xt(pu)  Tld(s)  Tlld(s)  Tlq(s)  H(MW/MVA.s)  D(pu/pu)  Tllq(pu)  S1.0   S1.2  Cg

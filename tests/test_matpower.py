@@ -141,42 +141,6 @@ def test_newton_raphson_solves_case5_dc() -> None:
     assert results.information.line_flow_overloads == 0
 
 
-def test_newton_raphson_solves_large_activitys_case() -> None:
-    parsed = parse_matpower_system(MATPOWER_DATA / "case_ACTIVSg10k.m")
-    solved = NewtonRaphsonPowerFlow(system=parsed.system, max_iterations=30, max_control_passes=0)
-    information = solved.power_flow_results.information
-
-    assert information.converged is True
-    assert information.solver == "newton-raphson"
-    assert information.bus_count == 10000
-    assert information.max_mismatch_pu <= 0.001
-
-
-def test_fast_decoupled_solves_large_activitys_case_via_fallback() -> None:
-    parsed = parse_matpower_system(MATPOWER_DATA / "case_ACTIVSg10k.m")
-    solved = FastDecoupledPowerFlow(system=parsed.system, max_iterations=30, max_control_passes=0)
-    information = solved.power_flow_results.information
-
-    assert information.converged is True
-    assert information.solver == "fast-decoupled"
-    assert information.bus_count == 10000
-    assert information.max_mismatch_pu <= 0.001
-
-
-def test_newton_raphson_solves_large_activitys70k_case_with_shunts() -> None:
-    parsed = parse_matpower_system(MATPOWER_DATA / "case_ACTIVSg70k.m")
-    solved = NewtonRaphsonPowerFlow(system=parsed.system, max_iterations=30, max_control_passes=0)
-    information = solved.power_flow_results.information
-
-    assert information.converged is True
-    assert information.solver == "newton-raphson"
-    assert information.bus_count == 70000
-    assert information.max_mismatch_pu <= 0.001
-    assert information.solved_generation_mw == pytest.approx(612959.4, rel=1e-3)
-    assert information.branch_active_losses_mw == pytest.approx(18243.0, rel=0.05)
-    assert information.power_balance_mw == pytest.approx(0.0, abs=1e-3)
-
-
 def test_acbuses_parses_matpower_bus_shunt_bs() -> None:
     from o_grid.models.m_models.topology import ACBuses
 

@@ -30,14 +30,15 @@ from o_grid.constants import (
 )
 from o_grid.exporter import ExportSolution, export_rows
 from o_grid.matpower import MatpowerInfrasysParser, parse_matpower_system
-from o_grid.parser import (
+from o_grid.plugin_config import AnaredeConfig, MatpowerConfig
+from o_grid.plugin_parser import AnaredeParser, MatPowerParser
+from o_grid.statics.ntw_parser import NtwFileParser
+from o_grid.statics.pwf_parser import (
     AnaredeInfrasysParser,
     ParsedAnaredeSystem,
     parse_anarede_system,
     parse_rows,
 )
-from o_grid.plugin_config import AnaredeConfig, MatpowerConfig
-from o_grid.plugin_parser import AnaredeParser, MatPowerParser
 
 __all__ = [
     "ACBusResults",
@@ -55,6 +56,7 @@ __all__ = [
     "MatpowerConfig",
     "MatpowerInfrasysParser",
     "NewtonRaphsonPowerFlow",
+    "NtwFileParser",
     "OptimizationACPowerFlow",
     "ParsedAnaredeSystem",
     "PhaseShiftingTransformerResults",

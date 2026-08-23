@@ -50,7 +50,7 @@ from o_grid.acpf.utils import (
     calculate_bus_results,
 )
 from o_grid.models import ACBusTypes
-from o_grid.parser import AnaredeInfrasysParser, ParsedAnaredeSystem
+from o_grid.statics.pwf_parser import AnaredeInfrasysParser, ParsedAnaredeSystem
 
 TOLERANCE = 1.0e-12
 DISPLAY_TOLERANCE = 1.0e-9
