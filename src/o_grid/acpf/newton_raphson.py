@@ -30,6 +30,8 @@ def solve_newton_raphson(
     max_iterations: int,
     initial_voltage: np.ndarray | None = None,
     iteration_callback: Callable[[IterationPowerFlowResult], None] | None = None,
+    control_callback: Callable[[np.ndarray, csc_matrix], tuple[np.ndarray, csc_matrix]]
+    | None = None,
 ) -> NumericalSolution:
     """Solve an AC case with a sparse polar-coordinate Newton-Raphson method.
 
@@ -70,6 +72,9 @@ def solve_newton_raphson(
     trace: list[IterationPowerFlowResult] = []
 
     for iteration in range(max_iterations + 1):
+        if control_callback is not None:
+            voltage, ybus = control_callback(voltage, ybus)
+            specified = case.specified_power
         calculated = calculate_power(ybus, voltage)
         svc_injection = svc_q_injection_by_bus(svc_states, len(case.buses))
         active_mismatch = specified_no_svc.real - calculated.real
@@ -216,34 +221,53 @@ def _build_jacobian(
 
     magnitude = voltage_magnitude if magnitudes is None else magnitudes
     pq_column = {int(index): column for column, index in enumerate(pq)}
-    svc_offset = len(pv_pq) + len(pq)
-    svc_count = len(active_svc)
-    rows = len(pv_pq) + len(pq) + svc_count
-    columns = len(pv_pq) + len(pq) + svc_count
-    jacobian = np.zeros((rows, columns), dtype=float)
-    jacobian[: len(pv_pq), : len(pv_pq)] = j11.toarray()
-    jacobian[: len(pv_pq), len(pv_pq) : svc_offset] = j12.toarray()
-    jacobian[len(pv_pq) : svc_offset, : len(pv_pq)] = j21.toarray()
-    jacobian[len(pv_pq) : svc_offset, len(pv_pq) : svc_offset] = j22.toarray()
-
+    base_jacobian = vstack(
+        (
+            hstack((j11, j12), format="csc"),
+            hstack((j21, j22), format="csc"),
+        ),
+        format="csc",
+    )
+    svc_voltage_rows: list[int] = []
+    svc_voltage_columns: list[int] = []
+    svc_voltage_values: list[float] = []
+    svc_q_rows: list[int] = []
+    svc_q_columns: list[int] = []
+    svc_q_values: list[float] = []
+    control_q_values: list[float] = []
     for column, index in enumerate(active_svc.tolist()):
         state = svc_states[index]
         q_row = pq_column.get(state.bus_index)
         if q_row is not None:
-            jacobian[len(pv_pq) + q_row, svc_offset + column] = -1.0
-        control_row = len(pv_pq) + len(pq) + column
+            svc_q_rows.append(len(pv_pq) + q_row)
+            svc_q_columns.append(column)
+            svc_q_values.append(-1.0)
+        control_row = column
         control_column = pq_column.get(state.control_bus_index)
         if control_column is not None:
-            jacobian[control_row, len(pv_pq) + control_column] += svc_control_derivative_voltage(
-                state, state.control_bus_index, magnitude
+            svc_voltage_rows.append(control_row)
+            svc_voltage_columns.append(len(pv_pq) + control_column)
+            svc_voltage_values.append(
+                svc_control_derivative_voltage(state, state.control_bus_index, magnitude)
             )
         device_column = pq_column.get(state.bus_index)
         if device_column is not None:
-            jacobian[control_row, len(pv_pq) + device_column] += svc_control_derivative_voltage(
-                state, state.bus_index, magnitude
+            svc_voltage_rows.append(control_row)
+            svc_voltage_columns.append(len(pv_pq) + device_column)
+            svc_voltage_values.append(
+                svc_control_derivative_voltage(state, state.bus_index, magnitude)
             )
-        jacobian[control_row, svc_offset + column] = svc_control_derivative_q(state, magnitude)
-    return csc_matrix(jacobian)
+        control_q_values.append(svc_control_derivative_q(state, magnitude))
+    svc_voltage = csc_matrix(
+        (svc_voltage_values, (svc_voltage_rows, svc_voltage_columns)),
+        shape=(len(active_svc), len(pv_pq) + len(pq)),
+    )
+    svc_q = csc_matrix(
+        (svc_q_values, (svc_q_rows, svc_q_columns)),
+        shape=(len(pv_pq) + len(pq), len(active_svc)),
+    )
+    control_rows = hstack((svc_voltage, diags(control_q_values, format="csc")), format="csc")
+    return vstack((hstack((base_jacobian, svc_q), format="csc"), control_rows), format="csc")
 
 
 def _line_search(

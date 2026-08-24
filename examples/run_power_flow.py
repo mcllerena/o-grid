@@ -35,26 +35,26 @@ parsed_system = AnaredeParser.from_context(parse_context).run().system
 # MW Load = 84088.955 -> 20240820_C_18-30
 
 # Run power flow on infrasys system
-# nr_pf = NewtonRaphsonPowerFlow(
-#     system=parsed_system,
-#     max_iterations=30,
-#     max_control_passes=0,
-#     print_iterations=True,
-# )
+nr_pf = NewtonRaphsonPowerFlow(
+    system=parsed_system,
+    max_iterations=30,
+    max_control_passes=12,
+    print_iterations=True,
+)
 # assert isinstance(nr_pf, AnaredeSystem)
 # assert nr_pf.power_flow_results is not None
 
-opt_pf = OptimizationACPowerFlow(
-    system=parsed_system,
-    objective_function="squared_generation",
-    max_iterations=100,
-    print_iterations=True,
-)
+# opt_pf = OptimizationACPowerFlow(
+#     system=parsed_system,
+#     objective_function="squared_generation",
+#     max_iterations=100,
+#     print_iterations=True,
+# )
 # assert isinstance(opt_pf, AnaredeSystem)
 
 # Export results to xlsx
 export_sys = ExportSolution(
-    system=opt_pf,
+    system=nr_pf,
     format="excel",
     output_path=Path(f"tests/data/pwf/{sys_name}_solution.xlsx"),
 )

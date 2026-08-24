@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from copy import deepcopy
 from pathlib import Path
-from typing import ClassVar, Self
+from typing import ClassVar, Literal, Self
 
 from infrasys import System
 from loguru import logger
@@ -30,8 +30,11 @@ from o_grid.acpf.utils import (
     calculate_branch_results,
     calculate_bus_results,
 )
+from o_grid.cpp.adapter import solve_with_cpp
 from o_grid.statics.ntw_parser import NtwFileParser
 from o_grid.statics.pwf_parser import AnaredeInfrasysParser, ParsedAnaredeSystem
+
+SolverApproach = Literal["python", "cpp"]
 
 
 class PowerFlowSolver:
@@ -51,7 +54,9 @@ class PowerFlowSolver:
         print_iterations: bool = False,
         objective_function: str = "minimize_residuals",
         strict_voltage_limits: bool = False,
+        approach: SolverApproach = "python",
     ) -> Self | System:
+        _validate_approach(approach)
         instance = super().__new__(cls)
         if system is None:
             return instance
@@ -61,6 +66,7 @@ class PowerFlowSolver:
         instance.print_iterations = print_iterations
         instance.objective_function = objective_function
         instance.strict_voltage_limits = strict_voltage_limits
+        instance.approach = approach
         return instance.run(system).system
 
     def __init__(
@@ -71,12 +77,15 @@ class PowerFlowSolver:
         max_iterations: int = 30,
         max_control_passes: int = 12,
         print_iterations: bool = False,
+        approach: SolverApproach = "python",
     ) -> None:
         del system
+        _validate_approach(approach)
         self.tolerance = tolerance
         self.max_iterations = max_iterations
         self.max_control_passes = max_control_passes
         self.print_iterations = print_iterations
+        self.approach = approach
 
     def run(
         self,
@@ -97,6 +106,24 @@ class PowerFlowSolver:
             else:
                 parser = AnaredeInfrasysParser(system_name=system_name or source.stem)
                 parsed = parser.parse(source)
+
+        if self.approach == "cpp":
+            result, report = solve_with_cpp(
+                parsed,
+                solver_name=self.solver_name,
+                tolerance=self.tolerance,
+                max_iterations=self.max_iterations,
+                print_iterations=self.print_iterations,
+            )
+            apply_power_flow_result(parsed, result)
+            case = build_power_flow_case(parsed)
+            component_results = build_component_results(
+                parsed, case, result, tolerance=self.tolerance or 1e-6
+            )  # noqa: E501
+            set_results = getattr(parsed.system, "set_power_flow_results", None)
+            if callable(set_results):
+                set_results(component_results)
+            return PowerFlowRun(parsed=parsed, result=result, stdout=report)
 
         case = build_power_flow_case(parsed)
         settings = build_power_flow_settings(
@@ -131,6 +158,7 @@ class PowerFlowSolver:
         )
         if live_reporter is not None:
             live_reporter.start()
+
         solution = solve(
             numerical_case,
             ybus,
@@ -153,12 +181,15 @@ class PowerFlowSolver:
                 live_reporter.accept("Base solve")
             else:
                 live_reporter.fail("Base solve")
-        rejected_controls: set[str] = set()
+        protect_voltage_violations = (
+            _voltage_violation_score(numerical_case, solution.voltage) >= 50
+        )
         for control_pass in range(self.max_control_passes):
             if solution.diverged:
                 break
             accepted_any = False
             changed_any = False
+            rejected_controls: set[str] = set()
             control_names = ["switched shunt", "LTC", "LCC"]
             if control_pass == 0:
                 control_names.insert(0, "bus limits")
@@ -214,6 +245,21 @@ class PowerFlowSolver:
                     )
                 next_solution.fallback_used = solution.fallback_used
                 if not next_solution.converged:
+                    if live_reporter is not None:
+                        live_reporter.reject(phase)
+                    rejected_controls.add(control_name)
+                    numerical_case = accepted_case
+                    reduction.case = numerical_case
+                    ybus = build_ybus(numerical_case)
+                    solution = accepted_solution
+                    continue
+                candidate_violations = _voltage_violation_score(
+                    numerical_case, next_solution.voltage
+                )
+                accepted_violations = _voltage_violation_score(
+                    accepted_case, accepted_solution.voltage
+                )
+                if protect_voltage_violations and candidate_violations > accepted_violations:
                     if live_reporter is not None:
                         live_reporter.reject(phase)
                     rejected_controls.add(control_name)
@@ -306,6 +352,16 @@ class PowerFlowSolver:
         return PowerFlowRun(parsed=parsed, result=result, stdout=report)
 
 
+def _voltage_violation_score(case, voltage) -> int:
+    """Count buses above their upper voltage limits."""
+    count = 0
+    for bus, value in zip(case.buses, abs(voltage), strict=True):
+        magnitude = float(value)
+        if magnitude - bus.maximum_voltage > 1.0e-6:
+            count += 1
+    return count
+
+
 class NewtonRaphsonPowerFlow(PowerFlowSolver):
     """Sparse full Newton-Raphson AC power-flow solver."""
 
@@ -330,3 +386,8 @@ class PrimeDualOPF(PowerFlowSolver):
 
 class ACOptimalPowerFlow(PrimeDualOPF):
     """Compatibility name for the current primal-dual AC solver."""
+
+
+def _validate_approach(approach: str) -> None:
+    if approach not in {"python", "cpp"}:
+        raise ValueError(f"approach must be 'python' or 'cpp', got {approach!r}")

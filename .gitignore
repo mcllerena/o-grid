@@ -27,6 +27,8 @@ dist/
 
 # Temporary build directory.
 build/
+.native-build/
+.native-deps/
 
 # Brazilian file cases (CEII)
 tests/data/pwf/CASO_FINAL_EQV2020.pwf
@@ -58,3 +60,6 @@ tests/data/ntw/*.ntw
 /*.blg
 /texput.log
 /bare_jrnl_new_sample4.pdf
+
+# coverage
+coverage.json
