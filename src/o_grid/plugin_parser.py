@@ -26,11 +26,13 @@ class AnaredeParser(Plugin[AnaredeConfig]):
                 Path(config.pwf_path),
                 mapping_path=Path(config.mapping_path),
                 system_name=config.system_name or "ANAREDE",
+                log=config.log,
             )
         else:
             parsed = parse_anarede_system(
                 Path(config.pwf_path),
                 system_name=config.system_name or "ANAREDE",
+                log=config.log,
             )
         self.ctx.metadata["parsed"] = parsed
         return Ok(parsed.system)

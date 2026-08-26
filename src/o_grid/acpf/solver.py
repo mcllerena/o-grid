@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from copy import deepcopy
 from pathlib import Path
-from typing import ClassVar, Literal, Self
+from typing import Any, ClassVar, Literal, Self, cast
 
 from infrasys import System
 from loguru import logger
@@ -50,19 +50,23 @@ class PowerFlowSolver:
         *,
         tolerance: float | None = None,
         max_iterations: int = 30,
+        max_cpu_time: float = 300.0,
         max_control_passes: int = 12,
+        relax_security_constraints: bool = False,
         print_iterations: bool = False,
         objective_function: str = "minimize_residuals",
         strict_voltage_limits: bool = False,
         approach: SolverApproach = "python",
     ) -> Self | System:
         _validate_approach(approach)
-        instance = super().__new__(cls)
+        instance = cast(Any, super().__new__(cls))
         if system is None:
             return instance
         instance.tolerance = tolerance
         instance.max_iterations = max_iterations
+        instance.max_cpu_time = max_cpu_time
         instance.max_control_passes = max_control_passes
+        instance.relax_security_constraints = relax_security_constraints
         instance.print_iterations = print_iterations
         instance.objective_function = objective_function
         instance.strict_voltage_limits = strict_voltage_limits
@@ -131,7 +135,10 @@ class PowerFlowSolver:
             tolerance=self.tolerance,
             max_iterations=self.max_iterations,
         )
-        reduction = reduce_closed_switches(case)
+        reduction = reduce_closed_switches(
+            case,
+            low_impedance_threshold=settings.low_impedance_threshold,
+        )
         numerical_case = reduction.case
         ybus = build_ybus(numerical_case)
         assign_island_reference_buses(numerical_case, ybus)

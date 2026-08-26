@@ -110,11 +110,13 @@ class AnaredeInfrasysParser:
         mapping_path: Path | str = MAPPING_PATH,
         system_name: str = "ANAREDE",
         gen_type_mapping_path: Path | str = GEN_TYPE_MAPPING_PATH,
+        log: bool = True,
     ) -> None:
         self.mapping_path = Path(mapping_path)
         self.system_name = system_name
         self.gen_type_mapping_path = Path(gen_type_mapping_path)
-        self._gen_type_by_bus = self._load_gen_type_mapping(self.gen_type_mapping_path)
+        self.log = log
+        self._gen_type_by_bus = self._load_gen_type_mapping(self.gen_type_mapping_path, log=log)
         self._raw_mapping = load_mapping(self.mapping_path)
         self.mapping = {
             section: spec
@@ -310,7 +312,8 @@ class AnaredeInfrasysParser:
         self._attach_dlin_branch_electrical_values(components_by_block)
         self._rename_dlin_components(components_by_block)
         total = sum(1 for _ in system._component_mgr.iter_all())
-        logger.success("Successfully parsed {} component(s).", total)
+        if self.log:
+            logger.success("Successfully parsed {} component(s).", total)
 
         populated_components = {k: v for k, v in components_by_block.items() if v}
         system.attach_parse_context(source, populated_components, self.component_classes)
@@ -328,7 +331,7 @@ class AnaredeInfrasysParser:
         self, block: str, components_by_block: dict[str, list[Component]]
     ) -> None:
         count = len(components_by_block.get(block, []))
-        if count:
+        if self.log and count:
             logger.info("Parsed {} section: {} record(s)", block, count)
 
     def _attach_bus_areas(
@@ -355,7 +358,10 @@ class AnaredeInfrasysParser:
             setattr(bus, "area", area)
             self._add_component(system, bus)
             if area_number is None:
-                logger.warning("Bus {} references a non-numeric area key {}", bus.name, area_key)
+                if self.log:
+                    logger.warning(
+                        "Bus {} references a non-numeric area key {}", bus.name, area_key
+                    )
 
     def _build_arc_from_dlin_record(self, line_record: AnaredeComponent, record_index: int) -> Arc:
         from_bus = getattr(line_record, "from_bus", None)
@@ -873,7 +879,7 @@ class AnaredeInfrasysParser:
                 object.__setattr__(generator, "active_generation", active_generation)
 
     @staticmethod
-    def _load_gen_type_mapping(path: Path) -> dict[str, GenType]:
+    def _load_gen_type_mapping(path: Path, *, log: bool = True) -> dict[str, GenType]:
         if not path.exists():
             return {}
         index: dict[str, GenType] = {}
@@ -885,7 +891,8 @@ class AnaredeInfrasysParser:
             try:
                 index[normalize_group_key(number)] = GenType(str(type_value))
             except ValueError:
-                logger.warning("Unknown generator type '{}' for bus {}", type_value, number)
+                if log:
+                    logger.warning("Unknown generator type '{}' for bus {}", type_value, number)
         return index
 
     def _attach_generator_types(
@@ -1335,9 +1342,14 @@ def parse_anarede_system(
     pwf_path: Path | str,
     mapping_path: Path | str = MAPPING_PATH,
     system_name: str = "ANAREDE",
+    log: bool = True,
 ) -> ParsedAnaredeSystem:
     """Parse an ANAREDE `.pwf` and return a populated infrasys representation."""
-    parser = AnaredeInfrasysParser(mapping_path=mapping_path, system_name=system_name)
+    parser = AnaredeInfrasysParser(
+        mapping_path=mapping_path,
+        system_name=system_name,
+        log=log,
+    )
     return parser.parse(pwf_path)
 
 

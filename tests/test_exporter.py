@@ -73,6 +73,22 @@ def test_export_solution_writes_reference_excel_schema(tmp_path: Path) -> None:
     assert workbook["Buses"]["F2"].number_format == "0.0000"
 
 
+def test_export_solution_can_skip_writing(tmp_path: Path) -> None:
+    parsed = AnaredeInfrasysParser().parse(DATA / "d_9nodes.pwf")
+    solved = NewtonRaphsonPowerFlow(parsed.system)
+    output_path = tmp_path / "solution.xlsx"
+
+    export = ExportSolution(
+        system=solved,
+        format="excel",
+        output_path=output_path,
+        export=False,
+    )
+
+    assert export.export is False
+    assert not output_path.exists()
+
+
 def test_export_solution_requires_solved_system(tmp_path: Path) -> None:
     parsed = AnaredeInfrasysParser().parse(DATA / "d_9nodes.pwf")
 

@@ -27,6 +27,10 @@ class AnaredeConfig(PluginConfig):
         str | None,
         Field(default=None, description="Optional override path for mapping JSON"),
     ] = None
+    log: Annotated[
+        bool,
+        Field(description="Enable parser log messages"),
+    ] = True
     scenario: Annotated[
         str,
         Field(default="base", description="Scenario identifier"),

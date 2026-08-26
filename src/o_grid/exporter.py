@@ -27,6 +27,7 @@ class ExportSolution:
         system: System,
         format: str,
         output_path: str | Path,
+        export: bool = True,
     ) -> None:
         export_format = format.strip().lower()
         if export_format not in {"excel", "xlsx"}:
@@ -38,6 +39,9 @@ class ExportSolution:
         self.system = system
         self.format = "excel"
         self.output_path = Path(output_path)
+        self.export = export
+        if not export:
+            return
         self.output_path.parent.mkdir(parents=True, exist_ok=True)
         _write_excel(results, self.output_path)
         logger.info("ExportSolution saved on {}", self.output_path)

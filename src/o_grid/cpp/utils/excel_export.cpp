@@ -175,10 +175,10 @@ double bus_voltage(const CaseData& data, const PowerFlowResult& result, int bus_
 double commutation_angle_deg(double angle_deg,
                              double pdc_mw,
                              double vdc_kv,
-                             double commutating_reactance,
+                             double commuting_reactance,
                              double tap,
                              double terminal_voltage_kv) {
-    if (std::abs(vdc_kv) <= TOLERANCE || commutating_reactance <= TOLERANCE || tap <= TOLERANCE || terminal_voltage_kv <= TOLERANCE) {
+    if (std::abs(vdc_kv) <= TOLERANCE || commuting_reactance <= TOLERANCE || tap <= TOLERANCE || terminal_voltage_kv <= TOLERANCE) {
         return 0.0;
     }
     const double dc_current_ka = std::abs(pdc_mw / vdc_kv);
@@ -186,7 +186,7 @@ double commutation_angle_deg(double angle_deg,
         return 0.0;
     }
     const double angle_rad = angle_deg * kPi / 180.0;
-    const double acos_argument = std::cos(angle_rad) - std::sqrt(2.0) * commutating_reactance * dc_current_ka /
+    const double acos_argument = std::cos(angle_rad) - std::sqrt(2.0) * commuting_reactance * dc_current_ka /
         (tap * terminal_voltage_kv);
     const double clamped_argument = std::max(-1.0, std::min(1.0, acos_argument));
     return (std::acos(clamped_argument) - angle_rad) * 180.0 / kPi;

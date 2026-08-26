@@ -28,7 +28,9 @@ def solve_with_cpp(
     elif source.suffix.lower() == ".pwf":
         convert_pwf(source, native_case)
     elif source.suffix.lower() != ".dat":
-        raise ValueError(f"The C++ backend supports .pwf, .ntw, and .dat inputs, not {source.suffix}")  # noqa: E501
+        raise ValueError(
+            f"The C++ backend supports .pwf, .ntw, and .dat inputs, not {source.suffix}"
+        )  # noqa: E501
 
     executable = _executable(solver_name)
     with tempfile.NamedTemporaryFile(suffix=".txt", delete=False) as report_file:
@@ -45,7 +47,9 @@ def solve_with_cpp(
 
     output = completed.stdout + completed.stderr
     if completed.returncode not in (0, 2):
-        raise RuntimeError(f"C++ power-flow failed with exit code {completed.returncode}:\n{output}")  # noqa: E501
+        raise RuntimeError(
+            f"C++ power-flow failed with exit code {completed.returncode}:\n{output}"
+        )  # noqa: E501
     result = _parse_report(report, parsed, solver_name)
     if print_iterations:
         print(output, end="")
@@ -87,7 +91,9 @@ def _parse_report(report: str, parsed: ParsedAnaredeSystem, solver_name: str) ->
     )
 
 
-def _parse_buses(report: str, parsed: ParsedAnaredeSystem, base_mva: float) -> list[BusPowerFlowResult]:  # noqa: E501
+def _parse_buses(
+    report: str, parsed: ParsedAnaredeSystem, base_mva: float
+) -> list[BusPowerFlowResult]:  # noqa: E501
     loads = {
         int(float(getattr(bus, "number", 0))): (
             _magnitude(getattr(bus, "active_load", None)),
@@ -131,10 +137,15 @@ def _parse_branches(report: str) -> list[BranchPowerFlowResult]:
             continue
         results.append(
             BranchPowerFlowResult(
-                from_bus=int(fields[1]), to_bus=int(fields[2]), circuit=1,
-                active_from_mw=float(fields[3]), reactive_from_mvar=float(fields[4]),
-                active_to_mw=float(fields[5]), reactive_to_mvar=float(fields[6]),
-                loading_percent=float(fields[8]), active_loss_mw=float(fields[9]),
+                from_bus=int(fields[1]),
+                to_bus=int(fields[2]),
+                circuit=1,
+                active_from_mw=float(fields[3]),
+                reactive_from_mvar=float(fields[4]),
+                active_to_mw=float(fields[5]),
+                reactive_to_mvar=float(fields[6]),
+                loading_percent=float(fields[8]),
+                active_loss_mw=float(fields[9]),
                 reactive_loss_mvar=float(fields[10]),
             )
         )

@@ -3,17 +3,20 @@
 from __future__ import annotations
 
 import argparse
-import json
 import re
 from pathlib import Path
 from typing import Any
 
-from o_grid.cpp.dat_writer import write_dat
 from o_grid.constants import MAPPING_PATH
+from o_grid.cpp.dat_writer import write_dat
 from o_grid.utils.utils_parser import load_mapping, parse_fixed_value, read_pwf_text, slice_field
 
 
-def convert(pwf_path: str | Path, dat_path: str | Path | None = None, mapping_path: str | Path = MAPPING_PATH) -> Path:
+def convert(
+    pwf_path: str | Path,
+    dat_path: str | Path | None = None,
+    mapping_path: str | Path = MAPPING_PATH,
+) -> Path:
     source = Path(pwf_path)
     mapping = load_mapping(Path(mapping_path))
     sections = _parse(source, mapping)
@@ -57,7 +60,9 @@ def _parse(source: Path, mapping: dict[str, Any]) -> dict[str, list[dict[str, An
                 sections[active].append({key: tokens[index], value_key: value})
             continue
         fields = mapping[active].get("fields", {})
-        values = {name: parse_fixed_value(slice_field(line, spec), spec) for name, spec in fields.items()}
+        values = {
+            name: parse_fixed_value(slice_field(line, spec), spec) for name, spec in fields.items()
+        }
         if active == "DBSH":
             sections[active].append(values)
             parent_index = len(sections[active])
@@ -70,7 +75,9 @@ def _parse(source: Path, mapping: dict[str, Any]) -> dict[str, list[dict[str, An
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description="Convert an ANAREDE PWF file to native C++ DAT format.")
+    parser = argparse.ArgumentParser(
+        description="Convert an ANAREDE PWF file to native C++ DAT format."
+    )
     parser.add_argument("pwf")
     parser.add_argument("dat", nargs="?")
     parser.add_argument("--mapping", default=str(MAPPING_PATH))

@@ -14,10 +14,12 @@ and control residuals toward zero while keeping the state near the input.
 from __future__ import annotations
 
 import math
+import os
 import re
 import tempfile
 from collections import defaultdict
 from pathlib import Path
+from types import SimpleNamespace
 from typing import Any, ClassVar, cast
 
 import numpy as np
@@ -27,6 +29,7 @@ from loguru import logger
 from pyomo.opt import SolverFactory, TerminationCondition
 
 from o_grid.acpf.models import (
+    ReducedPowerFlowCase,
     build_component_results,
     build_power_flow_case,
     build_power_flow_settings,
@@ -49,14 +52,62 @@ from o_grid.acpf.utils import (
     calculate_branch_results,
     calculate_bus_results,
 )
+from o_grid.formulations import resolve_formulation
+from o_grid.formulations.conic import ConicModel, build_conic_model, solve_conic_model
+from o_grid.formulations.current_voltage import (
+    add_ivr_branch_equations,
+    add_ivr_variables,
+)
+from o_grid.formulations.current_voltage import (
+    branch_power as ivr_branch_power,
+)
+from o_grid.formulations.lifted import (
+    add_act_voltage_variables,
+)
+from o_grid.formulations.lifted import (
+    branch_power as act_branch_power,
+)
+from o_grid.formulations.lifted import (
+    p_injection as act_p_injection,
+)
+from o_grid.formulations.lifted import (
+    q_injection as act_q_injection,
+)
+from o_grid.formulations.linear import (
+    branch_power as linear_branch_power,
+)
+from o_grid.formulations.linear import (
+    p_injection as linear_p_injection,
+)
+from o_grid.formulations.rectangular import (
+    add_acr_voltage_variables,
+    branch_power,
+    p_injection,
+    q_injection,
+)
 from o_grid.models import ACBusTypes
+from o_grid.solvers import ClarabelBridge
 from o_grid.statics.pwf_parser import AnaredeInfrasysParser, ParsedAnaredeSystem
 
 TOLERANCE = 1.0e-12
 DISPLAY_TOLERANCE = 1.0e-9
 CONVERGENCE_REPORT_EPS = 1.0e-6
+CONIC_FORMULATIONS = {
+    "SOCWRPowerModel",
+    "SOCWRConicPowerModel",
+    "SOCBFPowerModel",
+    "SOCBFConicPowerModel",
+    "SDPWRMPowerModel",
+    "SparseSDPWRMPowerModel",
+}
 ANGLE_LIMIT_RAD = math.pi / 2.0
 ANGLE_BOUND_RAD = math.pi
+LINEAR_FORMULATIONS = {
+    "DCPPowerModel",
+    "DCMPPowerModel",
+    "BFAPowerModel",
+    "NFAPowerModel",
+}
 
 OBJECTIVE_WEIGHT_VOLTAGE = 1.0
 OBJECTIVE_WEIGHT_VOLTAGE_LIMITS = 100.0
@@ -66,10 +117,7 @@ OBJECTIVE_WEIGHT_LTC = 0.01
 OBJECTIVE_WEIGHT_SVC = 100.0
 
 VALID_OBJECTIVE_FUNCTIONS = (
-    "minimize_residuals",
-    "zero_function",
-    "squared_generation",
-    "security_constrained",
+    "voltage_deviation",
 )
 
 SLACK = 2
@@ -293,11 +341,12 @@ def build_optimization_model(
     control_tolerance_pu: float,
     qlim_enabled: bool = False,
     strict_voltage_limits: bool = False,
-    objective_function: str = "minimize_residuals",
+    objective_function: str = "voltage_deviation",
+    formulation: str = "ACPPowerModel",
     optimize_ltc_taps: bool = False,
     optimize_ltc_controls: bool = False,
     enforce_shunt_deadbands: bool = False,
-) -> pyo.ConcreteModel:
+) -> pyo.ConcreteModel | ConicModel:
     """Build and initialize the Pyomo AC power-flow optimization model.
 
     ``objective_function`` selects which formulation is instantiated:
@@ -321,18 +370,28 @@ def build_optimization_model(
       active generation and an objective that minimizes the sum of squared
       active generation, selecting the feasible point with minimum generation
       (equivalently minimum losses for a fixed load).
-        * ``security_constrained`` -- security-constrained ACOPF.  Voltage,
+        * ``voltage_deviation`` -- security-constrained ACOPF.  Voltage,
             nodal-balance, phase-angle, and branch thermal limits are hard; the
                     objective minimizes the squared active-generation dispatch fallback.
     """
+    selected_formulation = resolve_formulation(formulation)
+    if not selected_formulation.implemented:
+        raise NotImplementedError(
+            f"ACOPF formulation {selected_formulation.name!r} is registered but not implemented"
+        )
     if objective_function not in VALID_OBJECTIVE_FUNCTIONS:
         raise ValueError(
             "Unknown objective_function {!r}; expected one of {}".format(
                 objective_function, ", ".join(VALID_OBJECTIVE_FUNCTIONS)
             )
-        )
+            )
+    if selected_formulation.name in CONIC_FORMULATIONS:
+        model = build_conic_model(case, selected_formulation.name)
+        cast(Any, model)._objective_function = objective_function
+        return model
     model = pyo.ConcreteModel("optimization_power_flow")
     model_any = cast(Any, model)
+    model_any._case = case
     base_mva = case.base_mva
     bus_ids = [bus.number for bus in case.buses]
     bus_by_id = {bus.number: bus for bus in case.buses}
@@ -349,7 +408,8 @@ def build_optimization_model(
     model_any.SVC = pyo.Set(initialize=svc_ids, ordered=True)
 
     model_any.base_mva = pyo.Param(initialize=base_mva, within=pyo.PositiveReals)
-    hard_security = objective_function == "security_constrained"
+    hard_security = True
+    model_any._hard_security = hard_security
     model_any.angle_limit = pyo.Param(initialize=ANGLE_LIMIT_RAD, within=pyo.PositiveReals)
     model_any.active_tolerance = pyo.Param(
         initialize=max(active_tolerance_pu, TOLERANCE), within=pyo.NonNegativeReals
@@ -403,7 +463,7 @@ def build_optimization_model(
     security_generator_ids = [
         bus.number
         for bus in case.buses
-        if objective_function == "security_constrained"
+        if objective_function == "voltage_deviation"
         and (
             abs(bus.active_generation) > TOLERANCE
             or abs(bus.reactive_generation) > TOLERANCE
@@ -428,12 +488,46 @@ def build_optimization_model(
         for bus in case.buses
         if bus.number in security_generator_ids
     }
-    model_any.security_generator_ids = pyo.Set(initialize=security_generator_ids, ordered=True)
+    model_any.security_generator_ids = pyo.Set(
+        initialize=security_generator_ids, ordered=True
+    )
     model_any.pg_security = pyo.Var(
         model_any.security_generator_ids,
         initialize=security_pg_initial,
         bounds=lambda m, bus: security_pg_bounds[bus],
         within=pyo.NonNegativeReals,
+    )
+    security_qg_bounds = {
+        bus.number: (
+            (
+                bus.minimum_reactive_generation
+                if bus.minimum_reactive_generation is not None
+                else -max(abs(bus.reactive_generation), base_mva)
+            )
+            / base_mva,
+            (
+                bus.maximum_reactive_generation
+                if bus.maximum_reactive_generation is not None
+                else max(abs(bus.reactive_generation), base_mva)
+            )
+            / base_mva,
+        )
+        for bus in case.buses
+        if bus.number in security_generator_ids
+    }
+    security_qg_initial = {
+        bus.number: min(
+            max(bus.reactive_generation / base_mva, security_qg_bounds[bus.number][0]),
+            security_qg_bounds[bus.number][1],
+        )
+        for bus in case.buses
+        if bus.number in security_generator_ids
+    }
+    model_any.qg_security = pyo.Var(
+        model_any.security_generator_ids,
+        initialize=security_qg_initial,
+        bounds=lambda m, bus: security_qg_bounds[bus],
+        within=pyo.Reals,
     )
 
     lcc_indices = [
@@ -559,8 +653,14 @@ def build_optimization_model(
         lower, upper = _voltage_bounds(bus, strict_voltage_limits or hard_security)
         bus_vm_bounds[bus.number] = (lower, upper)
         bus_va_bounds[bus.number] = (-ANGLE_BOUND_RAD, ANGLE_BOUND_RAD)
-        vm_seed[bus.number] = _bounded_voltage_seed(bus, strict_voltage_limits or hard_security)
-        va_seed[bus.number] = min(max(bus.angle, -ANGLE_BOUND_RAD), ANGLE_BOUND_RAD)
+        vm_seed[bus.number] = (
+            _bounded_voltage_seed(bus, strict_voltage_limits)
+            if not hard_security
+            else min(max(1.0, lower + 1.0e-5), upper - 1.0e-5)
+        )
+        va_seed[bus.number] = 0.0 if hard_security else min(
+            max(bus.angle, -ANGLE_BOUND_RAD), ANGLE_BOUND_RAD
+        )
         if bus.number in q_limited_pv_ids:
             qg_initial[bus.number] = (
                 bus.reactive_generation - svc_initial_by_bus[bus.number]
@@ -574,6 +674,36 @@ def build_optimization_model(
     model_any.va = pyo.Var(
         model_any.BUS, initialize=va_seed, bounds=bus_va_bounds, within=pyo.Reals
     )
+    if selected_formulation.name in LINEAR_FORMULATIONS:
+        for bus in model_any.BUS:
+            cast(Any, model_any.vm[bus]).fix(1.0)
+    if selected_formulation.name == "ACRPowerModel":
+        add_acr_voltage_variables(
+            model_any,
+            bus_ids=bus_ids,
+            vm_seed=vm_seed,
+            va_seed=va_seed,
+            voltage_bounds=bus_vm_bounds,
+        )
+    elif selected_formulation.name == "ACTPowerModel":
+        buspairs = list({
+            (min(branch.from_bus, branch.to_bus), max(branch.from_bus, branch.to_bus))
+            for branch in branches
+        })
+        add_act_voltage_variables(
+            model_any,
+            bus_ids=bus_ids,
+            vm_seed=vm_seed,
+            va_seed=va_seed,
+            voltage_bounds=bus_vm_bounds,
+            buspairs=buspairs,
+        )
+    elif selected_formulation.name == "IVRPowerModel":
+        add_ivr_variables(
+            model_any,
+            voltage_bounds=bus_vm_bounds,
+            vm_seed=vm_seed,
+        )
     model_any.qg_qpv = pyo.Var(
         model_any.QPV,
         initialize=qg_initial,
@@ -760,6 +890,11 @@ def build_optimization_model(
         branch_ytf_b[index] = (conductance * sin_shift - susceptance * cos_shift) / tap
         branch_ytt_g[index] = conductance
         branch_ytt_b[index] = branch_b_self[index]
+    branch_x = {
+        index: branch.reactance if abs(branch.reactance) > TOLERANCE else TOLERANCE
+        for index, branch in enumerate(branches)
+    }
+    branch_phase_shift = {index: branch.phase_shift for index, branch in enumerate(branches)}
     model_any.branch_yff_g = pyo.Param(model_any.BRANCH, initialize=branch_yff_g)
     model_any.branch_yff_b = pyo.Param(model_any.BRANCH, initialize=branch_yff_b)
     model_any.branch_yft_g = pyo.Param(model_any.BRANCH, initialize=branch_yft_g)
@@ -841,13 +976,97 @@ def build_optimization_model(
             )
         return expr
 
-    model_any.calculated_p_injection = pyo.Expression(model_any.BUS, rule=p_calc)
-    model_any.calculated_q_injection = pyo.Expression(model_any.BUS, rule=q_calc)
+    if selected_formulation.name == "ACRPowerModel":
+        model_any.calculated_p_injection = pyo.Expression(
+            model_any.BUS,
+            rule=lambda m, bus: p_injection(
+                m,
+                bus,
+                injections,
+                branch_g,
+                branch_b,
+                branch_tap,
+                branch_cos_shift,
+                branch_sin_shift,
+            ),
+        )
+        model_any.calculated_q_injection = pyo.Expression(
+            model_any.BUS,
+            rule=lambda m, bus: q_injection(
+                m,
+                bus,
+                injections,
+                branch_g,
+                branch_b,
+                branch_b_self,
+                branch_tap,
+                branch_cos_shift,
+                branch_sin_shift,
+            ),
+        )
+    elif selected_formulation.name == "ACTPowerModel":
+        model_any.calculated_p_injection = pyo.Expression(
+            model_any.BUS,
+            rule=lambda m, bus: act_p_injection(
+                m, bus, injections, branch_g, branch_b, branch_tap,
+                branch_cos_shift, branch_sin_shift,
+            ),
+        )
+        model_any.calculated_q_injection = pyo.Expression(
+            model_any.BUS,
+            rule=lambda m, bus: act_q_injection(
+                m, bus, injections, branch_g, branch_b, branch_b_self,
+                branch_tap, branch_cos_shift, branch_sin_shift,
+            ),
+        )
+    elif selected_formulation.name in LINEAR_FORMULATIONS:
+        model_any.calculated_p_injection = pyo.Expression(
+            model_any.BUS,
+            rule=lambda m, bus: linear_p_injection(m, bus, injections, branch_b),
+        )
+        model_any.calculated_q_injection = pyo.Expression(
+            model_any.BUS, rule=lambda _m, _bus: 0.0
+        )
+    elif selected_formulation.name == "IVRPowerModel":
+        def ivr_injection(m: Any, bus: int, reactive: bool):
+            expression = -m.b_shunt[bus] * m.vm[bus] ** 2 if reactive else 0.0
+            for other, branch_index, from_side in injections.get(bus, []):
+                power = ivr_branch_power(m, branch_index, from_side=from_side)
+                expression += power[1 if reactive else 0]
+            return expression
 
+        model_any.calculated_p_injection = pyo.Expression(
+            model_any.BUS, rule=lambda m, bus: ivr_injection(m, bus, False)
+        )
+        model_any.calculated_q_injection = pyo.Expression(
+            model_any.BUS, rule=lambda m, bus: ivr_injection(m, bus, True)
+        )
+        add_ivr_branch_equations(
+            model_any,
+            branches=branches,
+            branch_yff_g=branch_yff_g,
+            branch_yff_b=branch_yff_b,
+            branch_yft_g=branch_yft_g,
+            branch_yft_b=branch_yft_b,
+            branch_ytf_g=branch_ytf_g,
+            branch_ytf_b=branch_ytf_b,
+            branch_ytt_g=branch_ytt_g,
+            branch_ytt_b=branch_ytt_b,
+        )
+    else:
+        model_any.calculated_p_injection = pyo.Expression(model_any.BUS, rule=p_calc)
+        model_any.calculated_q_injection = pyo.Expression(model_any.BUS, rule=q_calc)
+
+    reference_bus = next(
+        (bus.number for bus in case.buses if _bus_type_code(bus.kind) == SLACK),
+        None,
+    )
     for bus in case.buses:
-        if _bus_type_code(bus.kind) == SLACK:
+        if _bus_type_code(bus.kind) == SLACK and not hard_security:
             cast(Any, model_any.vm[bus.number]).fix(vm_seed[bus.number])
             cast(Any, model_any.va[bus.number]).fix(va_seed[bus.number])
+        elif hard_security and bus.number == reference_bus:
+            cast(Any, model_any.va[bus.number]).fix(0.0)
         elif (
             bus.kind == ACBusTypes.PV
             and bus.number not in q_limited_pv_ids
@@ -881,6 +1100,34 @@ def build_optimization_model(
 
     def q_balance_rule(m: Any, bus: int):
         data = bus_by_id[bus]
+        if selected_formulation.name in LINEAR_FORMULATIONS:
+            return pyo.Constraint.Skip
+        if hard_security:
+            q_generation = (
+                m.qg_security[bus]
+                if bus in m.security_generator_ids
+                else 0.0
+            )
+            q_lcc_delta = sum(
+                (lcc_q_rect_initial[index] - m.qdc_rect[index])
+                for index in m.LCC
+                if lcc_rectifier_bus[index] == bus
+            ) + sum(
+                (lcc_q_inv_initial[index] - m.qdc_inv[index])
+                for index in m.LCC
+                if lcc_inverter_bus[index] == bus
+            )
+            q_control = sum(
+                m.qsvc[index] for index in svcs_by_bus.get(bus, [])
+            ) + sum(
+                m.qshunt[index] * m.vm[bus] ** 2
+                for index in shunts_by_bus.get(bus, [])
+            )
+            return (
+                q_generation - data.reactive_load / base_mva + q_lcc_delta + q_control
+                - m.calculated_q_injection[bus]
+                == 0.0
+            )
         q_limited_pv = bus in m.QPV
         if _bus_type_code(data.kind) != PQ and not q_limited_pv:
             return pyo.Constraint.Skip
@@ -920,7 +1167,7 @@ def build_optimization_model(
         branch = branches[index]
         delta = m.va[branch.from_bus] - m.va[branch.to_bus]
         return m.qf_from[index] == (
-            -(m.vm[branch.from_bus] ** 2) * branch_yff_b[index]
+            -m.vm[branch.from_bus] ** 2 * branch_yff_b[index]
             + m.vm[branch.from_bus]
             * m.vm[branch.to_bus]
             * (branch_yft_g[index] * pyo.sin(delta) - branch_yft_b[index] * pyo.cos(delta))
@@ -940,16 +1187,161 @@ def build_optimization_model(
         branch = branches[index]
         delta = m.va[branch.to_bus] - m.va[branch.from_bus]
         return m.qf_to[index] == (
-            -(m.vm[branch.to_bus] ** 2) * branch_ytt_b[index]
+            -m.vm[branch.to_bus] ** 2 * branch_ytt_b[index]
             + m.vm[branch.to_bus]
             * m.vm[branch.from_bus]
             * (branch_ytf_g[index] * pyo.sin(delta) - branch_ytf_b[index] * pyo.cos(delta))
         )
 
-    model_any.branch_p_from = pyo.Constraint(model_any.BRANCH, rule=branch_p_from_rule)
-    model_any.branch_q_from = pyo.Constraint(model_any.BRANCH, rule=branch_q_from_rule)
-    model_any.branch_p_to = pyo.Constraint(model_any.BRANCH, rule=branch_p_to_rule)
-    model_any.branch_q_to = pyo.Constraint(model_any.BRANCH, rule=branch_q_to_rule)
+    if selected_formulation.name == "ACRPowerModel":
+        model_any.branch_p_from = pyo.Constraint(
+            model_any.BRANCH,
+            rule=lambda m, index: m.pf_from[index]
+            == branch_power(
+                m,
+                index,
+                from_side=True,
+                branch_g=branch_g,
+                branch_b=branch_b,
+                branch_b_self=branch_b_self,
+                branch_tap=branch_tap,
+                branch_cos_shift=branch_cos_shift,
+                branch_sin_shift=branch_sin_shift,
+            )[0],
+        )
+        model_any.branch_q_from = pyo.Constraint(
+            model_any.BRANCH,
+            rule=lambda m, index: m.qf_from[index]
+            == branch_power(
+                m,
+                index,
+                from_side=True,
+                branch_g=branch_g,
+                branch_b=branch_b,
+                branch_b_self=branch_b_self,
+                branch_tap=branch_tap,
+                branch_cos_shift=branch_cos_shift,
+                branch_sin_shift=branch_sin_shift,
+            )[1],
+        )
+        model_any.branch_p_to = pyo.Constraint(
+            model_any.BRANCH,
+            rule=lambda m, index: m.pf_to[index]
+            == branch_power(
+                m,
+                index,
+                from_side=False,
+                branch_g=branch_g,
+                branch_b=branch_b,
+                branch_b_self=branch_b_self,
+                branch_tap=branch_tap,
+                branch_cos_shift=branch_cos_shift,
+                branch_sin_shift=branch_sin_shift,
+            )[0],
+        )
+        model_any.branch_q_to = pyo.Constraint(
+            model_any.BRANCH,
+            rule=lambda m, index: m.qf_to[index]
+            == branch_power(
+                m,
+                index,
+                from_side=False,
+                branch_g=branch_g,
+                branch_b=branch_b,
+                branch_b_self=branch_b_self,
+                branch_tap=branch_tap,
+                branch_cos_shift=branch_cos_shift,
+                branch_sin_shift=branch_sin_shift,
+            )[1],
+        )
+    elif selected_formulation.name == "ACTPowerModel":
+        def act_branch_constraint(m: Any, index: int, side: bool, flow: Any, reactive: bool):
+            values = act_branch_power(
+                m, index, from_side=side, branch_g=branch_g, branch_b=branch_b,
+                branch_b_self=branch_b_self, branch_tap=branch_tap,
+                branch_cos_shift=branch_cos_shift, branch_sin_shift=branch_sin_shift,
+            )
+            return flow[index] == values[1 if reactive else 0]
+
+        model_any.branch_p_from = pyo.Constraint(
+            model_any.BRANCH,
+            rule=lambda m, index: act_branch_constraint(
+                m, index, True, m.pf_from, False
+            ),
+        )
+        model_any.branch_q_from = pyo.Constraint(
+            model_any.BRANCH,
+            rule=lambda m, index: act_branch_constraint(
+                m, index, True, m.qf_from, True
+            ),
+        )
+        model_any.branch_p_to = pyo.Constraint(
+            model_any.BRANCH,
+            rule=lambda m, index: act_branch_constraint(
+                m, index, False, m.pf_to, False
+            ),
+        )
+        model_any.branch_q_to = pyo.Constraint(
+            model_any.BRANCH,
+            rule=lambda m, index: act_branch_constraint(
+                m, index, False, m.qf_to, True
+            ),
+        )
+    elif selected_formulation.name in LINEAR_FORMULATIONS:
+        transformer_aware = selected_formulation.name == "DCMPPowerModel"
+        model_any.branch_p_from = pyo.Constraint(
+            model_any.BRANCH,
+            rule=lambda m, index: m.pf_from[index]
+            == linear_branch_power(
+                m, index, from_side=True, branch_b=branch_b, branch_x=branch_x,
+                branch_tap=branch_tap, branch_phase_shift=branch_phase_shift,
+                transformer_aware=transformer_aware,
+            ),
+        )
+        model_any.branch_p_to = pyo.Constraint(
+            model_any.BRANCH,
+            rule=lambda m, index: m.pf_to[index]
+            == linear_branch_power(
+                m, index, from_side=False, branch_b=branch_b, branch_x=branch_x,
+                branch_tap=branch_tap, branch_phase_shift=branch_phase_shift,
+                transformer_aware=transformer_aware,
+            ),
+        )
+        model_any.branch_q_from = pyo.Constraint(
+            model_any.BRANCH, rule=lambda m, index: m.qf_from[index] == 0.0
+        )
+        model_any.branch_q_to = pyo.Constraint(
+            model_any.BRANCH, rule=lambda m, index: m.qf_to[index] == 0.0
+        )
+    elif selected_formulation.name == "IVRPowerModel":
+        def ivr_branch_constraint(m: Any, index: int, side: bool, reactive: bool):
+            values = ivr_branch_power(m, index, from_side=side)
+            flow = m.qf_from if reactive and side else (
+                m.qf_to if reactive else m.pf_from if side else m.pf_to
+            )
+            return flow[index] == values[1 if reactive else 0]
+
+        model_any.branch_p_from = pyo.Constraint(
+            model_any.BRANCH,
+            rule=lambda m, index: ivr_branch_constraint(m, index, True, False),
+        )
+        model_any.branch_q_from = pyo.Constraint(
+            model_any.BRANCH,
+            rule=lambda m, index: ivr_branch_constraint(m, index, True, True),
+        )
+        model_any.branch_p_to = pyo.Constraint(
+            model_any.BRANCH,
+            rule=lambda m, index: ivr_branch_constraint(m, index, False, False),
+        )
+        model_any.branch_q_to = pyo.Constraint(
+            model_any.BRANCH,
+            rule=lambda m, index: ivr_branch_constraint(m, index, False, True),
+        )
+    else:
+        model_any.branch_p_from = pyo.Constraint(model_any.BRANCH, rule=branch_p_from_rule)
+        model_any.branch_q_from = pyo.Constraint(model_any.BRANCH, rule=branch_q_from_rule)
+        model_any.branch_p_to = pyo.Constraint(model_any.BRANCH, rule=branch_p_to_rule)
+        model_any.branch_q_to = pyo.Constraint(model_any.BRANCH, rule=branch_q_to_rule)
 
     def phase_angle_upper_rule(m: Any, index: int):
         branch = branches[index]
@@ -965,9 +1357,13 @@ def build_optimization_model(
     def thermal_to_rule(m: Any, index: int):
         return m.pf_to[index] ** 2 + m.qf_to[index] ** 2 <= m.branch_smax[index] ** 2
 
-    if objective_function == "security_constrained":
-        model_any.phase_angle_upper = pyo.Constraint(model_any.BRANCH, rule=phase_angle_upper_rule)
-        model_any.phase_angle_lower = pyo.Constraint(model_any.BRANCH, rule=phase_angle_lower_rule)
+    if objective_function == "voltage_deviation":
+        model_any.phase_angle_upper = pyo.Constraint(
+            model_any.BRANCH, rule=phase_angle_upper_rule
+        )
+        model_any.phase_angle_lower = pyo.Constraint(
+            model_any.BRANCH, rule=phase_angle_lower_rule
+        )
         model_any.thermal_limit_from = pyo.Constraint(model_any.BRANCH, rule=thermal_from_rule)
         model_any.thermal_limit_to = pyo.Constraint(model_any.BRANCH, rule=thermal_to_rule)
         model_any.security_hard_active = pyo.Constraint(
@@ -1206,8 +1602,8 @@ def build_optimization_model(
             + lcc_regularization
         )
 
-    model_any._case = case
     model_any._strict_voltage_limits = strict_voltage_limits
+    model_any._formulation = selected_formulation.name
 
     p_seed: dict[int, float] = defaultdict(float)
     q_seed: dict[int, float] = defaultdict(float)
@@ -1307,31 +1703,18 @@ def build_optimization_model(
             vm_seed[ltc_ctrl_bus[index]] - ltc_v_target[index],
         )
 
-    if objective_function == "minimize_residuals":
-        model_any.objective = pyo.Objective(rule=objective_rule, sense=pyo.minimize)
-    elif objective_function == "zero_function":
-        _apply_zero_residuals(model)
-        _apply_exact_power_flow(model)
-        model_any.objective = pyo.Objective(expr=0.0, sense=pyo.minimize)
-    elif objective_function == "squared_generation":
-        _apply_zero_residuals(model)
-        _apply_slack_generation_redispatch(model, case, bus_by_id, p_seed)
-        model_any.objective = pyo.Objective(
-            expr=objective_rule(model)
-            + sum(model_any.pg_slack[bus] ** 2 for bus in model_any.SLACK_GEN),
-            sense=pyo.minimize,
+    model_any.objective = pyo.Objective(
+        expr=sum((cast(Any, model_any.vm[bus]) - 1.0) ** 2 for bus in model_any.BUS)
+        + sum(
+            (cast(Any, model_any.pg_security[bus]) - security_pg_initial[bus]) ** 2
+            for bus in model_any.security_generator_ids
         )
-    elif objective_function == "security_constrained":
-        model_any.objective = pyo.Objective(
-            expr=sum(
-                (cast(Any, model_any.pg_security[bus]) - security_pg_initial[bus]) ** 2
-                for bus in model_any.security_generator_ids
-            )
-            + sum(
-                (cast(Any, model_any.qg_qpv[bus]) - qg_initial[bus]) ** 2 for bus in model_any.QPV
-            ),
-            sense=pyo.minimize,
-        )
+        + sum(
+            (cast(Any, model_any.qg_security[bus]) - security_qg_initial[bus]) ** 2
+            for bus in model_any.security_generator_ids
+        ),
+        sense=pyo.minimize,
+    )
     model_any._objective_function = objective_function
     return model
 
@@ -1396,8 +1779,23 @@ def solution_metrics(model: pyo.ConcreteModel) -> dict[str, float | bool]:
     with the reactive balance. Released controls are not convergence violations
     and are counted separately from the maximum residual.
     """
+    if isinstance(model, ConicModel):
+        solved = model.solution is not None and model.solution.status.upper() in {
+            "SOLVED",
+            "ALMOST_SOLVED",
+        }
+        return {
+            "converged": solved,
+            "max_p": 0.0 if solved else float("inf"),
+            "max_q": 0.0 if solved else float("inf"),
+            "max_svc": 0.0,
+            "aggregate_p": 0.0,
+            "aggregate_q": 0.0,
+            "released_svc_count": 0,
+        }
     model_any = cast(Any, model)
     case = cast(PowerFlowCase, model_any._case)
+    bus_by_id = {bus.number: bus for bus in case.buses}
     lcc_data = [(case.lccs or [])[index] for index in getattr(model_any, "_lcc_indices", [])]
     active_tolerance = pyo.value(model_any.active_tolerance)
     reactive_tolerance = pyo.value(model_any.reactive_tolerance)
@@ -1412,14 +1810,23 @@ def solution_metrics(model: pyo.ConcreteModel) -> dict[str, float | bool]:
         )
     slack_buses = [bus.number for bus in case.buses if _bus_type_code(bus.kind) == SLACK]
     active_residual_buses = [bus.number for bus in case.buses if _bus_type_code(bus.kind) != SLACK]
-    reactive_residual_buses = [
-        bus.number
-        for bus in case.buses
-        if _bus_type_code(bus.kind) == PQ or bus.number in model_any.QPV
-    ]
-
+    if getattr(model_any, "_formulation", "") in LINEAR_FORMULATIONS:
+        reactive_residual_buses = []
+    else:
+        reactive_residual_buses = [
+            bus.number
+            for bus in case.buses
+            if _bus_type_code(bus.kind) == PQ or bus.number in model_any.QPV
+        ]
     def reactive_residual(bus: int) -> float:
-        expr = _value_or_default(model_any.q_spec[bus])
+        if getattr(model_any, "_hard_security", False):
+            expr = (
+                _value_or_default(model_any.qg_security[bus])
+                if bus in model_any.security_generator_ids
+                else 0.0
+            ) - bus_by_id[bus].reactive_load / case.base_mva
+        else:
+            expr = _value_or_default(model_any.q_spec[bus])
         for index, lcc in enumerate(lcc_data):
             if lcc.rectifier_bus == bus:
                 expr += lcc.q_rectifier_mvar / case.base_mva - _value_or_default(
@@ -1429,7 +1836,7 @@ def solution_metrics(model: pyo.ConcreteModel) -> dict[str, float | bool]:
                 expr += lcc.q_inverter_mvar / case.base_mva - _value_or_default(
                     model_any.qdc_inv[index]
                 )
-        if bus in model_any.QPV:
+        if bus in model_any.QPV and not getattr(model_any, "_hard_security", False):
             expr += _value_or_default(model_any.qg_qpv[bus])
         for index in svcs_by_bus.get(bus, []):
             expr += _value_or_default(model_any.qsvc[index])
@@ -1439,6 +1846,17 @@ def solution_metrics(model: pyo.ConcreteModel) -> dict[str, float | bool]:
                 * _value_or_default(model_any.vm[bus]) ** 2
             )
         return expr - _value_or_default(model_any.calculated_q_injection[bus])
+
+    def active_specification(bus: BusData | int) -> float:
+        bus_id = bus.number if isinstance(bus, BusData) else bus
+        generation = (
+            _value_or_default(model_any.pg_security[bus_id])
+            if bus_id in model_any.security_generator_ids
+            else _value_or_default(model_any.p_spec[bus_id])
+        )
+        if bus_id in model_any.security_generator_ids:
+            generation -= bus_by_id[bus_id].active_load / case.base_mva
+        return generation
 
     max_p = 0.0
     max_q = 0.0
@@ -1461,7 +1879,7 @@ def solution_metrics(model: pyo.ConcreteModel) -> dict[str, float | bool]:
         max_p = max(
             max_p,
             abs(
-                _value_or_default(model_any.p_spec[bus.number])
+                active_specification(bus)
                 + sum(
                     lcc.p_rectifier_mw / case.base_mva
                     - (
@@ -1510,7 +1928,7 @@ def solution_metrics(model: pyo.ConcreteModel) -> dict[str, float | bool]:
             continue
         max_svc = max(max_svc, abs(droop))
     aggregate_p = sum(
-        _value_or_default(model_any.p_spec[bus])
+            active_specification(bus)
         + sum(
             lcc.p_rectifier_mw / case.base_mva
             - (
@@ -1542,8 +1960,14 @@ def solution_metrics(model: pyo.ConcreteModel) -> dict[str, float | bool]:
         "converged": max_p <= active_tolerance + CONVERGENCE_REPORT_EPS
         and max_q <= reactive_tolerance + CONVERGENCE_REPORT_EPS
         and max_svc <= control_tolerance + CONVERGENCE_REPORT_EPS
-        and abs(aggregate_p) <= active_tolerance + CONVERGENCE_REPORT_EPS
-        and abs(aggregate_q) <= reactive_tolerance + CONVERGENCE_REPORT_EPS,
+        and (
+            getattr(model_any, "_hard_security", False)
+            or abs(aggregate_p) <= active_tolerance + CONVERGENCE_REPORT_EPS
+        )
+        and (
+            getattr(model_any, "_hard_security", False)
+            or abs(aggregate_q) <= reactive_tolerance + CONVERGENCE_REPORT_EPS
+        ),
     }
 
 
@@ -1570,13 +1994,35 @@ def _optimization_failure_state(
 
 
 def solve_optimization_model(
-    model: pyo.ConcreteModel,
+    model: pyo.ConcreteModel | ConicModel,
     *,
     max_iterations: int = 30,
     max_cpu_time: float = 300.0,
     print_iterations: bool = False,
 ):
     """Solve the optimization model with Ipopt and return the results and log."""
+    if isinstance(model, ConicModel):
+        project = getattr(model, "_clarabel_project", None)
+        if project is None:
+            project = os.environ.get("O_GRID_CLARABEL_PROJECT")
+        if project is None:
+            project = ClarabelBridge.bundled_project()
+        if not project:
+            return None, "Clarabel project is not configured", None
+        bridge = ClarabelBridge(project)
+        if not bridge.available():
+            return None, "Clarabel.jl is not available", None
+        result = solve_conic_model(model, bridge)
+        status = str(result.status).upper()
+        termination = (
+            TerminationCondition.optimal
+            if status in {"SOLVED", "ALMOST_SOLVED"}
+            else TerminationCondition.infeasible
+        )
+        wrapped = SimpleNamespace(
+            solver=SimpleNamespace(termination_condition=termination, status=status)
+        )
+        return wrapped, status, 0
     solver = SolverFactory("ipopt")
     if solver is None or not solver.available(exception_flag=False):
         return None, "", None
@@ -1626,10 +2072,13 @@ class OptimizationACPowerFlow(PowerFlowSolver):
         *,
         tolerance: float | None = None,
         max_iterations: int = 30,
+        max_cpu_time: float = 300.0,
         max_control_passes: int = 12,
         print_iterations: bool = False,
         strict_voltage_limits: bool = False,
-        objective_function: str = "minimize_residuals",
+        objective_function: str = "voltage_deviation",
+        formulation: str = "ACPPowerModel",
+        clarabel_project: str | Path | None = None,
         optimize_ltc_taps: bool = False,
         optimize_ltc_controls: bool = False,
         enforce_shunt_deadbands: bool = False,
@@ -1648,7 +2097,10 @@ class OptimizationACPowerFlow(PowerFlowSolver):
             print_iterations=print_iterations,
         )
         self.strict_voltage_limits = strict_voltage_limits
+        self.max_cpu_time = max_cpu_time
         self.objective_function = objective_function
+        self.formulation = formulation
+        self.clarabel_project = clarabel_project
         self.optimize_ltc_taps = optimize_ltc_taps
         self.optimize_ltc_controls = optimize_ltc_controls
         self.enforce_shunt_deadbands = enforce_shunt_deadbands
@@ -1678,11 +2130,13 @@ class OptimizationACPowerFlow(PowerFlowSolver):
         reduction = reduce_closed_switches(
             case,
             low_impedance_threshold=settings.low_impedance_threshold,
+            reduce_switches=self.formulation not in CONIC_FORMULATIONS,
         )
         numerical_case = reduction.case
         clamp_svc_seed_to_limits(numerical_case)
         _newton_warm_start(numerical_case, settings)
 
+        model_objective = "voltage_deviation"
         model = build_optimization_model(
             numerical_case,
             active_tolerance_pu=max(settings.active_tolerance, TOLERANCE),
@@ -1690,44 +2144,98 @@ class OptimizationACPowerFlow(PowerFlowSolver):
             control_tolerance_pu=max(settings.control_tolerance, TOLERANCE),
             qlim_enabled="QLIM" in settings.options,
             strict_voltage_limits=getattr(self, "strict_voltage_limits", False),
-            objective_function=getattr(self, "objective_function", "minimize_residuals"),
+            objective_function=model_objective,
+            formulation=getattr(self, "formulation", "ACPPowerModel"),
             optimize_ltc_taps=getattr(self, "optimize_ltc_taps", False),
             optimize_ltc_controls=getattr(self, "optimize_ltc_controls", False),
             enforce_shunt_deadbands=getattr(self, "enforce_shunt_deadbands", False),
         )
+        if isinstance(model, ConicModel):
+            cast(Any, model)._clarabel_project = self.clarabel_project
         results, solver_log, ipopt_iterations = solve_optimization_model(
             model,
             max_iterations=self.max_iterations,
+            max_cpu_time=self.max_cpu_time,
             print_iterations=self.print_iterations,
         )
         if results is None:
             logger.error(
-                "Optimization power flow failed because Ipopt is not available.",
+                "ACOPF [{}] failed because the selected solver is unavailable: {}",
+                self.formulation,
+                solver_log,
             )
             return self._failed_run(
                 parsed,
                 case,
                 reduction,
                 settings,
-                error="Ipopt solver is not available",
+                error=solver_log or "Selected solver is not available",
             )
 
         termination = getattr(getattr(results, "solver", None), "termination_condition", None)
-        optimal_statuses = {
-            TerminationCondition.optimal,
-            TerminationCondition.locallyOptimal,
-            TerminationCondition.feasible,
+        if (
+            isinstance(model, ConicModel)
+            and termination
+            in {
+                TerminationCondition.infeasible,
+                TerminationCondition.infeasibleOrUnbounded,
+            }
+            and len(numerical_case.buses) < len(case.buses)
+        ):
+            logger.warning(
+                "ACOPF [{}] conic reduction was infeasible; retrying without "
+                "low-impedance contraction.",
+                self.formulation,
+            )
+            reduction = ReducedPowerFlowCase(
+                case,
+                np.arange(len(case.buses), dtype=np.int64),
+            )
+            numerical_case = reduction.case
+            clamp_svc_seed_to_limits(numerical_case)
+            _newton_warm_start(numerical_case, settings)
+            model = build_optimization_model(
+                numerical_case,
+                active_tolerance_pu=max(settings.active_tolerance, TOLERANCE),
+                reactive_tolerance_pu=max(settings.reactive_tolerance, TOLERANCE),
+                control_tolerance_pu=max(settings.control_tolerance, TOLERANCE),
+                qlim_enabled="QLIM" in settings.options,
+                strict_voltage_limits=getattr(self, "strict_voltage_limits", False),
+                objective_function=model_objective,
+                formulation=getattr(self, "formulation", "ACPPowerModel"),
+                optimize_ltc_taps=getattr(self, "optimize_ltc_taps", False),
+                optimize_ltc_controls=getattr(self, "optimize_ltc_controls", False),
+                enforce_shunt_deadbands=getattr(self, "enforce_shunt_deadbands", False),
+            )
+            if isinstance(model, ConicModel):
+                cast(Any, model)._clarabel_project = self.clarabel_project
+            results, retry_log, ipopt_iterations = solve_optimization_model(
+                model,
+                max_iterations=self.max_iterations,
+                max_cpu_time=self.max_cpu_time,
+                print_iterations=self.print_iterations,
+            )
+            solver_log = f"{solver_log}\n{retry_log}" if retry_log else solver_log
+            termination = getattr(getattr(results, "solver", None), "termination_condition", None)
+        metrics = solution_metrics(cast(pyo.ConcreteModel, model))
+        failed_terminations = {
+            TerminationCondition.infeasible,
+            TerminationCondition.infeasibleOrUnbounded,
+            TerminationCondition.unbounded,
+            TerminationCondition.error,
         }
-        solver_ok = termination in optimal_statuses
-        metrics = solution_metrics(model)
-        converged = solver_ok and metrics["converged"]
+        converged = metrics["converged"] and termination not in failed_terminations
         diverged = termination in {
             TerminationCondition.infeasible,
             TerminationCondition.infeasibleOrUnbounded,
             TerminationCondition.unbounded,
             TerminationCondition.error,
         }
-        iterations = int(ipopt_iterations or 0)
+        iterations = (
+            model.solution.iterations
+            if isinstance(model, ConicModel) and model.solution is not None
+            else int(ipopt_iterations or 0)
+        )
         max_mismatch = max(metrics["max_p"], metrics["max_q"], metrics["max_svc"])
 
         vm, va = _solved_voltage(model)
@@ -1735,11 +2243,29 @@ class OptimizationACPowerFlow(PowerFlowSolver):
             [vm[bus.number] * np.exp(1j * va[bus.number]) for bus in numerical_case.buses],
             dtype=np.complex128,
         )
-        _sync_optimization_control_state(model, numerical_case)
+        _sync_optimization_control_state(cast(pyo.ConcreteModel, model), numerical_case)
         refresh_lcc_reporting_state(numerical_case, reduced_voltage)
         reduction.sync_control_state(case)
         expanded_voltage = reduction.expand_voltage(reduced_voltage)
         result_ybus = build_ybus(case)
+        expanded_buses = calculate_bus_results(case, result_ybus, expanded_voltage)
+        expanded_branches = calculate_branch_results(case, expanded_voltage)
+        security_tolerance = max(
+            DISPLAY_TOLERANCE,
+            settings.active_tolerance,
+            settings.reactive_tolerance,
+        )
+        security_ok = all(
+            bus.minimum_voltage - security_tolerance
+            <= bus_result.voltage_pu
+            <= bus.maximum_voltage + security_tolerance
+            for bus, bus_result in zip(case.buses, expanded_buses)
+        ) and all(
+            branch_result.loading_percent <= 100.0 + security_tolerance
+            for branch_result in expanded_branches
+        )
+        if self.solver_name == "acopf" and not isinstance(model, ConicModel):
+            converged = converged and security_ok
         result = ACPowerFlowResult(
             solver=self.solver_name,
             converged=converged,
@@ -1759,8 +2285,8 @@ class OptimizationACPowerFlow(PowerFlowSolver):
                 )
                 for index in range(iterations + 1)
             ],
-            buses=calculate_bus_results(case, result_ybus, expanded_voltage),
-            branches=calculate_branch_results(case, expanded_voltage),
+            buses=expanded_buses,
+            branches=expanded_branches,
         )
         apply_power_flow_result(parsed, result)
         component_results = build_component_results(
@@ -1773,12 +2299,8 @@ class OptimizationACPowerFlow(PowerFlowSolver):
         set_results = getattr(parsed.system, "set_power_flow_results", None)
         if callable(set_results):
             set_results(component_results)
+        solver_label = f"ACOPF [{self.formulation}]"
         if converged:
-            solver_label = (
-                "Primal-dual OPF"
-                if self.solver_name == "primal-dual"
-                else "Optimization AC power flow"
-            )
             logger.success(
                 "{} converged in {} iteration(s); max mismatch {:.4e} pu.",
                 solver_label,
@@ -1786,11 +2308,6 @@ class OptimizationACPowerFlow(PowerFlowSolver):
                 max_mismatch,
             )
         else:
-            solver_label = (
-                "Primal-dual OPF"
-                if self.solver_name == "primal-dual"
-                else "Optimization AC power flow"
-            )
             logger.error(
                 "{} is {} after {} iteration(s); max mismatch {:.4e} pu.",
                 solver_label,
@@ -1798,7 +2315,7 @@ class OptimizationACPowerFlow(PowerFlowSolver):
                 iterations,
                 max_mismatch,
             )
-        report = summarize_solution(model)
+        report = summarize_solution(cast(pyo.ConcreteModel, model))
         if solver_log.strip():
             report = f"{report}\n\n{solver_log}"
         return PowerFlowRun(parsed=parsed, result=result, stdout=report)
@@ -1814,7 +2331,8 @@ class OptimizationACPowerFlow(PowerFlowSolver):
     ) -> PowerFlowRun:
         """Return a non-converged run built from the initial network state."""
         logger.error(
-            "Optimization AC power flow did not produce a solution: {}.",
+            "ACOPF [{}] did not produce a solution: {}.",
+            self.formulation,
             error,
         )
         initial_voltage = case.initial_voltage
@@ -1836,8 +2354,10 @@ class OptimizationACPowerFlow(PowerFlowSolver):
 
 
 def _solved_voltage(
-    model: pyo.ConcreteModel,
+    model: pyo.ConcreteModel | ConicModel,
 ) -> tuple[dict[int, float], dict[int, float]]:
+    if isinstance(model, ConicModel) and model.vm is not None and model.va is not None:
+        return model.vm, model.va
     model_any = cast(Any, model)
     case = cast(PowerFlowCase, model_any._case)
     vm = {
@@ -1853,9 +2373,13 @@ def summarize_solution(model: pyo.ConcreteModel) -> str:
     case = cast(PowerFlowCase, model_any._case)
     vm, va = _solved_voltage(model)
     metrics = solution_metrics(model)
+    formulation = getattr(
+        model_any, "formulation", getattr(model_any, "_formulation", "ACPPowerModel")
+    )
     lines = [
         f"Optimization power-flow summary for {len(case.buses)} buses, "
         f"{len(case.branches)} branches",
+        f"  Formulation: {formulation}",
         f"  Objective function: {getattr(model_any, '_objective_function', 'minimize_residuals')}",
         f"  Converged: {metrics['converged']}",
         f"  Max P residual: {metrics['max_p']:.6e} pu",
@@ -1877,3 +2401,49 @@ def summarize_solution(model: pyo.ConcreteModel) -> str:
                 f"{vm[bus.number]:.4f} pu (min {bus.minimum_voltage:.4f})"
             )
     return "\n".join(lines)
+
+
+class ACOptimalPowerFlow(OptimizationACPowerFlow):
+    """Strict ACOPF that minimizes voltage deviation when costs are absent."""
+
+    solver_name = "acopf"
+
+    def __new__(
+        cls,
+        system=None,
+        *,
+        objective_function: str = "voltage_deviation",
+        formulation: str = "ACPPowerModel",
+        clarabel_project: str | Path | None = None,
+        **kwargs: Any,
+    ):
+        if objective_function != "voltage_deviation":
+            raise ValueError(
+                "ACOptimalPowerFlow only supports objective_function='voltage_deviation'"
+            )
+        return super().__new__(
+            cls,
+            system=system,
+            objective_function="voltage_deviation",
+            **kwargs,
+        )
+
+    def __init__(
+        self,
+        *args: Any,
+        objective_function: str = "voltage_deviation",
+        formulation: str = "ACPPowerModel",
+        **kwargs: Any,
+    ) -> None:
+        if objective_function != "voltage_deviation":
+            raise ValueError(
+                "ACOptimalPowerFlow only supports objective_function='voltage_deviation'"
+            )
+        selected_formulation = resolve_formulation(formulation)
+        if not selected_formulation.implemented:
+            raise NotImplementedError(
+                f"ACOPF formulation {selected_formulation.name!r} is registered but not implemented"
+            )
+        kwargs["objective_function"] = "voltage_deviation"
+        kwargs["formulation"] = selected_formulation.name
+        super().__init__(*args, **kwargs)

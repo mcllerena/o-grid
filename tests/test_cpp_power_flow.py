@@ -29,7 +29,7 @@ def test_format_dat_value_and_write_dat(tmp_path: Path) -> None:
     )
     text = destination.read_text(encoding="utf-8")
     assert "# Generated from case.pwf" in text
-    assert 'param: DBAR:' in text
+    assert "param: DBAR:" in text
     assert '"Bus 1"' in text
     assert text.endswith("\n")
 

@@ -65,7 +65,12 @@ class ReducedPowerFlowCase:
                 setattr(source, item.name, getattr(solved, item.name))
 
 
-def reduce_closed_switches(case: PowerFlowCase) -> ReducedPowerFlowCase:
+def reduce_closed_switches(
+    case: PowerFlowCase,
+    *,
+    low_impedance_threshold: float = 2.000001e-4,
+    reduce_switches: bool = True,
+) -> ReducedPowerFlowCase:
     """Contract switches and electrically equivalent low-impedance jumper buses."""
     _initialize_auxiliary_bus_voltages(case)
     parent = list(range(len(case.buses)))
@@ -87,7 +92,12 @@ def reduce_closed_switches(case: PowerFlowCase) -> ReducedPowerFlowCase:
     for branch in case.branches:
         external_degree[branch.from_bus] += 1
         external_degree[branch.to_bus] += 1
-        if _should_reduce_branch(case, branch):
+        if _should_reduce_branch(
+            case,
+            branch,
+            low_impedance_threshold=low_impedance_threshold,
+            reduce_switches=reduce_switches,
+        ):
             union(indices[branch.from_bus], indices[branch.to_bus])
 
     groups: dict[int, list[int]] = {}
@@ -274,13 +284,21 @@ def _initialize_auxiliary_bus_voltages(case: PowerFlowCase) -> None:
             from_bus.angle = to_bus.angle + branch.phase_shift
 
 
-def _should_reduce_branch(case: PowerFlowCase, branch: BranchData) -> bool:
+def _should_reduce_branch(
+    case: PowerFlowCase,
+    branch: BranchData,
+    *,
+    low_impedance_threshold: float,
+    reduce_switches: bool,
+) -> bool:
     impedance = math.hypot(branch.resistance, branch.reactance)
-    if branch.is_switch:
+    if branch.is_switch and reduce_switches:
         return True
+    if branch.is_switch:
+        return False
     if abs(branch.tap - 1.0) > 1e-9 or abs(branch.phase_shift) > 1e-9:
         return False
-    if impedance <= 2.000001e-4:
+    if impedance <= low_impedance_threshold:
         return True
     if impedance > 1.05e-3:
         return False

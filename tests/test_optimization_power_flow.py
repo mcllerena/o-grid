@@ -10,6 +10,13 @@ from loguru import logger
 from pyomo.opt import TerminationCondition
 
 from o_grid import OptimizationACPowerFlow
+from o_grid.acopf import (
+    FORMULATION_REGISTRY,
+    ACOptimalPowerFlow,
+    implemented_formulations,
+    resolve_formulation,
+)
+from o_grid.acopf.optimization import build_optimization_model as build_acopf_model
 from o_grid.acpf.models import (
     build_power_flow_case,
     build_power_flow_settings,
@@ -23,6 +30,7 @@ from o_grid.acpf.optimization import (
     solve_optimization_model,
     summarize_solution,
 )
+from o_grid.formulations.conic import build_conic_model
 from o_grid.models import ACBus, ACBusTypes
 from o_grid.parser import AnaredeInfrasysParser
 from o_grid.system import AnaredeSystem
@@ -65,6 +73,118 @@ def test_optimization_solver_runs_from_pwf_path() -> None:
         isinstance(bus, ACBus) and bus.solved_voltage is not None
         for bus in parsed.components_by_block["DBAR"]
     )
+
+
+def test_acopf_model_has_dispatch_and_security_constraints() -> None:
+    parsed = AnaredeInfrasysParser().parse(DATA / "d_9nodes.pwf")
+    case = reduce_closed_switches(build_power_flow_case(parsed)).case
+
+    model = build_acopf_model(
+        case,
+        active_tolerance_pu=1.0e-8,
+        reactive_tolerance_pu=1.0e-8,
+        control_tolerance_pu=1.0e-8,
+        objective_function="voltage_deviation",
+    )
+
+    assert len(model.security_generator_ids) > 0
+    assert len(model.pg_security) == len(model.security_generator_ids)
+    assert len(model.phase_angle_upper) == len(case.branches)
+    assert len(model.thermal_limit_from) == len(case.branches)
+    assert model.objective.sense == pyo.minimize
+
+
+def test_acopf_solver_uses_voltage_deviation_method() -> None:
+    run = ACOptimalPowerFlow(objective_function="voltage_deviation", tolerance=1.0e-2).run(
+        DATA / "d_9nodes.pwf"
+    )
+
+    assert run.result.converged is True
+    assert run.result.max_mismatch <= 1.0e-2
+
+
+def test_acopf_formulation_registry_matches_pm_names() -> None:
+    assert "ACPPowerModel" in FORMULATION_REGISTRY
+    assert "SOCWRPowerModel" in FORMULATION_REGISTRY
+    assert resolve_formulation("acp").name == "ACPPowerModel"
+    assert resolve_formulation("SOCWRPowerModel").family == "quadratic_relaxation"
+    assert implemented_formulations() == (
+        "ACPPowerModel",
+        "ACRPowerModel",
+        "ACTPowerModel",
+        "IVRPowerModel",
+        "DCPPowerModel",
+        "DCMPPowerModel",
+        "BFAPowerModel",
+        "NFAPowerModel",
+        "SOCWRPowerModel",
+        "SOCWRConicPowerModel",
+        "SOCBFPowerModel",
+        "SOCBFConicPowerModel",
+        "SDPWRMPowerModel",
+        "SparseSDPWRMPowerModel",
+    )
+
+
+def test_acr_model_uses_rectangular_voltage_equations() -> None:
+    parsed = AnaredeInfrasysParser().parse(DATA / "d_9nodes.pwf")
+    case = reduce_closed_switches(build_power_flow_case(parsed)).case
+
+    model = build_acopf_model(
+        case,
+        active_tolerance_pu=1.0e-8,
+        reactive_tolerance_pu=1.0e-8,
+        control_tolerance_pu=1.0e-8,
+        objective_function="voltage_deviation",
+        formulation="ACRPowerModel",
+    )
+
+    assert hasattr(model, "vr")
+    assert hasattr(model, "vi")
+    assert len(model.acr_voltage_magnitude) == len(case.buses)
+    assert len(model.branch_p_from) == len(case.branches)
+    assert model._formulation == "ACRPowerModel"
+
+
+def test_ivr_model_uses_current_voltage_equations() -> None:
+    parsed = AnaredeInfrasysParser().parse(DATA / "d_9nodes.pwf")
+    case = reduce_closed_switches(build_power_flow_case(parsed)).case
+
+    model = build_acopf_model(
+        case,
+        active_tolerance_pu=1.0e-8,
+        reactive_tolerance_pu=1.0e-8,
+        control_tolerance_pu=1.0e-8,
+        objective_function="voltage_deviation",
+        formulation="IVRPowerModel",
+    )
+
+    assert hasattr(model, "vr")
+    assert hasattr(model, "cr_from")
+    assert len(model.ivr_current_from_real) == len(case.branches)
+    assert model._formulation == "IVRPowerModel"
+
+
+@pytest.mark.parametrize(
+    "formulation",
+    ("SOCWRPowerModel", "SOCBFPowerModel", "SDPWRMPowerModel", "SparseSDPWRMPowerModel"),
+)
+def test_acopf_accepts_conic_formulations(formulation: str) -> None:
+    solver = ACOptimalPowerFlow(formulation=formulation)
+
+    assert solver.formulation == formulation
+
+
+def test_sparse_sdp_uses_edge_soc_cliques() -> None:
+    case = build_power_flow_case(AnaredeInfrasysParser().parse(DATA / "d_9nodes.pwf"))
+
+    model = build_conic_model(case, "SparseSDPWRMPowerModel")
+
+    assert not any(cone["type"] == "positive_semidefinite" for cone in model.problem["cones"])
+    edge_cones = [cone for cone in model.problem["cones"] if cone["type"] == "second_order"]
+    assert len(edge_cones) == len(case.branches)
+    assert all(cone["dimension"] == 4 for cone in edge_cones)
+    assert sum(cone["dimension"] for cone in model.problem["cones"]) == model.problem["m"]
 
 
 def test_optimization_constructor_returns_solved_infrasys_system() -> None:

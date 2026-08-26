@@ -8,7 +8,12 @@ from pathlib import Path
 from typing import Any
 
 
-def write_dat(path: str | Path, source: str | Path, sections: Mapping[str, Iterable[Mapping[str, Any]]], config: Mapping[str, Any]) -> Path:
+def write_dat(
+    path: str | Path,
+    source: str | Path,
+    sections: Mapping[str, Iterable[Mapping[str, Any]]],
+    config: Mapping[str, Any],
+) -> Path:
     destination = Path(path)
     lines = [f"# Generated from {source}", ""]
     field_order = config.get("field_order", {})
@@ -28,16 +33,23 @@ def write_dat(path: str | Path, source: str | Path, sections: Mapping[str, Itera
                 widths[index] = max(widths[index], len(value))
         left = {index for row in values for index, value in enumerate(row) if value.startswith('"')}
         prefix = f"param: {section}: "
-        lines.append(prefix + "  ".join(
-            value.ljust(widths[index]) if index in left else value.rjust(widths[index])
-            for index, value in enumerate(headers)
-        ) + " :=")
+        lines.append(
+            prefix
+            + "  ".join(
+                value.ljust(widths[index]) if index in left else value.rjust(widths[index])
+                for index, value in enumerate(headers)
+            )
+            + " :="
+        )
         row_prefix = " " * len(prefix)
         for row in values:
-            lines.append(row_prefix + "  ".join(
-                value.ljust(widths[index]) if index in left else value.rjust(widths[index])
-                for index, value in enumerate(row)
-            ))
+            lines.append(
+                row_prefix
+                + "  ".join(
+                    value.ljust(widths[index]) if index in left else value.rjust(widths[index])
+                    for index, value in enumerate(row)
+                )
+            )
         lines.extend([";", ""])
     destination.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
     return destination
