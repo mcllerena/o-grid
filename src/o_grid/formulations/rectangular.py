@@ -34,9 +34,7 @@ def add_acr_voltage_variables(
     )
     model.acr_voltage_angle = pyo.Constraint(
         model.BUS,
-        rule=lambda m, bus: m.vr[bus] * pyo.sin(m.va[bus])
-        - m.vi[bus] * pyo.cos(m.va[bus])
-        == 0.0,
+        rule=lambda m, bus: m.vr[bus] * pyo.sin(m.va[bus]) - m.vi[bus] * pyo.cos(m.va[bus]) == 0.0,
     )
 
 
@@ -125,24 +123,20 @@ def branch_power(
         self_g = branch_g[index] / (tap * tap)
         self_b = branch_b_self[index] / (tap * tap)
         mutual_g = (
-            -branch_g[index] * branch_cos_shift[index]
-            + branch_b[index] * branch_sin_shift[index]
+            -branch_g[index] * branch_cos_shift[index] + branch_b[index] * branch_sin_shift[index]
         ) / tap
         mutual_b = (
-            -branch_g[index] * branch_sin_shift[index]
-            - branch_b[index] * branch_cos_shift[index]
+            -branch_g[index] * branch_sin_shift[index] - branch_b[index] * branch_cos_shift[index]
         ) / tap
     else:
         local, remote = branch.to_bus, branch.from_bus
         self_g = branch_g[index]
         self_b = branch_b_self[index]
         mutual_g = (
-            -branch_g[index] * branch_cos_shift[index]
-            - branch_b[index] * branch_sin_shift[index]
+            -branch_g[index] * branch_cos_shift[index] - branch_b[index] * branch_sin_shift[index]
         ) / branch_tap[index]
         mutual_b = (
-            branch_g[index] * branch_sin_shift[index]
-            - branch_b[index] * branch_cos_shift[index]
+            branch_g[index] * branch_sin_shift[index] - branch_b[index] * branch_cos_shift[index]
         ) / branch_tap[index]
     dot = model.vr[local] * model.vr[remote] + model.vi[local] * model.vi[remote]
     cross = model.vi[local] * model.vr[remote] - model.vr[local] * model.vi[remote]

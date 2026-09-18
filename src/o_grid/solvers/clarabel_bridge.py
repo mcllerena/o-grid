@@ -110,9 +110,7 @@ class ClarabelBridge:
             x=[float(value) for value in result.get("x", [])],
             z=[float(value) for value in result.get("z", [])],
             s=[float(value) for value in result.get("s", [])],
-            objective=(
-                float(result["objective"]) if result.get("objective") is not None else None
-            ),
+            objective=(float(result["objective"]) if result.get("objective") is not None else None),
             iterations=int(result.get("iterations", 0)),
             solve_time=(
                 float(result["solve_time"]) if result.get("solve_time") is not None else None

@@ -102,11 +102,7 @@ def q_injection(
         tap = branch_tap[branch_index]
         conductance = branch_g[branch_index]
         susceptance = branch_b[branch_index]
-        self_b = (
-            branch_b_self[branch_index] / tap**2
-            if from_side
-            else branch_b_self[branch_index]
-        )
+        self_b = branch_b_self[branch_index] / tap**2 if from_side else branch_b_self[branch_index]
         if from_side:
             mutual_g = (
                 -conductance * branch_cos_shift[branch_index]
@@ -151,23 +147,19 @@ def branch_power(
         self_g = branch_g[index] / tap**2
         self_b = branch_b_self[index] / tap**2
         mutual_g = (
-            -branch_g[index] * branch_cos_shift[index]
-            + branch_b[index] * branch_sin_shift[index]
+            -branch_g[index] * branch_cos_shift[index] + branch_b[index] * branch_sin_shift[index]
         ) / tap
         mutual_b = (
-            -branch_g[index] * branch_sin_shift[index]
-            - branch_b[index] * branch_cos_shift[index]
+            -branch_g[index] * branch_sin_shift[index] - branch_b[index] * branch_cos_shift[index]
         ) / tap
     else:
         self_g = branch_g[index]
         self_b = branch_b_self[index]
         mutual_g = (
-            -branch_g[index] * branch_cos_shift[index]
-            - branch_b[index] * branch_sin_shift[index]
+            -branch_g[index] * branch_cos_shift[index] - branch_b[index] * branch_sin_shift[index]
         ) / tap
         mutual_b = (
-            branch_g[index] * branch_sin_shift[index]
-            - branch_b[index] * branch_cos_shift[index]
+            branch_g[index] * branch_sin_shift[index] - branch_b[index] * branch_cos_shift[index]
         ) / tap
     wr, wi = _pair(model, local, remote)
     return (

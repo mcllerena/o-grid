@@ -87,6 +87,7 @@ from o_grid.formulations.rectangular import (
 )
 from o_grid.models import ACBusTypes
 from o_grid.solvers import ClarabelBridge
+from o_grid.statics.ntw_parser import NtwFileParser
 from o_grid.statics.pwf_parser import AnaredeInfrasysParser, ParsedAnaredeSystem
 
 TOLERANCE = 1.0e-12
@@ -116,9 +117,7 @@ OBJECTIVE_WEIGHT_ANGLE_LIMITS = 1.0e-2
 OBJECTIVE_WEIGHT_LTC = 0.01
 OBJECTIVE_WEIGHT_SVC = 100.0
 
-VALID_OBJECTIVE_FUNCTIONS = (
-    "voltage_deviation",
-)
+VALID_OBJECTIVE_FUNCTIONS = ("voltage_deviation",)
 
 SLACK = 2
 PV = 1
@@ -346,6 +345,12 @@ def build_optimization_model(
     optimize_ltc_taps: bool = False,
     optimize_ltc_controls: bool = False,
     enforce_shunt_deadbands: bool = False,
+    data_center_load_mw: float = 0.0,
+    data_center_reactive_mvar: float = 0.0,
+    data_center_generation_mw: float = 0.0,
+    data_center_generation_reactive_mvar: float = 0.0,
+    data_center_candidate_buses: tuple[int, ...] = (),
+    data_center_sites: int = 1,
 ) -> pyo.ConcreteModel | ConicModel:
     """Build and initialize the Pyomo AC power-flow optimization model.
 
@@ -384,7 +389,7 @@ def build_optimization_model(
             "Unknown objective_function {!r}; expected one of {}".format(
                 objective_function, ", ".join(VALID_OBJECTIVE_FUNCTIONS)
             )
-            )
+        )
     if selected_formulation.name in CONIC_FORMULATIONS:
         model = build_conic_model(case, selected_formulation.name)
         cast(Any, model)._objective_function = objective_function
@@ -395,6 +400,27 @@ def build_optimization_model(
     base_mva = case.base_mva
     bus_ids = [bus.number for bus in case.buses]
     bus_by_id = {bus.number: bus for bus in case.buses}
+    candidate_buses = tuple(data_center_candidate_buses)
+    if (
+        data_center_load_mw < 0.0
+        or data_center_reactive_mvar < 0.0
+        or data_center_generation_mw < 0.0
+        or data_center_generation_reactive_mvar < 0.0
+    ):
+        raise ValueError("data-center load and generation values must be non-negative")
+    if any(bus not in bus_by_id for bus in candidate_buses):
+        missing = sorted(set(candidate_buses) - set(bus_by_id))
+        raise ValueError(f"data-center candidate buses are not in the case: {missing}")
+    if len(set(candidate_buses)) != len(candidate_buses):
+        raise ValueError("data_center_candidate_buses must not contain duplicates")
+    if (data_center_load_mw > 0.0 or data_center_generation_mw > 0.0) and not candidate_buses:
+        raise ValueError(
+            "candidate buses are required when data-center load or generation is positive"
+        )
+    if candidate_buses and not 1 <= data_center_sites <= len(candidate_buses):
+        raise ValueError("data_center_sites must be between 1 and the number of candidates")
+    if not candidate_buses and data_center_sites != 1:
+        raise ValueError("data_center_sites must be 1 when no candidates are configured")
     branch_ids = list(range(len(case.branches)))
     svc_ids = list(range(len(case.svcs or [])))
     branches = case.branches
@@ -406,6 +432,26 @@ def build_optimization_model(
     model_any.QPV = pyo.Set(initialize=q_limited_pv_ids, ordered=True)
     model_any.BRANCH = pyo.Set(initialize=branch_ids, ordered=True)
     model_any.SVC = pyo.Set(initialize=svc_ids, ordered=True)
+    model_any.DATA_CENTER_CANDIDATE = pyo.Set(initialize=candidate_buses, ordered=True)
+    model_any.data_center_site = pyo.Var(
+        model_any.DATA_CENTER_CANDIDATE, domain=pyo.Binary, initialize=0
+    )
+    model_any.data_center_sites = pyo.Param(initialize=data_center_sites)
+    model_any.data_center_load_mw = pyo.Param(initialize=data_center_load_mw)
+    model_any.data_center_reactive_mvar = pyo.Param(initialize=data_center_reactive_mvar)
+    model_any.data_center_generation_mw = pyo.Param(initialize=data_center_generation_mw)
+    model_any.data_center_generation_reactive_mvar = pyo.Param(
+        initialize=data_center_generation_reactive_mvar
+    )
+
+    def data_center_site_count_rule(m: Any):
+        if not candidate_buses:
+            return pyo.Constraint.Skip
+        return (
+            sum(m.data_center_site[bus] for bus in m.DATA_CENTER_CANDIDATE) == m.data_center_sites
+        )
+
+    model_any.data_center_site_count = pyo.Constraint(rule=data_center_site_count_rule)
 
     model_any.base_mva = pyo.Param(initialize=base_mva, within=pyo.PositiveReals)
     hard_security = True
@@ -488,9 +534,7 @@ def build_optimization_model(
         for bus in case.buses
         if bus.number in security_generator_ids
     }
-    model_any.security_generator_ids = pyo.Set(
-        initialize=security_generator_ids, ordered=True
-    )
+    model_any.security_generator_ids = pyo.Set(initialize=security_generator_ids, ordered=True)
     model_any.pg_security = pyo.Var(
         model_any.security_generator_ids,
         initialize=security_pg_initial,
@@ -658,8 +702,8 @@ def build_optimization_model(
             if not hard_security
             else min(max(1.0, lower + 1.0e-5), upper - 1.0e-5)
         )
-        va_seed[bus.number] = 0.0 if hard_security else min(
-            max(bus.angle, -ANGLE_BOUND_RAD), ANGLE_BOUND_RAD
+        va_seed[bus.number] = (
+            0.0 if hard_security else min(max(bus.angle, -ANGLE_BOUND_RAD), ANGLE_BOUND_RAD)
         )
         if bus.number in q_limited_pv_ids:
             qg_initial[bus.number] = (
@@ -686,10 +730,12 @@ def build_optimization_model(
             voltage_bounds=bus_vm_bounds,
         )
     elif selected_formulation.name == "ACTPowerModel":
-        buspairs = list({
-            (min(branch.from_bus, branch.to_bus), max(branch.from_bus, branch.to_bus))
-            for branch in branches
-        })
+        buspairs = list(
+            {
+                (min(branch.from_bus, branch.to_bus), max(branch.from_bus, branch.to_bus))
+                for branch in branches
+            }
+        )
         add_act_voltage_variables(
             model_any,
             bus_ids=bus_ids,
@@ -1008,15 +1054,28 @@ def build_optimization_model(
         model_any.calculated_p_injection = pyo.Expression(
             model_any.BUS,
             rule=lambda m, bus: act_p_injection(
-                m, bus, injections, branch_g, branch_b, branch_tap,
-                branch_cos_shift, branch_sin_shift,
+                m,
+                bus,
+                injections,
+                branch_g,
+                branch_b,
+                branch_tap,
+                branch_cos_shift,
+                branch_sin_shift,
             ),
         )
         model_any.calculated_q_injection = pyo.Expression(
             model_any.BUS,
             rule=lambda m, bus: act_q_injection(
-                m, bus, injections, branch_g, branch_b, branch_b_self,
-                branch_tap, branch_cos_shift, branch_sin_shift,
+                m,
+                bus,
+                injections,
+                branch_g,
+                branch_b,
+                branch_b_self,
+                branch_tap,
+                branch_cos_shift,
+                branch_sin_shift,
             ),
         )
     elif selected_formulation.name in LINEAR_FORMULATIONS:
@@ -1024,10 +1083,9 @@ def build_optimization_model(
             model_any.BUS,
             rule=lambda m, bus: linear_p_injection(m, bus, injections, branch_b),
         )
-        model_any.calculated_q_injection = pyo.Expression(
-            model_any.BUS, rule=lambda _m, _bus: 0.0
-        )
+        model_any.calculated_q_injection = pyo.Expression(model_any.BUS, rule=lambda _m, _bus: 0.0)
     elif selected_formulation.name == "IVRPowerModel":
+
         def ivr_injection(m: Any, bus: int, reactive: bool):
             expression = -m.b_shunt[bus] * m.vm[bus] ** 2 if reactive else 0.0
             for other, branch_index, from_side in injections.get(bus, []):
@@ -1084,6 +1142,11 @@ def build_optimization_model(
             if bus in m.security_generator_ids
             else data.active_generation / base_mva
         )
+        p_data_center_generation = (
+            m.data_center_generation_mw / base_mva * m.data_center_site[bus]
+            if bus in m.DATA_CENTER_CANDIDATE
+            else 0.0
+        )
         p_lcc_delta = sum(
             (lcc_p_rect_initial[index] - (m.pdc[index] + m.lcc_rdc[index] * m.idc[index] ** 2))
             for index in m.LCC
@@ -1093,8 +1156,18 @@ def build_optimization_model(
             for index in m.LCC
             if lcc_inverter_bus[index] == bus
         )
+        p_data_center = (
+            m.data_center_load_mw / base_mva * m.data_center_site[bus]
+            if bus in m.DATA_CENTER_CANDIDATE
+            else 0.0
+        )
         return (
-            p_generation - data.active_load / base_mva + p_lcc_delta - m.calculated_p_injection[bus]
+            p_generation
+            + p_data_center_generation
+            - data.active_load / base_mva
+            - p_data_center
+            + p_lcc_delta
+            - m.calculated_p_injection[bus]
             == m.p_slack_pos[bus] - m.p_slack_neg[bus]
         )
 
@@ -1103,11 +1176,7 @@ def build_optimization_model(
         if selected_formulation.name in LINEAR_FORMULATIONS:
             return pyo.Constraint.Skip
         if hard_security:
-            q_generation = (
-                m.qg_security[bus]
-                if bus in m.security_generator_ids
-                else 0.0
-            )
+            q_generation = m.qg_security[bus] if bus in m.security_generator_ids else 0.0
             q_lcc_delta = sum(
                 (lcc_q_rect_initial[index] - m.qdc_rect[index])
                 for index in m.LCC
@@ -1117,14 +1186,26 @@ def build_optimization_model(
                 for index in m.LCC
                 if lcc_inverter_bus[index] == bus
             )
-            q_control = sum(
-                m.qsvc[index] for index in svcs_by_bus.get(bus, [])
-            ) + sum(
-                m.qshunt[index] * m.vm[bus] ** 2
-                for index in shunts_by_bus.get(bus, [])
+            q_control = sum(m.qsvc[index] for index in svcs_by_bus.get(bus, [])) + sum(
+                m.qshunt[index] * m.vm[bus] ** 2 for index in shunts_by_bus.get(bus, [])
+            )
+            q_data_center = (
+                m.data_center_reactive_mvar / base_mva * m.data_center_site[bus]
+                if bus in m.DATA_CENTER_CANDIDATE
+                else 0.0
+            )
+            q_data_center_generation = (
+                m.data_center_generation_reactive_mvar / base_mva * m.data_center_site[bus]
+                if bus in m.DATA_CENTER_CANDIDATE
+                else 0.0
             )
             return (
-                q_generation - data.reactive_load / base_mva + q_lcc_delta + q_control
+                q_generation
+                + q_data_center_generation
+                - data.reactive_load / base_mva
+                - q_data_center
+                + q_lcc_delta
+                + q_control
                 - m.calculated_q_injection[bus]
                 == 0.0
             )
@@ -1167,7 +1248,7 @@ def build_optimization_model(
         branch = branches[index]
         delta = m.va[branch.from_bus] - m.va[branch.to_bus]
         return m.qf_from[index] == (
-            -m.vm[branch.from_bus] ** 2 * branch_yff_b[index]
+            -(m.vm[branch.from_bus] ** 2) * branch_yff_b[index]
             + m.vm[branch.from_bus]
             * m.vm[branch.to_bus]
             * (branch_yft_g[index] * pyo.sin(delta) - branch_yft_b[index] * pyo.cos(delta))
@@ -1187,7 +1268,7 @@ def build_optimization_model(
         branch = branches[index]
         delta = m.va[branch.to_bus] - m.va[branch.from_bus]
         return m.qf_to[index] == (
-            -m.vm[branch.to_bus] ** 2 * branch_ytt_b[index]
+            -(m.vm[branch.to_bus] ** 2) * branch_ytt_b[index]
             + m.vm[branch.to_bus]
             * m.vm[branch.from_bus]
             * (branch_ytf_g[index] * pyo.sin(delta) - branch_ytf_b[index] * pyo.cos(delta))
@@ -1196,115 +1277,136 @@ def build_optimization_model(
     if selected_formulation.name == "ACRPowerModel":
         model_any.branch_p_from = pyo.Constraint(
             model_any.BRANCH,
-            rule=lambda m, index: m.pf_from[index]
-            == branch_power(
-                m,
-                index,
-                from_side=True,
-                branch_g=branch_g,
-                branch_b=branch_b,
-                branch_b_self=branch_b_self,
-                branch_tap=branch_tap,
-                branch_cos_shift=branch_cos_shift,
-                branch_sin_shift=branch_sin_shift,
-            )[0],
+            rule=lambda m, index: (
+                m.pf_from[index]
+                == branch_power(
+                    m,
+                    index,
+                    from_side=True,
+                    branch_g=branch_g,
+                    branch_b=branch_b,
+                    branch_b_self=branch_b_self,
+                    branch_tap=branch_tap,
+                    branch_cos_shift=branch_cos_shift,
+                    branch_sin_shift=branch_sin_shift,
+                )[0]
+            ),
         )
         model_any.branch_q_from = pyo.Constraint(
             model_any.BRANCH,
-            rule=lambda m, index: m.qf_from[index]
-            == branch_power(
-                m,
-                index,
-                from_side=True,
-                branch_g=branch_g,
-                branch_b=branch_b,
-                branch_b_self=branch_b_self,
-                branch_tap=branch_tap,
-                branch_cos_shift=branch_cos_shift,
-                branch_sin_shift=branch_sin_shift,
-            )[1],
+            rule=lambda m, index: (
+                m.qf_from[index]
+                == branch_power(
+                    m,
+                    index,
+                    from_side=True,
+                    branch_g=branch_g,
+                    branch_b=branch_b,
+                    branch_b_self=branch_b_self,
+                    branch_tap=branch_tap,
+                    branch_cos_shift=branch_cos_shift,
+                    branch_sin_shift=branch_sin_shift,
+                )[1]
+            ),
         )
         model_any.branch_p_to = pyo.Constraint(
             model_any.BRANCH,
-            rule=lambda m, index: m.pf_to[index]
-            == branch_power(
-                m,
-                index,
-                from_side=False,
-                branch_g=branch_g,
-                branch_b=branch_b,
-                branch_b_self=branch_b_self,
-                branch_tap=branch_tap,
-                branch_cos_shift=branch_cos_shift,
-                branch_sin_shift=branch_sin_shift,
-            )[0],
+            rule=lambda m, index: (
+                m.pf_to[index]
+                == branch_power(
+                    m,
+                    index,
+                    from_side=False,
+                    branch_g=branch_g,
+                    branch_b=branch_b,
+                    branch_b_self=branch_b_self,
+                    branch_tap=branch_tap,
+                    branch_cos_shift=branch_cos_shift,
+                    branch_sin_shift=branch_sin_shift,
+                )[0]
+            ),
         )
         model_any.branch_q_to = pyo.Constraint(
             model_any.BRANCH,
-            rule=lambda m, index: m.qf_to[index]
-            == branch_power(
+            rule=lambda m, index: (
+                m.qf_to[index]
+                == branch_power(
+                    m,
+                    index,
+                    from_side=False,
+                    branch_g=branch_g,
+                    branch_b=branch_b,
+                    branch_b_self=branch_b_self,
+                    branch_tap=branch_tap,
+                    branch_cos_shift=branch_cos_shift,
+                    branch_sin_shift=branch_sin_shift,
+                )[1]
+            ),
+        )
+    elif selected_formulation.name == "ACTPowerModel":
+
+        def act_branch_constraint(m: Any, index: int, side: bool, flow: Any, reactive: bool):
+            values = act_branch_power(
                 m,
                 index,
-                from_side=False,
+                from_side=side,
                 branch_g=branch_g,
                 branch_b=branch_b,
                 branch_b_self=branch_b_self,
                 branch_tap=branch_tap,
                 branch_cos_shift=branch_cos_shift,
                 branch_sin_shift=branch_sin_shift,
-            )[1],
-        )
-    elif selected_formulation.name == "ACTPowerModel":
-        def act_branch_constraint(m: Any, index: int, side: bool, flow: Any, reactive: bool):
-            values = act_branch_power(
-                m, index, from_side=side, branch_g=branch_g, branch_b=branch_b,
-                branch_b_self=branch_b_self, branch_tap=branch_tap,
-                branch_cos_shift=branch_cos_shift, branch_sin_shift=branch_sin_shift,
             )
             return flow[index] == values[1 if reactive else 0]
 
         model_any.branch_p_from = pyo.Constraint(
             model_any.BRANCH,
-            rule=lambda m, index: act_branch_constraint(
-                m, index, True, m.pf_from, False
-            ),
+            rule=lambda m, index: act_branch_constraint(m, index, True, m.pf_from, False),
         )
         model_any.branch_q_from = pyo.Constraint(
             model_any.BRANCH,
-            rule=lambda m, index: act_branch_constraint(
-                m, index, True, m.qf_from, True
-            ),
+            rule=lambda m, index: act_branch_constraint(m, index, True, m.qf_from, True),
         )
         model_any.branch_p_to = pyo.Constraint(
             model_any.BRANCH,
-            rule=lambda m, index: act_branch_constraint(
-                m, index, False, m.pf_to, False
-            ),
+            rule=lambda m, index: act_branch_constraint(m, index, False, m.pf_to, False),
         )
         model_any.branch_q_to = pyo.Constraint(
             model_any.BRANCH,
-            rule=lambda m, index: act_branch_constraint(
-                m, index, False, m.qf_to, True
-            ),
+            rule=lambda m, index: act_branch_constraint(m, index, False, m.qf_to, True),
         )
     elif selected_formulation.name in LINEAR_FORMULATIONS:
         transformer_aware = selected_formulation.name == "DCMPPowerModel"
         model_any.branch_p_from = pyo.Constraint(
             model_any.BRANCH,
-            rule=lambda m, index: m.pf_from[index]
-            == linear_branch_power(
-                m, index, from_side=True, branch_b=branch_b, branch_x=branch_x,
-                branch_tap=branch_tap, branch_phase_shift=branch_phase_shift,
-                transformer_aware=transformer_aware,
+            rule=lambda m, index: (
+                m.pf_from[index]
+                == linear_branch_power(
+                    m,
+                    index,
+                    from_side=True,
+                    branch_b=branch_b,
+                    branch_x=branch_x,
+                    branch_tap=branch_tap,
+                    branch_phase_shift=branch_phase_shift,
+                    transformer_aware=transformer_aware,
+                )
             ),
         )
         model_any.branch_p_to = pyo.Constraint(
             model_any.BRANCH,
-            rule=lambda m, index: m.pf_to[index]
-            == linear_branch_power(
-                m, index, from_side=False, branch_b=branch_b, branch_x=branch_x,
-                branch_tap=branch_tap, branch_phase_shift=branch_phase_shift,
-                transformer_aware=transformer_aware,
+            rule=lambda m, index: (
+                m.pf_to[index]
+                == linear_branch_power(
+                    m,
+                    index,
+                    from_side=False,
+                    branch_b=branch_b,
+                    branch_x=branch_x,
+                    branch_tap=branch_tap,
+                    branch_phase_shift=branch_phase_shift,
+                    transformer_aware=transformer_aware,
+                )
             ),
         )
         model_any.branch_q_from = pyo.Constraint(
@@ -1314,10 +1416,13 @@ def build_optimization_model(
             model_any.BRANCH, rule=lambda m, index: m.qf_to[index] == 0.0
         )
     elif selected_formulation.name == "IVRPowerModel":
+
         def ivr_branch_constraint(m: Any, index: int, side: bool, reactive: bool):
             values = ivr_branch_power(m, index, from_side=side)
-            flow = m.qf_from if reactive and side else (
-                m.qf_to if reactive else m.pf_from if side else m.pf_to
+            flow = (
+                m.qf_from
+                if reactive and side
+                else (m.qf_to if reactive else m.pf_from if side else m.pf_to)
             )
             return flow[index] == values[1 if reactive else 0]
 
@@ -1358,12 +1463,8 @@ def build_optimization_model(
         return m.pf_to[index] ** 2 + m.qf_to[index] ** 2 <= m.branch_smax[index] ** 2
 
     if objective_function == "voltage_deviation":
-        model_any.phase_angle_upper = pyo.Constraint(
-            model_any.BRANCH, rule=phase_angle_upper_rule
-        )
-        model_any.phase_angle_lower = pyo.Constraint(
-            model_any.BRANCH, rule=phase_angle_lower_rule
-        )
+        model_any.phase_angle_upper = pyo.Constraint(model_any.BRANCH, rule=phase_angle_upper_rule)
+        model_any.phase_angle_lower = pyo.Constraint(model_any.BRANCH, rule=phase_angle_lower_rule)
         model_any.thermal_limit_from = pyo.Constraint(model_any.BRANCH, rule=thermal_from_rule)
         model_any.thermal_limit_to = pyo.Constraint(model_any.BRANCH, rule=thermal_to_rule)
         model_any.security_hard_active = pyo.Constraint(
@@ -1818,6 +1919,7 @@ def solution_metrics(model: pyo.ConcreteModel) -> dict[str, float | bool]:
             for bus in case.buses
             if _bus_type_code(bus.kind) == PQ or bus.number in model_any.QPV
         ]
+
     def reactive_residual(bus: int) -> float:
         if getattr(model_any, "_hard_security", False):
             expr = (
@@ -1928,7 +2030,7 @@ def solution_metrics(model: pyo.ConcreteModel) -> dict[str, float | bool]:
             continue
         max_svc = max(max_svc, abs(droop))
     aggregate_p = sum(
-            active_specification(bus)
+        active_specification(bus)
         + sum(
             lcc.p_rectifier_mw / case.base_mva
             - (
@@ -1999,6 +2101,7 @@ def solve_optimization_model(
     max_iterations: int = 30,
     max_cpu_time: float = 300.0,
     print_iterations: bool = False,
+    solver_name: str = "ipopt",
 ):
     """Solve the optimization model with Ipopt and return the results and log."""
     if isinstance(model, ConicModel):
@@ -2023,15 +2126,16 @@ def solve_optimization_model(
             solver=SimpleNamespace(termination_condition=termination, status=status)
         )
         return wrapped, status, 0
-    solver = SolverFactory("ipopt")
+    solver = SolverFactory(solver_name)
     if solver is None or not solver.available(exception_flag=False):
         return None, "", None
     solver.options["max_iter"] = int(max_iterations)
     solver.options["max_cpu_time"] = float(max_cpu_time)
     solver.options["tol"] = 1.0e-8
     solver.options["acceptable_tol"] = 1.0e-6
-    solver.options["acceptable_iter"] = 3
-    solver.options["mu_strategy"] = "adaptive"
+    if solver_name == "ipopt":
+        solver.options["acceptable_iter"] = 3
+        solver.options["mu_strategy"] = "adaptive"
     if print_iterations:
         solver.options["print_level"] = 5
     log_path: Path | None = None
@@ -2082,6 +2186,13 @@ class OptimizationACPowerFlow(PowerFlowSolver):
         optimize_ltc_taps: bool = False,
         optimize_ltc_controls: bool = False,
         enforce_shunt_deadbands: bool = False,
+        data_center_load_mw: float = 0.0,
+        data_center_reactive_mvar: float = 0.0,
+        data_center_generation_mw: float = 0.0,
+        data_center_generation_reactive_mvar: float = 0.0,
+        data_center_candidate_buses: tuple[int, ...] = (),
+        data_center_sites: int = 1,
+        optimization_solver: str | None = None,
     ) -> None:
         if objective_function not in VALID_OBJECTIVE_FUNCTIONS:
             raise ValueError(
@@ -2104,6 +2215,15 @@ class OptimizationACPowerFlow(PowerFlowSolver):
         self.optimize_ltc_taps = optimize_ltc_taps
         self.optimize_ltc_controls = optimize_ltc_controls
         self.enforce_shunt_deadbands = enforce_shunt_deadbands
+        self.data_center_load_mw = data_center_load_mw
+        self.data_center_reactive_mvar = data_center_reactive_mvar
+        self.data_center_generation_mw = data_center_generation_mw
+        self.data_center_generation_reactive_mvar = data_center_generation_reactive_mvar
+        self.data_center_candidate_buses = data_center_candidate_buses
+        self.data_center_sites = data_center_sites
+        self.optimization_solver = optimization_solver or (
+            "bonmin" if data_center_candidate_buses and data_center_load_mw > 0.0 else "ipopt"
+        )
 
     def run(
         self,
@@ -2118,8 +2238,12 @@ class OptimizationACPowerFlow(PowerFlowSolver):
             parsed = ParsedAnaredeSystem.from_system(pwf_path)
         else:
             source = Path(pwf_path).resolve()
-            parser = AnaredeInfrasysParser(system_name=system_name or source.stem)
-            parsed = parser.parse(source)
+            if source.suffix.lower() == ".ntw":
+                system = NtwFileParser(source, system_name=system_name or source.stem).system
+                parsed = ParsedAnaredeSystem.from_system(system)
+            else:
+                parser = AnaredeInfrasysParser(system_name=system_name or source.stem)
+                parsed = parser.parse(source)
 
         case = build_power_flow_case(parsed)
         settings = build_power_flow_settings(
@@ -2149,6 +2273,14 @@ class OptimizationACPowerFlow(PowerFlowSolver):
             optimize_ltc_taps=getattr(self, "optimize_ltc_taps", False),
             optimize_ltc_controls=getattr(self, "optimize_ltc_controls", False),
             enforce_shunt_deadbands=getattr(self, "enforce_shunt_deadbands", False),
+            data_center_load_mw=getattr(self, "data_center_load_mw", 0.0),
+            data_center_reactive_mvar=getattr(self, "data_center_reactive_mvar", 0.0),
+            data_center_generation_mw=getattr(self, "data_center_generation_mw", 0.0),
+            data_center_generation_reactive_mvar=getattr(
+                self, "data_center_generation_reactive_mvar", 0.0
+            ),
+            data_center_candidate_buses=getattr(self, "data_center_candidate_buses", ()),
+            data_center_sites=getattr(self, "data_center_sites", 1),
         )
         if isinstance(model, ConicModel):
             cast(Any, model)._clarabel_project = self.clarabel_project
@@ -2157,6 +2289,7 @@ class OptimizationACPowerFlow(PowerFlowSolver):
             max_iterations=self.max_iterations,
             max_cpu_time=self.max_cpu_time,
             print_iterations=self.print_iterations,
+            solver_name=getattr(self, "optimization_solver", "ipopt"),
         )
         if results is None:
             logger.error(
@@ -2206,6 +2339,14 @@ class OptimizationACPowerFlow(PowerFlowSolver):
                 optimize_ltc_taps=getattr(self, "optimize_ltc_taps", False),
                 optimize_ltc_controls=getattr(self, "optimize_ltc_controls", False),
                 enforce_shunt_deadbands=getattr(self, "enforce_shunt_deadbands", False),
+                data_center_load_mw=getattr(self, "data_center_load_mw", 0.0),
+                data_center_reactive_mvar=getattr(self, "data_center_reactive_mvar", 0.0),
+                data_center_generation_mw=getattr(self, "data_center_generation_mw", 0.0),
+                data_center_generation_reactive_mvar=getattr(
+                    self, "data_center_generation_reactive_mvar", 0.0
+                ),
+                data_center_candidate_buses=getattr(self, "data_center_candidate_buses", ()),
+                data_center_sites=getattr(self, "data_center_sites", 1),
             )
             if isinstance(model, ConicModel):
                 cast(Any, model)._clarabel_project = self.clarabel_project
@@ -2214,6 +2355,7 @@ class OptimizationACPowerFlow(PowerFlowSolver):
                 max_iterations=self.max_iterations,
                 max_cpu_time=self.max_cpu_time,
                 print_iterations=self.print_iterations,
+                solver_name=getattr(self, "optimization_solver", "ipopt"),
             )
             solver_log = f"{solver_log}\n{retry_log}" if retry_log else solver_log
             termination = getattr(getattr(results, "solver", None), "termination_condition", None)

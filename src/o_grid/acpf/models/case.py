@@ -20,6 +20,7 @@ from o_grid.models import (
     BusShuntBank,
     CircuitState,
     ControllableSeriesCompensator,
+    Generator,
     LineShuntBank,
     LTCTransformer,
     PhaseShiftingTransformer,
@@ -179,6 +180,45 @@ def _apply_supplemental_components(
     shunt_controls: list[ShuntControlData],
 ) -> None:
     by_number = {bus.number: bus for bus in buses}
+    for component in parsed.components_by_block.get("DGER", []):
+        if not isinstance(component, Generator):
+            continue
+        status = getattr(component, "status", None)
+        if status is not None and int(status) != 1:
+            continue
+        values = _pwf_values(component)
+        bus_value = (
+            getattr(component, "bus_id", None)
+            or getattr(component, "bus", None)
+            or values.get("bus_id")
+            or values.get("bus")
+        )
+        if bus_value is None:
+            continue
+        bus = by_number.get(_bus_number(bus_value))
+        if bus is None:
+            continue
+        bus.active_generation += _magnitude(
+            getattr(component, "active_generation", None),
+            values.get("active_generation", 0.0),
+        )
+        bus.reactive_generation += _magnitude(
+            getattr(component, "reactive_generation", None),
+            values.get("reactive_generation", 0.0),
+        )
+        minimum = _magnitude(getattr(component, "minimum_reactive_generation", None))
+        maximum = _magnitude(getattr(component, "maximum_reactive_generation", None))
+        bus.minimum_reactive_generation = (
+            minimum
+            if bus.minimum_reactive_generation is None
+            else min(bus.minimum_reactive_generation, minimum)
+        )
+        bus.maximum_reactive_generation = (
+            maximum
+            if bus.maximum_reactive_generation is None
+            else max(bus.maximum_reactive_generation, maximum)
+        )
+
     for component in parsed.components_by_block.get("DCAI", []):
         values = _pwf_values(component)
         bus = by_number.get(_bus_number(getattr(component, "bus", values.get("bus"))))

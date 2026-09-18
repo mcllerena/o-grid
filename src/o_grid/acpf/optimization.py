@@ -1658,6 +1658,7 @@ class OptimizationACPowerFlow(PowerFlowSolver):
         pwf_path: str | Path | System | ParsedAnaredeSystem,
         *,
         system_name: str | None = None,
+        case_override: PowerFlowCase | None = None,
     ) -> PowerFlowRun:
         """Solve a PWF path or parsed infrasys system with the optimization formulation."""
         if isinstance(pwf_path, ParsedAnaredeSystem):
@@ -1669,7 +1670,7 @@ class OptimizationACPowerFlow(PowerFlowSolver):
             parser = AnaredeInfrasysParser(system_name=system_name or source.stem)
             parsed = parser.parse(source)
 
-        case = build_power_flow_case(parsed)
+        case = case_override or build_power_flow_case(parsed)
         settings = build_power_flow_settings(
             parsed,
             tolerance=self.tolerance,

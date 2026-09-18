@@ -34,8 +34,7 @@ def add_ivr_variables(
     )
     model.ivr_voltage_angle = pyo.Constraint(
         model.BUS,
-        rule=lambda m, bus: m.vr[bus] * pyo.sin(m.va[bus])
-        - m.vi[bus] * pyo.cos(m.va[bus]) == 0.0,
+        rule=lambda m, bus: m.vr[bus] * pyo.sin(m.va[bus]) - m.vi[bus] * pyo.cos(m.va[bus]) == 0.0,
     )
 
 
@@ -53,6 +52,7 @@ def add_ivr_branch_equations(
     branch_ytt_b: dict[int, float],
 ) -> None:
     """Add rectangular Ohm equations and power/current expressions."""
+
     def from_current_real(m: Any, index: int):
         branch = branches[index]
         return m.cr_from[index] == (

@@ -1,0 +1,311 @@
+---
+title: Data-center siting and capacity expansion
+description: ReEDS-style multi-period siting, capacity expansion, and AC power-flow evaluation for large loads.
+head: []
+---
+
+The data-center module separates **planning** from **network validation**:
+
+1. A capacity-expansion model chooses when and where data-center load capacity is built.
+2. The model co-expands active and reactive generation at the selected site.
+3. A separate AC power-flow model evaluates the selected plan on the parsed Brazilian network.
+
+This separation follows the ReEDS/CEM pattern: investment decisions are made over multiple planning years, while nonlinear AC feasibility is checked for a selected operating year.
+
+## Planning inputs
+
+`CapacityExpansionStudy` uses bus numbers as candidate siting regions at the current model resolution. Its principal input is a mapping of end-of-year cumulative load targets:
+
+```python
+cumulative_load_mw_by_year={2030: 50.0, 2035: 100.0}
+```
+
+The keys are years, not site identifiers. The values are total installed data-center load capacity by the end of each year. This example means:
+
+| Year | Cumulative capacity target | New capacity in that period |
+| --- | ---: | ---: |
+| 2030 | 50 MW | 50 MW |
+| 2035 | 100 MW | 50 MW |
+
+The model enforces non-negative, non-decreasing targets. A target of `1000.0` in 2035 therefore means 1000 MW total by 2035, not 1000 MW added during 2035.
+
+Other inputs are:
+
+| Input | Meaning |
+| --- | --- |
+| `candidate_buses` | Buses eligible for data-center construction. |
+| `generation_mw_per_load_mw` | Active generation capacity built per MW of load capacity. |
+| `generation_mvar_per_load_mw` | Reactive generation capability built per MW of load capacity. |
+| `capacity_factor` | Minimum operating load as a fraction of installed capacity. |
+| `max_sites` | Maximum number of buses that may be activated. |
+| `max_capacity_mw_by_bus` | Optional bus-specific load-capacity limits. |
+| `load_site_cost_by_bus` | Investment cost coefficient for load-site capacity. |
+| `generation_cost_by_bus` | Investment cost coefficient for active generation capacity. |
+| `transmission_projects` | Candidate physical branches that can reinforce a site. |
+
+The capacity-expansion model supports explicit candidate transmission projects,
+but does not synthesize new corridors from overload sensitivities, perform N-1
+expansion, choose generator technologies or vintages, run chronological hourly
+dispatch, or model geographic regions above the bus level.
+
+## How the bus is selected
+
+The model does not automatically inspect every bus in the PWF or infer
+suitability from a bus name. `candidate_buses` is an explicit eligibility
+set. Only buses in that tuple can receive data-center capacity.
+
+For the large-scale example:
+
+```python
+candidate_buses=(10,)
+max_sites=1
+```
+
+Bus 10 is therefore selected because it is the only eligible bus and the
+milestones require one active site. The selection is made by capacity
+expansion, not by ACOPF. In a multi-bus study, the model chooses buses that
+can satisfy the cumulative targets while respecting site count, bus capacity,
+interconnection capacity, transmission projects, and investment costs. Equal
+costs and constraints produce equivalent optima, so HiGHS may choose any of
+them; use bus-specific costs or limits to express a preference.
+
+The example reads the selected bus from `plan.site_active` and fixes it for
+AC validation. This avoids repeating a discrete siting search inside a
+large nonlinear ACOPF.
+
+## Mathematical formulation
+
+Let:
+
+- $B$ be the set of candidate buses;
+- $Y$ be the ordered set of planning years;
+- $D_y$ be the cumulative load-capacity target in year $y$;
+- $\alpha$ be the active-generation-to-load capacity ratio;
+- $\beta$ be the reactive-generation-to-load capacity ratio;
+- $\mathrm{CF}$ be the capacity factor;
+- $M_b$ be the maximum load capacity allowed at bus $b$;
+- $c^L_b$ and $c^G_b$ be load-site and active-generation investment costs.
+
+The implementation uses the following variables:
+
+| Variable | Domain | Meaning |
+| --- | --- | --- |
+| $I^L_{b,y}$ | $\mathbb{R}_+$ | Load-site capacity invested at bus $b$ in year $y$. |
+| $C^L_{b,y}$ | $\mathbb{R}_+$ | Cumulative load capacity at bus $b$ by year $y$. |
+| $I^G_{b,y}$ | $\mathbb{R}_+$ | Active-generation capacity invested at bus $b$ in year $y$. |
+| $C^G_{b,y}$ | $\mathbb{R}_+$ | Cumulative active-generation capacity. |
+| $I^Q_{b,y}$ | $\mathbb{R}_+$ | Reactive-generation capability invested at bus $b$ in year $y$. |
+| $C^Q_{b,y}$ | $\mathbb{R}_+$ | Cumulative reactive-generation capability. |
+| $O^L_{b,y}$ | $\mathbb{R}_+$ | Operational data-center load at bus $b$ in year $y$. |
+| $z_b$ | $\{0,1\}$ | 1 if bus $b$ is an activated data-center site. |
+
+### Cumulative capacity accounting
+
+Load capacity is the sum of all investments made up to the current year:
+
+$$
+C^L_{b,y}=\sum_{k\in Y:k\le y} I^L_{b,k}
+\qquad \forall b\in B, y\in Y.
+$$
+
+Active and reactive generation use the same cumulative accounting:
+
+$$
+C^G_{b,y}=\sum_{k\in Y:k\le y} I^G_{b,k},
+$$
+
+$$
+C^Q_{b,y}=\sum_{k\in Y:k\le y} I^Q_{b,k}.
+$$
+
+### Co-located generation
+
+Generation is linked to load-site investment in the same period:
+
+$$
+I^G_{b,y}=\alpha I^L_{b,y},
+$$
+
+$$
+I^Q_{b,y}=\beta I^L_{b,y}.
+$$
+
+Therefore, the cumulative generation capacities also satisfy:
+
+$$
+C^G_{b,y}=\alpha C^L_{b,y},
+\qquad
+C^Q_{b,y}=\beta C^L_{b,y}.
+$$
+
+This is a planning assumption, not a generator-technology model. For example, `generation_mw_per_load_mw=1.0` builds 1 MW of active generation for every 1 MW of data-center load capacity.
+
+### Annual siting target
+
+The total cumulative load capacity across all candidate buses must equal the target for each year:
+
+$$
+\sum_{b\in B} C^L_{b,y}=D_y
+\qquad \forall y\in Y.
+$$
+
+Because the target is cumulative, the model can invest only the increment required to move from one milestone to the next.
+
+### Site activation and site count
+
+A bus can receive capacity only when it is activated:
+
+$$
+C^L_{b,y}\le M_b z_b
+\qquad \forall b\in B, y\in Y.
+$$
+
+If no bus-specific limit is supplied, the implementation uses the largest cumulative target as $M_b$. An optional site-count limit is:
+
+$$
+\sum_{b\in B}z_b\le N_{sites}^{max}.
+$$
+
+The current example sets `max_sites=1`, so all capacity is assigned to one candidate bus. With equal costs, the selected bus is solver-dependent among equivalent solutions.
+
+### Operational load
+
+Operational load is bounded by installed capacity:
+
+$$
+O^L_{b,y}\le C^L_{b,y}
+\qquad \forall b\in B, y\in Y,
+$$
+
+and the capacity factor imposes a minimum utilization:
+
+$$
+O^L_{b,y}\ge \mathrm{CF}\,C^L_{b,y}
+\qquad \forall b\in B, y\in Y.
+$$
+
+The current implementation does not pass $O^L_{b,y}$ into the ACOPF example. The example evaluates the full cumulative capacity at the selected target year as a fixed data-center load.
+
+### Objective
+
+The implemented objective minimizes investment cost:
+
+$$
+\min\quad
+\sum_{b\in B}\sum_{y\in Y}
+\left(c^L_b I^L_{b,y}+c^G_b I^G_{b,y}\right).
+$$
+
+Reactive-generation investment has no separate cost coefficient in the current model. Its capacity is determined by $\beta$ and the load-site investment.
+
+### Interconnection reinforcement
+
+The planner can represent an existing grid connection and staged reinforcement
+at each candidate bus. Let $E_b$ be existing interconnection capacity and
+$I^{IC}_{b,y}$ be new capacity built in year $y$:
+
+$$
+C^{IC}_{b,y}=E_b+\sum_{k\le y}I^{IC}_{b,k}.
+$$
+
+Site capacity must fit through the available interconnection:
+
+$$
+C^L_{b,y}\le C^{IC}_{b,y}.
+$$
+
+Expansion can be limited by bus and priced in the objective. Candidate
+transmission projects extend this accounting. For project $p$, connected site
+$b(p)$, build binary $x_{p,y}$, and incremental capacity $K_p$:
+
+$$
+\sum_y x_{p,y}\le 1,
+$$
+
+$$
+C^{IC}_{b,y}=E_b+\sum_{k\le y}I^{IC}_{b,k}
++\sum_{p:b(p)=b}K_p\sum_{k\le y}x_{p,k}.
+$$
+
+Projects are unavailable before `available_year`, and their investment costs
+are included in the objective. Thus the planner cannot claim a 1000 MW site
+connection without selecting explicit interconnection capacity or a physical
+reinforcement.
+
+`apply_transmission_expansion()` converts selected projects into fixed
+`BranchData` records. It checks both endpoint buses, rejects duplicate
+circuits, and returns a copied `PowerFlowCase`. This is where a planning
+project becomes visible to the AC network equations.
+
+## Solution workflow
+
+`solve_capacity_expansion(study)` builds the Pyomo model and solves it with HiGHS by default. It returns cumulative capacities indexed by `(bus, year)` and bus activation values.
+
+The example then performs this handoff:
+
+```python
+plan = solve_capacity_expansion(expansion)
+selected_bus = next(
+    bus for bus, active in plan.site_active.items() if active > 0.5
+)
+load_mw = plan.load_capacity_mw[selected_bus, target_year]
+generation_mw = plan.generation_capacity_mw[selected_bus, target_year]
+generation_mvar = plan.reactive_generation_capacity_mvar[
+    selected_bus, target_year
+]
+```
+
+Those planning results become a fixed validation case for `ACOptimalPowerFlow`:
+
+- the selected bus receives the data-center active load;
+- the data-center reactive demand is calculated from the example power factor;
+- co-located active generation is added at the selected bus;
+- co-located reactive capability is added at the selected bus;
+- Ipopt solves a continuous nonlinear AC model on the selected topology. The
+  example does not repeat binary bus or branch selection inside ACOPF.
+
+For the 7,282-bus case, the concrete sequence is:
+
+1. The PWF parser reads 7,282 buses and 10,750 line records.
+2. HiGHS solves the small capacity-expansion MILP and selects the one
+    available 700 MW reinforcement needed to move from the 300 MW existing
+    connection to the 1000 MW 2035 target.
+3. The selected project is appended as a physical branch. The case contains
+    10,379 branches before AC preprocessing.
+4. The planned 1000 MW load is applied at bus 10 with a 0.98 power factor.
+5. AC preprocessing reduces closed switches, leaving 6,912 buses and 9,995
+    branches for the continuous Ipopt model.
+6. Ipopt converged in 39 iterations in approximately 60 seconds. The run
+    reported `Converged: True` and a maximum mismatch of
+    $4.975205\times10^{-4}$ pu.
+
+The large-system strategy is therefore decomposition: solve discrete
+investment decisions in a compact MILP, materialize the selected topology,
+then solve only the continuous AC equations. A converged numerical result
+still requires review of the detailed active/reactive residuals and voltage
+diagnostics; the base case reports voltage-limit notices even though the
+solver's convergence criterion is satisfied.
+
+The capacity-expansion solve itself does not know whether the AC network can carry the resulting plan. A plan can therefore be optimal in the investment model and infeasible in ACOPF.
+
+## 9-bus example
+
+The checked-in example uses the 9-bus Brazilian test case and currently demonstrates a convergent 100 MW plan:
+
+```python
+cumulative_load_mw_by_year={2030: 50.0, 2035: 100.0}
+generation_mw_per_load_mw=1.0
+generation_mvar_per_load_mw=0.203
+```
+
+The reactive ratio matches the example's data-center power-factor assumption. The resulting 2035 plan is 100 MW of load, 100 MW of co-located active generation, and 20.3 MVAr of reactive capability. The ACOPF converges with a mismatch on the order of $10^{-8}$ pu on the current test case.
+
+A 1000 MW target is not directly comparable to the 9-bus system's scale. It requires network-level feasibility checks, reactive support, generator limits, voltage constraints, and potentially transmission or generation expansion. The current two-stage workflow is intended to expose that distinction: capacity expansion proposes a plan, and ACOPF validates it.
+
+## API locations
+
+- Models: `src/o_grid/data_center/models.py`
+- Capacity-expansion formulation: `src/o_grid/data_center/expansion.py`
+- Static placement evaluation: `src/o_grid/data_center/placement.py`
+- ACOPF data-center constraints: `src/o_grid/acopf/optimization.py`
+- End-to-end example: `examples/run_data_center.py`

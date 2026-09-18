@@ -57,6 +57,13 @@ class PowerFlowSolver:
         objective_function: str = "minimize_residuals",
         strict_voltage_limits: bool = False,
         approach: SolverApproach = "python",
+        data_center_load_mw: float = 0.0,
+        data_center_reactive_mvar: float = 0.0,
+        data_center_generation_mw: float = 0.0,
+        data_center_generation_reactive_mvar: float = 0.0,
+        data_center_candidate_buses: tuple[int, ...] = (),
+        data_center_sites: int = 1,
+        optimization_solver: str | None = None,
     ) -> Self | System:
         _validate_approach(approach)
         instance = cast(Any, super().__new__(cls))
@@ -71,6 +78,13 @@ class PowerFlowSolver:
         instance.objective_function = objective_function
         instance.strict_voltage_limits = strict_voltage_limits
         instance.approach = approach
+        instance.data_center_load_mw = data_center_load_mw
+        instance.data_center_reactive_mvar = data_center_reactive_mvar
+        instance.data_center_generation_mw = data_center_generation_mw
+        instance.data_center_generation_reactive_mvar = data_center_generation_reactive_mvar
+        instance.data_center_candidate_buses = data_center_candidate_buses
+        instance.data_center_sites = data_center_sites
+        instance.optimization_solver = optimization_solver
         return instance.run(system).system
 
     def __init__(

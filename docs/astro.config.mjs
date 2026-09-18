@@ -64,6 +64,7 @@ export default defineConfig({
             { label: "DC power flow", link: "/explanation/dc-power-flow/" },
             { label: "Dynamic stability", link: "/explanation/stability-dynamics/" },
             { label: "Optimization-based AC power flow", link: "/explanation/optimization-acpf/" },
+            { label: "Data-center siting and capacity expansion", link: "/explanation/data-center-siting/" },
           ],
         },
       ],

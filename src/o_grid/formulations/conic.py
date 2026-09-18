@@ -141,9 +141,7 @@ class _Builder:
         self_value = values[self_key + ("b" if reactive else "g")]
         mutual_real = values[mutual_key + ("b" if reactive else "g")]
         mutual_imag = values[mutual_key + ("g" if reactive else "b")]
-        coefficients = {
-            self.variable("w", bus): -self_value if reactive else self_value
-        }
+        coefficients = {self.variable("w", bus): -self_value if reactive else self_value}
         self.pair_coeff(
             coefficients, bus, other, -mutual_real if reactive else mutual_real, mutual_imag
         )
